@@ -1,0 +1,19 @@
+{
+  "name": "gitlab-mr-manager",
+  "version": "1.0.0",
+  "main": "main.js",
+  "scripts": {
+    "build:angular": "cd my-app && npx ng build --configuration production --base-href ./",
+    "start:electron": "npx electron .",
+    "start": "npm run build:angular && npm run start:electron"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@angular/cli": "^20.0.4",
+    "electron": "^37.1.0",
+    "electron-store": "^10.1.0"
+  }
+}

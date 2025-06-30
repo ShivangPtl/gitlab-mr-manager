@@ -1,0 +1,15 @@
+<div class="header">
+  <div class="title">GitLab MR Manager</div>
+  <div class="user-info" (click)="toggleDropdown()">
+    <img src="https://www.gravatar.com/avatar?d=mp" alt="avatar" />
+    <span>{{ username }}</span>
+    <div class="dropdown" *ngIf="dropdownOpen">
+      <button (click)="logout()">Logout</button>
+    </div>
+  </div>
+</div>
+
+<div class="content">
+  <h2>Welcome, {{ username }}!</h2>
+  <p>This is the home screen. Next, we can show MRs here.</p>
+</div>

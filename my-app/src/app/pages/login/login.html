@@ -1,0 +1,17 @@
+<div class="login-container">
+  <h2>GitLab MR Manager</h2>
+
+  <form (ngSubmit)="onSubmit()">
+    <label for="token">Personal Access Token</label>
+    <input
+      type="password"
+      id="token"
+      name="token"
+      [(ngModel)]="accessToken"
+      required
+    />
+    <button type="submit">Login</button>
+  </form>
+
+  <div *ngIf="error" style="color: red; margin-top: 1rem;">{{ error }}</div>
+</div>
