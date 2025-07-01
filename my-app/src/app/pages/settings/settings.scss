@@ -1,144 +1,15 @@
+// Import shared styles
+@import '../../../assets/shared-styles.scss';
+
 .settings-container {
-  padding: 1.5rem;
-  background: #1e1e1e;
-  color: #e5e5e5;
+  @extend .page-container;
 
-  .controls {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-
-    .labels {
-      display: flex;
-      flex-direction: column;
-
-      .label-list {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 1rem;
-
-        // Checkbox styling
-        ::ng-deep .mat-mdc-checkbox .mdc-label {
-          color: #e5e5e5 !important;
-        }
-
-        ::ng-deep .mat-mdc-checkbox .mdc-checkbox__background {
-          border-color: #e5e5e5 !important;
-        }
-
-        ::ng-deep .mat-mdc-checkbox:hover .mdc-checkbox__background {
-          border-color: #7986cb !important;
-          background-color: rgba(121, 134, 203, 0.06);
-        }
-
-        ::ng-deep .mat-mdc-checkbox:hover .mdc-label {
-          color: #7986cb !important;
-        }
-      }
-    }
-
-    // Dropdown input
-    ::ng-deep .mat-mdc-form-field {
-      background-color: #2e2e2e;
-      border-radius: 4px;
-
-      .mdc-text-field {
-        background-color: transparent;
-        color: #e5e5e5;
-      }
-
-      .mat-mdc-select-value,
-      .mat-mdc-select-placeholder,
-      .mat-mdc-select-arrow,
-      .mdc-floating-label {
-        color: #ccc !important;
-      }
-    }
-
-    ::ng-deep .mat-mdc-form-field {
-      background-color: #2e2e2e;
-      border-radius: 4px;
-
-      .mdc-text-field {
-        background-color: transparent;
-        color: #e5e5e5;
-      }
-
-      .mat-mdc-input-element {
-        color: #e5e5e5;
-      }
-
-      .mdc-floating-label {
-        color: #aaa !important;
-      }
-    }
+  // Settings-specific styles (if any)
+  .defaults {
+    // Default options section can have specific styling here if needed
   }
 
-  // Dropdown panel (overlay)
-  ::ng-deep .mat-mdc-select-panel {
-    background-color: #2e2e2e !important;
-    color: #e5e5e5 !important;
-  }
-
-  ::ng-deep .mat-mdc-option {
-    color: #e5e5e5 !important;
-
-    &:hover {
-      background-color: #444 !important;
-    }
-
-    &.mat-mdc-option-active {
-      background-color: #555 !important;
-    }
-  }
-
-  .full-width-table {
-    width: 100%;
-    margin-bottom: 2rem;
-
-    ::ng-deep .mat-mdc-table {
-      background-color: #2b2b2b;
-      color: #e5e5e5;
-    }
-
-    ::ng-deep .mat-mdc-header-cell,
-    ::ng-deep .mat-mdc-cell {
-      color: #e5e5e5;
-      border-bottom: 1px solid #444;
-      font-size: 14px;
-    }
-
-    ::ng-deep .mat-mdc-header-row {
-      background: #333;
-      font-weight: normal;
-      height: 40px !important;
-    }
-
-    ::ng-deep .mat-mdc-row {
-      background: #2e2e2e;
-    }
-  }
-
-  .full-width {
-    width: 100%;
-  }
-
-  .actions {
-    margin-top: 1.5rem;
-    display: flex;
-    justify-content: flex-end;
-
-    ::ng-deep button.mat-raised-button {
-      background-color: #f56c6c;
-      color: #fff;
-      padding: 0.6rem 1.2rem;
-      font-size: 1rem;
-      border-radius: 4px;
-
-      &:hover {
-        background-color: #e04c4c;
-      }
-    }
+  .projects {
+    // Projects section can have specific styling here if needed
   }
 }
