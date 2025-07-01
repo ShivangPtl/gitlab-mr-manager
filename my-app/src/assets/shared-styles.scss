@@ -70,10 +70,10 @@
         border-color: var(--text-primary) !important;
       }
 
-      ::ng-deep .mat-mdc-checkbox:hover .mdc-checkbox__background {
-        border-color: var(--accent-color) !important;
-        background-color: var(--accent-hover);
-      }
+      // ::ng-deep .mat-mdc-checkbox:hover .mdc-checkbox__background {
+      //   border-color: var(--accent-color) !important;
+      //   background-color: var(--accent-hover);
+      // }
 
       ::ng-deep .mat-mdc-checkbox:hover .mdc-label {
         color: var(--accent-color) !important;

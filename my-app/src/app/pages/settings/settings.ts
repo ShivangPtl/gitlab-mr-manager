@@ -84,7 +84,7 @@ export class Settings implements OnInit {
     if (path) project.local_repo_path = path;
   }
 
-  async save() {
+  async save(showAlert: boolean = true) {
     const settings = {
       projects: this.projects,
       defaultBranch: this.defaultBranch,
@@ -93,7 +93,7 @@ export class Settings implements OnInit {
       darkMode: this.darkMode
     };
     await window.electronAPI.saveSettings(settings);
-    alert('Settings saved successfully!');
+    if (showAlert) alert('Settings saved successfully!');
     this.applyTheme(this.darkMode);
   }
 
@@ -111,6 +111,6 @@ export class Settings implements OnInit {
   onThemeToggle(event: any): void {
     this.darkMode = event.checked;
     this.applyTheme(this.darkMode);
-    window.electronAPI.saveSettings({ darkMode: this.darkMode });
+    this.save(false);
   }
 }
