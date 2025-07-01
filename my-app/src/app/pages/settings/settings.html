@@ -1,57 +1,69 @@
 <app-navbar></app-navbar>
-<div class="settings-container">
-  <h1>Settings</h1>
+
+<div class="settings-container ">
+  <section class="defaults mat-theme">
+    <h2 style="margin-top: 0;">Default Options</h2>
+
+    <div class="controls">
+      <mat-form-field appearance="fill">
+        <mat-label>Target Branch</mat-label>
+        <input matInput [(ngModel)]="defaultBranch" />
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>Default Assignee</mat-label>
+        <mat-select [(ngModel)]="selectedAssigneeId">
+          <mat-option *ngFor="let user of assignees" [value]="user.user_id">
+            {{ user.user_name }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>Default Reviewer</mat-label>
+        <mat-select [(ngModel)]="selectedReviewerId">
+          <mat-option *ngFor="let user of reviewers" [value]="user.user_id">
+            {{ user.user_name }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+  </section>
+
 
   <section class="projects">
-    <h2>Projects</h2>
-    <table>
-      <thead>
-        <tr>
-          <th>Select</th>
-          <th>Project Name</th>
-          <th>Local Path</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let project of projects">
-          <td><input type="checkbox" [(ngModel)]="project.is_selected"></td>
-          <td>{{ project.project_name }}</td>
-          <td>{{ project.local_repo_path || 'Not Set' }}</td>
-          <td><button (click)="browseFolder(project)">Browse</button></td>
-        </tr>
-      </tbody>
+    <h2 style="margin-top: 0;">Projects</h2>
+    <table mat-table [dataSource]="projects" class="mat-elevation-z2 full-width-table">
+      <ng-container matColumnDef="select">
+        <th mat-header-cell *matHeaderCellDef>Select</th>
+        <td mat-cell *matCellDef="let project">
+          <mat-checkbox [(ngModel)]="project.is_selected"></mat-checkbox>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="name">
+        <th mat-header-cell *matHeaderCellDef>Project Name</th>
+        <td mat-cell *matCellDef="let project">{{ project.project_name }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="path">
+        <th mat-header-cell *matHeaderCellDef>Local Path</th>
+        <td mat-cell *matCellDef="let project">{{ project.local_repo_path || 'Not Set' }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef>Actions</th>
+        <td mat-cell *matCellDef="let project">
+          <button mat-button (click)="browseFolder(project)">Browse</button>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="['select', 'name', 'path', 'actions']"></tr>
+      <tr mat-row *matRowDef="let row; columns: ['select', 'name', 'path', 'actions'];"></tr>
     </table>
-  </section>
-
-  <section class="defaults">
-    <h2>Default Options</h2>
-    <label>
-      Target Branch:
-      <input type="text" [(ngModel)]="defaultBranch">
-    </label>
-    <label>
-      Default Assignee:
-      <select [(ngModel)]="selectedAssigneeId">
-        <option *ngFor="let user of assignees" [value]="user.user_id">{{ user.user_name }}</option>
-      </select>
-    </label>
-    <label>
-      Default Reviewer:
-      <select [(ngModel)]="selectedReviewerId">
-        <option *ngFor="let user of reviewers" [value]="user.user_id">{{ user.user_name }}</option>
-      </select>
-    </label>
-  </section>
-
-  <section class="labels">
-    <h2>Labels</h2>
-    <label *ngFor="let label of labels">
-      <input type="checkbox" [(ngModel)]="label.is_selected"> {{ label.name }}
-    </label>
-  </section>
+  </section> 
 
   <div class="actions">
-    <button (click)="save()">Save Settings</button>
+    <button mat-raised-button color="primary" (click)="save()">Save Settings</button>
   </div>
 </div>
