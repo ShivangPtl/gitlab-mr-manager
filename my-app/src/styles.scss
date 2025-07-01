@@ -1,8 +1,11 @@
+// styles.scss - Conservative approach that works with most Angular Material versions
 
-// Custom Theming for Angular Material
-// For more information: https://material.angular.dev/guide/theming
 @use '@angular/material' as mat;
 
+// Include the common styles for Angular Material
+@include mat.core();
+
+// Simple theme approach - let Angular Material use defaults and override with CSS variables
 html {
   @include mat.theme((
     color: (
@@ -10,18 +13,83 @@ html {
       primary: mat.$azure-palette,
       tertiary: mat.$blue-palette,
     ),
-    typography: Roboto,
-    density: 0,
   ));
-}@import url('https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600&display=swap');
+}
+
+@import url('https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600&display=swap');
+
+// Root variables (default dark theme)
+:root {
+  --bg-primary: #1e1e1e;
+  --bg-secondary: #2e2e2e;
+  --bg-tertiary: #2b2b2b;
+  --bg-header: #333;
+  --text-primary: #e5e5e5;
+  --text-secondary: #ccc;
+  --text-tertiary: #aaa;
+  --border-color: #444;
+  --hover-bg: #444;
+  --active-bg: #555;
+  --accent-color: #7986cb;
+  --accent-hover: rgba(121, 134, 203, 0.06);
+  --button-bg: #f56c6c;
+  --button-hover: #e04c4c;
+}
+
+// Light theme class
+.light-theme {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f5f5f5;
+  --bg-tertiary: #fafafa;
+  --bg-header: #e0e0e0;
+  --text-primary: #333333;
+  --text-secondary: #666666;
+  --text-tertiary: #888888;
+  --border-color: #e0e0e0;
+  --hover-bg: #f0f0f0;
+  --active-bg: #e8e8e8;
+  --accent-color: #1976d2;
+  --accent-hover: rgba(25, 118, 210, 0.06);
+  --button-bg: #1976d2;
+  --button-hover: #1565c0;
+}
 
 body {
   margin: 0;
   padding: 0;
   font-family: 'Source Sans Pro', sans-serif;
-  background-color: #1e1e1e;
-  color: #fff;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-html, body { height: 100%; }
-body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+html, body { 
+  height: 100%; 
+}
+
+// Smooth transitions for theme switching
+* {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+// Override Angular Material component colors with CSS variables for theming
+.dark-theme {
+  // This will apply to Angular Material components in dark mode
+  .mat-mdc-form-field {
+    --mdc-filled-text-field-container-color: var(--bg-secondary);
+    --mdc-filled-text-field-label-text-color: var(--text-secondary);
+    --mdc-filled-text-field-input-text-color: var(--text-primary);
+  }
+  
+  .mat-mdc-select-panel {
+    background: var(--bg-secondary) !important;
+  }
+  
+  .mat-mdc-option {
+    color: var(--text-primary) !important;
+    
+    &:hover {
+      background: var(--hover-bg) !important;
+    }
+  }
+}

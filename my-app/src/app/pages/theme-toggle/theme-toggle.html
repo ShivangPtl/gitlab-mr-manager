@@ -1,0 +1,10 @@
+<div class="theme-toggle-container">
+  <mat-icon class="theme-icon">light_mode</mat-icon>
+  <mat-slide-toggle
+    [checked]="isDarkTheme"
+    (change)="onThemeToggle($event)"
+    color="primary"
+    class="theme-toggle">
+  </mat-slide-toggle>
+  <mat-icon class="theme-icon">dark_mode</mat-icon>
+</div>

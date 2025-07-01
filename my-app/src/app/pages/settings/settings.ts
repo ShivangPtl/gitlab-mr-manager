@@ -12,6 +12,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatIconModule } from '@angular/material/icon';
 
 declare const window: any;
 
@@ -30,8 +31,9 @@ declare const window: any;
     MatCheckboxModule,
     MatTableModule,
     MatButtonModule,
-    MatSlideToggleModule
-  ]
+    MatSlideToggleModule,
+    MatIconModule,    
+]
 })
 export class Settings implements OnInit {
   projects: ProjectSettingModel[] = [];
@@ -73,7 +75,7 @@ export class Settings implements OnInit {
       if (data.selectedReviewerId) this.selectedReviewerId = data.selectedReviewerId;
       if (data.darkMode !== undefined) this.darkMode = data.darkMode;
 
-      this.applyTheme();
+      this.applyTheme(this.darkMode);
     });
   }
 
@@ -92,17 +94,23 @@ export class Settings implements OnInit {
     };
     await window.electronAPI.saveSettings(settings);
     alert('Settings saved successfully!');
-    this.applyTheme();
+    this.applyTheme(this.darkMode);
   }
 
-  applyTheme() {
-    const classList = document.body.classList;
-    if (this.darkMode) {
-      classList.add('dark-theme');
-      classList.remove('light-theme');
+
+  private applyTheme(isDark: boolean): void {
+    if (isDark) {
+      document.body.classList.add('dark-theme');
+      document.body.classList.remove('light-theme');
     } else {
-      classList.add('light-theme');
-      classList.remove('dark-theme');
+      document.body.classList.add('light-theme');
+      document.body.classList.remove('dark-theme');
     }
+  }
+
+  onThemeToggle(event: any): void {
+    this.darkMode = event.checked;
+    this.applyTheme(this.darkMode);
+    window.electronAPI.saveSettings({ darkMode: this.darkMode });
   }
 }

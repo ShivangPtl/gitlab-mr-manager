@@ -12,4 +12,62 @@
   .projects {
     // Projects section can have specific styling here if needed
   }
+
+
+  .theme-toggle-container {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.7rem;
+    border-radius: 8px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+    
+    &:hover {
+      background: var(--hover-bg);
+      border-color: var(--accent-color);
+    }
+  }
+  
+  .theme-icon {
+    color: var(--text-secondary);
+    font-size: 1.2rem;
+    width: 1.2rem;
+    height: 1.2rem;
+    transition: color 0.3s ease;
+  }
+  
+  .theme-toggle {
+    ::ng-deep .mat-mdc-slide-toggle-bar {
+      background-color: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+    }
+  
+    ::ng-deep .mat-mdc-slide-toggle-thumb {
+      background-color: var(--text-primary);
+    }
+  
+    &.mat-checked {
+      ::ng-deep .mat-mdc-slide-toggle-bar {
+        background-color: var(--accent-color);
+        opacity: 0.6;
+      }
+  
+      ::ng-deep .mat-mdc-slide-toggle-thumb {
+        background-color: var(--accent-color);
+      }
+    }
+  }
+  
+  // Light theme specific styling
+  :host-context(.light-theme) .theme-icon:first-child {
+    color: var(--accent-color);
+  }
+  
+  // Dark theme specific styling  
+  :host-context(.dark-theme) .theme-icon:last-child {
+    color: var(--accent-color);
+  }
 }
+
