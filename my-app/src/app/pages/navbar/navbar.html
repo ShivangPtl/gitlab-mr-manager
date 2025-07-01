@@ -1,0 +1,11 @@
+<nav class="navbar">
+  <div class="left">
+    <span class="title">GitLab MR Manager</span>
+    <button (click)="goTo('/home')">🏠 Home</button>
+    <button (click)="goTo('/settings')">⚙️ Settings</button>
+  </div>
+  <div class="right">
+    <span class="user">👤 {{ userName }}</span>
+    <button class="logout" (click)="logout()">Logout</button>
+  </div>
+</nav>

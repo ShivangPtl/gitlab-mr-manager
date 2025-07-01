@@ -1,15 +1,74 @@
-<div class="header">
-  <div class="title">GitLab MR Manager</div>
-  <div class="user-info" (click)="toggleDropdown()">
-    <img src="https://www.gravatar.com/avatar?d=mp" alt="avatar" />
-    <span>{{ username }}</span>
-    <div class="dropdown" *ngIf="dropdownOpen">
-      <button (click)="logout()">Logout</button>
+<app-navbar></app-navbar>
+
+<div class="home-container">
+  <!-- Filters: Assignee, Reviewer, Labels -->
+  <div class="controls">
+    <label>
+      Assignee:
+      <select [(ngModel)]="selectedAssigneeId">
+        <option *ngFor="let user of assignees" [value]="user.user_id">
+          {{ user.user_name }}
+        </option>
+      </select>
+    </label>
+
+    <label>
+      Reviewer:
+      <select [(ngModel)]="selectedReviewerId">
+        <option *ngFor="let user of reviewers" [value]="user.user_id">
+          {{ user.user_name }}
+        </option>
+      </select>
+    </label>
+
+    <div class="labels">
+      <label *ngFor="let label of labels">
+        <input type="checkbox" [(ngModel)]="label.is_selected" />
+        {{ label.name }}
+      </label>
     </div>
   </div>
-</div>
 
-<div class="content">
-  <h2>Welcome, {{ username }}!</h2>
-  <p>This is the home screen. Next, we can show MRs here.</p>
+  <!-- Project Table -->
+  <table>
+    <thead>
+      <tr>
+        <th>Select</th>
+        <th>Project</th>
+        <th>Branch</th>
+        <th>Target</th>
+        <th>Commits Ahead</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let project of filteredProjects">
+        <td>
+          <input type="checkbox" [(ngModel)]="project.is_selected" />
+        </td>
+        <td>{{ project.project_name }}</td>
+        <td>{{ project.current_branch }}</td>
+        <td>{{ project.target_branch }}</td>
+        <td>{{ project.commits_ahead }}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- MR Meta: Title & Description -->
+  <section class="mr-meta">
+    <div class="field">
+      <label for="title">MR Title (optional):</label>
+      <input id="title" type="text" [(ngModel)]="mrTitle" placeholder="Leave blank to use latest commit message" />
+    </div>
+
+    <div class="field">
+      <label for="description">MR Description (optional):</label>
+      <textarea id="description" [(ngModel)]="mrDescription" rows="3"
+        placeholder="Leave blank to use latest commit message"></textarea>
+    </div>
+  </section>
+
+  <!-- Create MR Button -->
+  <div class="actions">
+    <button (click)="createMergeRequests()">🚀 Create MR</button>
+  </div>
 </div>

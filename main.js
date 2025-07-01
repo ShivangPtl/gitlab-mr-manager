@@ -1,7 +1,8 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const path = require('path');
 const ElectronStore = require('electron-store');
 const store = new ElectronStore.default();
+const { exec } = require('child_process');
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -32,6 +33,29 @@ function createWindow() {
     store.delete('gitlabToken');
     store.delete('gitlabUser');
   });  
+
+
+  ipcMain.handle('open-folder-dialog', async () => {
+    const result = await dialog.showOpenDialog({ properties: ['openDirectory'] });
+    return result.canceled ? null : result.filePaths[0];
+  });
+  
+  ipcMain.handle('save-settings', async (event, settings) => {
+    store.set('settings', settings);
+  });
+  
+  ipcMain.handle('get-settings', async () => {
+    return store.get('settings') || {};
+  });
+
+  ipcMain.handle('run-git-command', async (event, repoPath, args) => {
+    return new Promise((resolve) => {
+      exec(`git ${args}`, { cwd: repoPath }, (err, stdout) => {
+        if (err) return resolve('');
+        resolve(stdout.trim());
+      });
+    });
+  });
 
   // Load Angular app (from dist)
   win.loadFile(path.join(__dirname, 'my-app', 'dist', 'my-app','browser', 'index.html'));
