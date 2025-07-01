@@ -57,9 +57,15 @@ function createWindow() {
     });
   });
 
-  // Load Angular app (from dist)
-  win.loadFile(path.join(__dirname, 'my-app', 'dist', 'my-app','browser', 'index.html'));
-  win.webContents.openDevTools({ mode: 'detach' });
+  const isDev = !app.isPackaged;
+
+  if (isDev) {
+    win.loadURL('http://localhost:4200');
+    win.webContents.openDevTools({ mode: 'detach' });
+  } else {
+    win.loadFile(path.join(__dirname, 'my-app', 'dist', 'my-app', 'browser', 'index.html'));
+  }
+
 }
 
 app.whenReady().then(createWindow);

@@ -1,18 +1,34 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSelectModule } from '@angular/material/select';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatOptionModule } from '@angular/material/core';
 import { UserItem } from '../../models/user-item.model';
 import { LabelItem } from '../../models/label-item.model';
 import { ProjectSettingModel } from '../../models/project-settings.model';
 import { Navbar } from '../../pages/navbar/navbar';
+import { MatTableModule } from '@angular/material/table';
+import { MatButtonModule } from '@angular/material/button';
+import { MatInputModule } from '@angular/material/input';
+import { MatTableDataSource } from '@angular/material/table';
+
 
 declare const window: any;
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, FormsModule, Navbar ],
+  imports: [CommonModule, FormsModule, Navbar,
+    MatFormFieldModule,
+    MatSelectModule,
+    MatCheckboxModule,
+    MatOptionModule,
+    MatTableModule,
+    MatButtonModule,
+    MatInputModule
+   ],
   templateUrl: './home.html',
   styleUrls: ['./home.scss']
 })
@@ -25,7 +41,7 @@ export class Home implements OnInit {
   selectedReviewerId: number = 119;
   mrTitle: string = '';
   mrDescription: string = '';
-
+  dataSource = new MatTableDataSource<any>();
 
   filteredProjects: {
     project_id: number;
@@ -83,6 +99,10 @@ export class Home implements OnInit {
         is_selected: false
       });
     }
+
+    console.log(this.filteredProjects);
+    this.dataSource.data = this.filteredProjects;
+    console.log(this.dataSource.data);
   }
 
   async runGit(path: string, command: string): Promise<string> {

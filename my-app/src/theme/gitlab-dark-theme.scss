@@ -1,0 +1,18 @@
+// @use '@angular/material' as mat;
+
+// $gitlab-primary: mat.define-palette(mat.$red-palette, 600, 500, 700);
+// $gitlab-accent: mat.define-palette(mat.$orange-palette, A200, A100, A400);
+// $gitlab-warn: mat.define-palette(mat.$deep-orange-palette);
+
+// $gitlab-theme: mat.define-dark-theme((
+//   color: (
+//     primary: $gitlab-primary,
+//     accent: $gitlab-accent,
+//     warn: $gitlab-warn,
+//   ),
+//   typography: mat.define-typography-config(),
+//   density: 0
+// ));
+
+// @include mat.core();
+// @include mat.all-component-themes($gitlab-theme);

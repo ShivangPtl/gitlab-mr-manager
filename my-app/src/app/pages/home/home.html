@@ -1,74 +1,93 @@
 <app-navbar></app-navbar>
 
 <div class="home-container">
-  <!-- Filters: Assignee, Reviewer, Labels -->
+  <!-- Filters -->
   <div class="controls">
-    <label>
-      Assignee:
-      <select [(ngModel)]="selectedAssigneeId">
-        <option *ngFor="let user of assignees" [value]="user.user_id">
+    <!-- Assignee -->
+    <mat-form-field appearance="fill" class="control-item">
+      <mat-label>Assignee</mat-label>
+      <mat-select [(ngModel)]="selectedAssigneeId">
+        <mat-option *ngFor="let user of assignees" [value]="user.user_id">
           {{ user.user_name }}
-        </option>
-      </select>
-    </label>
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
 
-    <label>
-      Reviewer:
-      <select [(ngModel)]="selectedReviewerId">
-        <option *ngFor="let user of reviewers" [value]="user.user_id">
+    <!-- Reviewer -->
+    <mat-form-field appearance="fill" class="control-item">
+      <mat-label>Reviewer</mat-label>
+      <mat-select [(ngModel)]="selectedReviewerId">
+        <mat-option *ngFor="let user of reviewers" [value]="user.user_id">
           {{ user.user_name }}
-        </option>
-      </select>
-    </label>
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
 
-    <div class="labels">
-      <label *ngFor="let label of labels">
-        <input type="checkbox" [(ngModel)]="label.is_selected" />
-        {{ label.name }}
-      </label>
+    <!-- Labels -->
+    <div class="labels control-item">
+      <mat-label>Labels</mat-label>
+      <div class="label-list">
+        <mat-checkbox *ngFor="let label of labels" [(ngModel)]="label.is_selected">
+          {{ label.name }}
+        </mat-checkbox>
+      </div>
     </div>
   </div>
+ 
+  <!-- Table --> 
+  <table mat-table [dataSource]="dataSource" class="mat-elevation-z2 full-width-table">
+    <!-- Select -->
+    <ng-container matColumnDef="select">
+      <th mat-header-cell *matHeaderCellDef> Select </th>
+      <td mat-cell *matCellDef="let project">
+        <mat-checkbox [(ngModel)]="project.is_selected"></mat-checkbox>
+      </td>
+    </ng-container>
 
-  <!-- Project Table -->
-  <table>
-    <thead>
-      <tr>
-        <th>Select</th>
-        <th>Project</th>
-        <th>Branch</th>
-        <th>Target</th>
-        <th>Commits Ahead</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let project of filteredProjects">
-        <td>
-          <input type="checkbox" [(ngModel)]="project.is_selected" />
-        </td>
-        <td>{{ project.project_name }}</td>
-        <td>{{ project.current_branch }}</td>
-        <td>{{ project.target_branch }}</td>
-        <td>{{ project.commits_ahead }}</td>
-      </tr>
-    </tbody>
+    <!-- Project Name -->
+    <ng-container matColumnDef="project">
+      <th mat-header-cell *matHeaderCellDef> Project </th>
+      <td mat-cell *matCellDef="let project">{{ project.project_name }}</td>
+    </ng-container>
+
+    <!-- Branch -->
+    <ng-container matColumnDef="branch">
+      <th mat-header-cell *matHeaderCellDef> Branch </th>
+      <td mat-cell *matCellDef="let project">{{ project.current_branch }}</td>
+    </ng-container>
+
+    <!-- Target -->
+    <ng-container matColumnDef="target">
+      <th mat-header-cell *matHeaderCellDef> Target </th>
+      <td mat-cell *matCellDef="let project">{{ project.target_branch }}</td>
+    </ng-container>
+
+    <!-- Ahead -->
+    <ng-container matColumnDef="ahead">
+      <th mat-header-cell *matHeaderCellDef> Commits Ahead </th>
+      <td mat-cell *matCellDef="let project">{{ project.commits_ahead }}</td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="['select', 'project', 'branch', 'target', 'ahead']"></tr>
+    <tr mat-row *matRowDef="let row; columns: ['select', 'project', 'branch', 'target', 'ahead'];"></tr>
   </table>
 
-  <!-- MR Meta: Title & Description -->
+  <!-- MR Meta -->
   <section class="mr-meta">
-    <div class="field">
-      <label for="title">MR Title (optional):</label>
-      <input id="title" type="text" [(ngModel)]="mrTitle" placeholder="Leave blank to use latest commit message" />
-    </div>
+    <mat-form-field appearance="fill" class="full-width">
+      <mat-label>MR Title (optional)</mat-label>
+      <input matInput [(ngModel)]="mrTitle" placeholder="Leave blank to use latest commit message" />
+    </mat-form-field>
 
-    <div class="field">
-      <label for="description">MR Description (optional):</label>
-      <textarea id="description" [(ngModel)]="mrDescription" rows="3"
+    <mat-form-field appearance="fill" class="full-width">
+      <mat-label>MR Description (optional)</mat-label>
+      <textarea matInput [(ngModel)]="mrDescription" rows="3"
         placeholder="Leave blank to use latest commit message"></textarea>
-    </div>
+    </mat-form-field>
   </section>
 
-  <!-- Create MR Button -->
+  <!-- Create MR -->
   <div class="actions">
-    <button (click)="createMergeRequests()">🚀 Create MR</button>
+    <button mat-raised-button color="primary" (click)="createMergeRequests()">🚀 Create MR</button>
   </div>
 </div>
