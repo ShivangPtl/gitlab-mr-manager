@@ -13,6 +13,7 @@ import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatInputModule } from '@angular/material/input';
 import { MatTableDataSource } from '@angular/material/table';
+import { LoaderService } from '../../services/loader';
 
 
 declare const window: any;
@@ -28,11 +29,15 @@ declare const window: any;
     MatTableModule,
     MatButtonModule,
     MatInputModule
-   ],
+  ],
   templateUrl: './home.html',
   styleUrls: ['./home.scss']
 })
+
+
+
 export class Home implements OnInit {
+  constructor(private loaderService: LoaderService) { }
   gitlabApiBase = 'https://git.promptdairytech.com/api/v4';
   assignees: UserItem[] = [];
   reviewers: UserItem[] = [];
@@ -42,6 +47,7 @@ export class Home implements OnInit {
   mrTitle: string = '';
   mrDescription: string = '';
   dataSource = new MatTableDataSource<any>();
+  lastRefreshed: Date | null = null;
 
   filteredProjects: {
     project_id: number;
@@ -100,9 +106,8 @@ export class Home implements OnInit {
       });
     }
 
-    console.log(this.filteredProjects);
     this.dataSource.data = this.filteredProjects;
-    console.log(this.dataSource.data);
+    this.lastRefreshed = new Date();
   }
 
   async runGit(path: string, command: string): Promise<string> {
@@ -110,69 +115,108 @@ export class Home implements OnInit {
   }
 
   async createMergeRequests() {
-    const selected = this.filteredProjects.filter(p => p.is_selected);
-    if (!selected.length) {
-      alert('Please select at least one project.');
-      return;
-    }
+    try {
+      this.loaderService.showCreatingMR();
 
-    const { token } = await window.electronAPI.getToken();
-    if (!token) {
-      alert('Missing GitLab token.');
-      return;
-    }
-
-    const selectedLabels = this.labels.filter(l => l.is_selected).map(l => l.name).join(',');
-    const results: { project: string, status: 'success' | 'failed', message: string }[] = [];
-    for (const proj of selected) {
-      try {
-        const commitMsg = await this.runGit(proj.local_repo_path, 'log -1 --pretty=%B');
-  
-        const title = this.mrTitle?.trim() || commitMsg.split('\n')[0]?.trim() || 'Automated MR';
-        const description = this.mrDescription?.trim()
-          || (!commitMsg || commitMsg.length > 1000 ? 'Created from GitLabMRManager' : commitMsg.trim());
-  
-        const formData = new URLSearchParams();
-        formData.append('source_branch', proj.current_branch);
-        formData.append('target_branch', proj.target_branch);
-        formData.append('title', title);
-        formData.append('description', description);
-        formData.append('assignee_id', this.selectedAssigneeId.toString());
-        formData.append('reviewer_ids[]', this.selectedReviewerId.toString());
-        formData.append('labels', selectedLabels);
-  
-        // const response = await fetch(`${this.gitlabApiBase}/projects/${proj.project_id}/merge_requests`, {
-        //   method: 'POST',
-        //   headers: {
-        //     'PRIVATE-TOKEN': token
-        //   },
-        //   body: formData.toString()
-        // });
-
-        const response = await fetch(`https://git.promptdairytech.com/api/v4/projects/${proj.project_id}/merge_requests`, {
-          method: 'POST',
-          headers: {
-            'PRIVATE-TOKEN': token,
-            'Content-Type': 'application/x-www-form-urlencoded'
-          },
-          body: formData.toString()
-        });
-  
-        const resText = await response.text();
-  
-        if (response.ok) {
-          results.push({ project: proj.project_name, status: 'success', message: 'MR created successfully' });
-        } else {
-          const errorMessage = this.extractErrorMessage(resText);
-          results.push({ project: proj.project_name, status: 'failed', message: errorMessage });
-        }
-      } catch (ex: any) {
-        results.push({ project: proj.project_name, status: 'failed', message: `Exception: ${ex.message}` });
+      const selected = this.filteredProjects.filter(p => p.is_selected);
+      if (!selected.length) {
+        alert('Please select at least one project.');
+        return;
       }
+
+      const { token } = await window.electronAPI.getToken();
+      if (!token) {
+        alert('Missing GitLab token.');
+        return;
+      }
+
+      const selectedLabels = this.labels.filter(l => l.is_selected).map(l => l.name).join(',');
+      const results: { project: string, status: 'success' | 'failed', message: string }[] = [];
+      for (const proj of selected) {
+        try {
+          const commitMsg = await this.runGit(proj.local_repo_path, 'log -1 --pretty=%B');
+
+          const title = this.mrTitle?.trim() || commitMsg.split('\n')[0]?.trim() || 'Automated MR';
+          const description = this.mrDescription?.trim()
+            || (!commitMsg || commitMsg.length > 1000 ? 'Created from GitLabMRManager' : commitMsg.trim());
+
+          const formData = new URLSearchParams();
+          formData.append('source_branch', proj.current_branch);
+          formData.append('target_branch', proj.target_branch);
+          formData.append('title', title);
+          formData.append('description', description);
+          formData.append('assignee_id', this.selectedAssigneeId.toString());
+          formData.append('reviewer_ids[]', this.selectedReviewerId.toString());
+          formData.append('labels', selectedLabels);
+
+          const response = await fetch(`https://git.promptdairytech.com/api/v4/projects/${proj.project_id}/merge_requests`, {
+            method: 'POST',
+            headers: {
+              'PRIVATE-TOKEN': token,
+              'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: formData.toString()
+          });
+
+          const resText = await response.text();
+
+          if (response.ok) {
+            results.push({ project: proj.project_name, status: 'success', message: 'MR created successfully' });
+          } else {
+            const errorMessage = this.extractErrorMessage(resText);
+            results.push({ project: proj.project_name, status: 'failed', message: errorMessage });
+          }
+        } catch (ex: any) {
+          results.push({ project: proj.project_name, status: 'failed', message: `Exception: ${ex.message}` });
+        }
+      }
+
+      this.showMRResultsSummary(results);
+      this.loaderService.hide();
+    } catch (error) {
+      this.loaderService.hide();
     }
-  
-    this.showMRResultsSummary(results);
   }
+
+  async refreshCommitsAhead() {
+    try {
+      this.loaderService.showLoading('Refreshing commit info...');
+
+      const settings = await window.electronAPI.getSettings();
+      const targetBranch: string = settings.defaultBranch || 'master_ah';
+
+      this.filteredProjects = [];
+
+      const validProjects = (settings.projects || []).filter((p: ProjectSettingModel) => p.is_selected && p.local_repo_path);
+
+      for (const project of validProjects) {
+        await this.runGit(project.local_repo_path, 'fetch origin');
+        const current_branch = await this.runGit(project.local_repo_path, 'rev-parse --abbrev-ref HEAD');
+        const commits_ahead_str = await this.runGit(
+          project.local_repo_path,
+          `rev-list --count origin/${targetBranch}..${current_branch}`
+        );
+        const commits_ahead = parseInt(commits_ahead_str || '0');
+
+        this.filteredProjects.push({
+          ...project,
+          current_branch,
+          target_branch: targetBranch,
+          commits_ahead,
+          is_selected: false // clear any existing selections
+        });
+      }
+
+      this.dataSource.data = this.filteredProjects;
+      this.lastRefreshed = new Date();
+
+      this.loaderService.hide();
+    } catch (error) {
+      this.loaderService.hide();
+      alert(error);
+    }
+  }
+
 
   extractErrorMessage(responseText: string): string {
     try {
@@ -186,19 +230,19 @@ export class Home implements OnInit {
     }
     return 'Unknown error';
   }
-  
+
 
   showMRResultsSummary(results: { project: string, status: string, message: string }[]) {
     const success = results.filter(r => r.status === 'success').length;
     const failed = results.length - success;
-  
+
     let message = `✅ ${success} succeeded\n❌ ${failed} failed\n\n`;
-  
+
     for (const r of results) {
       message += `${r.project}: ${r.status.toUpperCase()} - ${r.message}\n`;
     }
-  
+
     alert(message);
   }
-  
+
 }

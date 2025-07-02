@@ -10,5 +10,29 @@
     // Any additional MR meta specific styling can go here
   }
 
-  // Any other home-specific styling can be added here
+  .actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-top: 1.5rem;
+    gap: 1rem;
+
+    .refresh-info {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+    }
+
+    .button-group {
+      display: flex;
+      gap: 1rem;
+
+      ::ng-deep button.mat-raised-button {
+        padding: 0.6rem 1.2rem;
+        font-size: 1rem;
+        border-radius: 4px;
+        transition: background-color 0.3s ease;
+      }
+    }
+  }
 }

@@ -33,8 +33,8 @@
       </div>
     </div>
   </div>
- 
-  <!-- Table --> 
+
+  <!-- Table -->
   <table mat-table [dataSource]="dataSource" class="mat-elevation-z2 full-width-table">
     <!-- Select -->
     <ng-container matColumnDef="select">
@@ -87,7 +87,18 @@
   </section>
 
   <!-- Create MR -->
+  <!-- Action Section -->
   <div class="actions">
-    <button mat-raised-button color="primary" (click)="createMergeRequests()">🚀 Create MR</button>
+    <!-- Left: Last Refreshed Info -->
+    <div class="refresh-info">
+      ⏱️ Last refreshed: {{ lastRefreshed | date: 'short' }}
+    </div>
+
+    <!-- Right: Buttons -->
+    <div class="button-group">
+      <button mat-raised-button color="accent" (click)="refreshCommitsAhead()">🔄 Refresh</button>
+      <button mat-raised-button color="primary" (click)="createMergeRequests()">🚀 Create MR</button>
+    </div>
   </div>
+
 </div>

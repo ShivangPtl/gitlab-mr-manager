@@ -1,9 +1,38 @@
-<nav class="navbar">
+<!-- <nav class="navbar">
   <div class="left">
-    <!-- <span class="title">GitLab MR Manager</span> -->
     <button style="padding-left: 0;" (click)="goTo('/home')">🏠 Home</button>
     <button (click)="goTo('/settings')">⚙️ Settings</button>
   </div>
+  <div class="right">
+    <span class="user">👤 {{ userName }}</span>
+    <button class="logout" (click)="logout()">Logout</button>
+  </div>
+</nav> -->
+
+
+<!-- navbar.component.html -->
+<nav class="navbar">
+  <div class="left">
+    <mat-tab-group 
+      [(selectedIndex)]="selectedTabIndex" 
+      (selectedIndexChange)="onTabChange($event)"
+      class="navbar-tabs"
+      animationDuration="200ms">
+      
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <span class="tab-text">🏠 Home</span>
+        </ng-template>
+      </mat-tab>
+
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <span class="tab-text">⚙️ Settings</span>
+        </ng-template>
+      </mat-tab>
+    </mat-tab-group>
+  </div>
+  
   <div class="right">
     <span class="user">👤 {{ userName }}</span>
     <button class="logout" (click)="logout()">Logout</button>

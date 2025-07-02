@@ -1,3 +1,8 @@
 <div class="app-container">
   <router-outlet></router-outlet>
+  <app-loader 
+      [show]="isLoading$ | async"
+      [message]="loaderMessage$ | async"
+      [loaderType]="loaderType$ | async">
+    </app-loader>
 </div>
