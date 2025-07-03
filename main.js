@@ -16,6 +16,8 @@ function createWindow() {
     }
   });
 
+  win.setMenu(null);
+
   ipcMain.handle('save-token', async (event, token, username) => {
     store.set('gitlabToken', token);
     store.set('gitlabUser', username);

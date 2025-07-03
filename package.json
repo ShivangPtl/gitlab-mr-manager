@@ -5,7 +5,27 @@
   "scripts": {
     "build:angular": "cd my-app && npx ng build --configuration production --base-href ./",
     "start:electron": "npx electron .",
-    "start": "npm run build:angular && npm run start:electron"
+    "start": "npm run build:angular && npm run start:electron",
+    "dist": "npm run build:angular && electron-builder"
+  },
+  "build": {
+    "appId": "com.gitlab.mrmanager",
+    "productName": "GitLab MR Manager",
+    "files": [
+      "main.js",
+      "preload.js",
+      "package.json",
+      "my-app/dist/**/*",
+      "node_modules/**/*"
+    ],
+    "directories": {
+      "output": "release"
+    },
+    "win": {
+      "target": [
+        "portable"
+      ]
+    }
   },
   "keywords": [],
   "author": "",
@@ -14,6 +34,7 @@
   "devDependencies": {
     "@angular/cli": "^20.0.4",
     "electron": "^37.1.0",
+    "electron-builder": "^26.0.12",
     "electron-store": "^10.1.0"
   }
 }
