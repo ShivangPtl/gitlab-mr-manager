@@ -13,6 +13,7 @@ import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatIconModule } from '@angular/material/icon';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 declare const window: any;
 
@@ -36,6 +37,7 @@ declare const window: any;
 ]
 })
 export class Settings implements OnInit {
+  constructor(private snackBar: MatSnackBar){}
   projects: ProjectSettingModel[] = [];
   assignees: UserItem[] = [];
   reviewers: UserItem[] = [];
@@ -93,7 +95,14 @@ export class Settings implements OnInit {
       darkMode: this.darkMode
     };
     await window.electronAPI.saveSettings(settings);
-    if (showAlert) alert('Settings saved successfully!');
+
+    this.snackBar.open('Settings saved successfully!', 'Close', {
+      duration: 2000,
+      horizontalPosition: 'center',
+      verticalPosition: 'bottom',
+      panelClass: ['success-snackbar']
+    });
+
     this.applyTheme(this.darkMode);
   }
 

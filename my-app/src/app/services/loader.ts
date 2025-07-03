@@ -33,7 +33,9 @@ export class LoaderService {
     this.show('Saving Settings...', 'dots');
   }
 
-  showLoading(message: string = 'Loading...', type: 'spinner' | 'dots' | 'pulse' = 'spinner'): void {
+  // type: 'spinner' | 'dots' | 'pulse' = 'dots'
+  showLoading(message: string = 'Loading...'): void {
+    const type = 'spinner';
     this.show(message, type);
   }
 }

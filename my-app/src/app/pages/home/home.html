@@ -107,7 +107,7 @@
 
     <!-- Right: Buttons -->
     <div class="button-group">
-      <button mat-raised-button class="themed-btn" (click)="loadProjectsWithCommitInfo('Refreshing commit info...')">🔄 Refresh</button>
+      <button mat-raised-button class="themed-btn" (click)="isAnySelected() ? updateMrStatus() : loadProjectsWithCommitInfo()">🔄 Refresh</button>
       <button mat-raised-button class="themed-btn" (click)="createMergeRequests()" [disabled]="!isAnySelected()">🚀 Create MR</button>
     </div>
   </div>

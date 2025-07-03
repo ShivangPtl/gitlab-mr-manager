@@ -15,6 +15,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatTableDataSource } from '@angular/material/table';
 import { LoaderService } from '../../services/loader';
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
+import { ProjectListModel } from '../../models/project-list.model';
 
 declare const window: any;
 
@@ -47,20 +48,10 @@ export class Home implements OnInit {
   selectedReviewerId: number = 119;
   mrTitle: string = '';
   mrDescription: string = '';
-  dataSource = new MatTableDataSource<any>();
+  dataSource = new MatTableDataSource<ProjectListModel>();
   lastRefreshed: Date | null = null;
-
-  filteredProjects: {
-    project_id: number;
-    project_name: string;
-    local_repo_path: string;
-    is_selected: boolean;
-    current_branch: string;
-    target_branch: string;
-    commits_ahead: number;
-    mr_status?: 'Created' | 'Merged' | 'Rejected' | 'No MR';
-  }[] = [];
   token: string = '';
+  loaderType: 'spinner' | 'dots' | 'pulse' | undefined = 'spinner';
   async ngOnInit() {
     this.token = (await window.electronAPI.getToken()).token;
     const settings = await window.electronAPI.getSettings();
@@ -87,7 +78,7 @@ export class Home implements OnInit {
     if (settings.selectedReviewerId) this.selectedReviewerId = settings.selectedReviewerId;
     if (settings.labels) this.labels = settings.labels;
 
-    this.loadProjectsWithCommitInfo('Loading projects info...');
+    this.loadProjectsWithCommitInfo();
   }
 
   async runGit(path: string, command: string): Promise<string> {
@@ -96,9 +87,10 @@ export class Home implements OnInit {
 
   async createMergeRequests() {
     try {
-      this.loaderService.showCreatingMR();
+      this.loaderService.showLoading('Creating MR...'); 
 
-      const selected = this.filteredProjects.filter(p => p.is_selected);
+
+      const selected = this.dataSource.data.filter(p => p.is_selected);
       if (!selected.length) {
         alert('Please select at least one project.');
         this.loaderService.hide();
@@ -115,6 +107,7 @@ export class Home implements OnInit {
       const results: { project: string, status: 'success' | 'failed', message: string }[] = [];
       for (const proj of selected) {
         try {
+          this.loaderService.showLoading(`Creating MR for ${proj.project_name}...`);
           const commitMsg = await this.runGit(proj.local_repo_path, 'log -1 --pretty=%B');
 
           const title = this.mrTitle?.trim() || commitMsg.split('\n')[0]?.trim() || 'Automated MR';
@@ -150,10 +143,10 @@ export class Home implements OnInit {
         } catch (ex: any) {
           results.push({ project: proj.project_name, status: 'failed', message: `Exception: ${ex.message}` });
         }
+        this.loaderService.hide();
       }
 
-      this.loaderService.showLoading('Updating MR status...');
-      await this.updateMrStatus(selected);
+      await this.updateMrStatus();
       this.loaderService.hide();
       this.showMRResultsSummary(results);
     } catch (error) {
@@ -161,26 +154,27 @@ export class Home implements OnInit {
     }
   }
 
-  async loadProjectsWithCommitInfo(message: string): Promise<void> {
+  async loadProjectsWithCommitInfo(): Promise<void> {
     try {
-      this.loaderService.showLoading(message);
-      this.filteredProjects = [];
-  
+      this.loaderService.showLoading('Loading projects info...');
+
       const settings = await window.electronAPI.getSettings();
       const targetBranch: string = settings.defaultBranch || 'master_ah';
-    
+
       const validProjects = (settings.projects || []).filter((p: ProjectSettingModel) => p.is_selected && p.local_repo_path);
-    
+
+      const filteredProjects: ProjectListModel[] = [];
       for (const project of validProjects) {
+        this.loaderService.showLoading(`Loading ${project.project_name} info...`);
         await this.runGit(project.local_repo_path, `fetch origin ${targetBranch}:refs/remotes/origin/${targetBranch}`);
-  
+
         const current_branch = await this.runGit(project.local_repo_path, 'rev-parse --abbrev-ref HEAD');
         const commits_ahead_str = await this.runGit(project.local_repo_path, `rev-list --count origin/${targetBranch}..${current_branch}`);
         const commits_ahead = parseInt(commits_ahead_str || '0');
-    
+
         const mr_status = await this.fetchMRStatus(project.project_id, current_branch, targetBranch);
-    
-        this.filteredProjects.push({
+
+        filteredProjects.push({
           ...project,
           current_branch,
           target_branch: targetBranch,
@@ -189,43 +183,76 @@ export class Home implements OnInit {
           is_selected: false
         });
       }
-    
-      this.dataSource.data = this.filteredProjects;
+      this.dataSource.data = [];
+      this.dataSource.data = filteredProjects;
       this.lastRefreshed = new Date();
       this.loaderService.hide();
     } catch (error) {
-      this.loaderService.hide();
-      alert(error);
-    }
-  }
-  
-  async updateMrStatus(projects: any[]): Promise<void> {
-    for (const project of projects) {
-      const mr_status = await this.fetchMRStatus(project.project_id, project.current_branch, project.target_branch);
-      const commits_ahead_str = await this.runGit(project.local_repo_path, `rev-list --count origin/${project.target_branch}..${project.current_branch}`);
-      const commits_ahead = parseInt(commits_ahead_str || '0');
-      this.filteredProjects = this.filteredProjects.map(p => p.project_id === project.project_id ? { ...p,is_selected: false, mr_status, commits_ahead } : p);
-      this.dataSource.data = this.filteredProjects;
+      this.handleError(error);
     }
   }
 
-  async fetchMRStatus(projectId: number, sourceBranch: string, targetBranch: string): Promise<'Created' | 'Merged' | 'Rejected' | 'No MR'> {
-    const url = `${this.gitlabApiBase}/projects/${projectId}/merge_requests?source_branch=${encodeURIComponent(sourceBranch)}&target_branch=${encodeURIComponent(targetBranch)}&state=all`;
-  
-    console.log(this.token);
-    const res = await fetch(url, {
-      headers: { 'PRIVATE-TOKEN': this.token }
-    });
-  
-    const mrs = await res.json();
-  
-    if (!Array.isArray(mrs) || mrs.length === 0) return 'No MR';
-  
-    const latest = mrs[0]; // Assuming sorted by created date
-    if (latest.state === 'merged') return 'Merged';
-    if (latest.state === 'closed') return 'Rejected';
-    return 'Created';
-  }  
+  async updateMrStatus(): Promise<void> {
+    try {
+      let selectedProjects = this.dataSource.data.filter(p => p.is_selected);
+      if (selectedProjects.length === 0) {
+        selectedProjects = this.dataSource.data;
+      }
+
+      if (selectedProjects.length === 0) {
+        this.snackBar.open('No Projects Found!', 'Close', { duration: 3000 });
+        this.loaderService.hide();
+        return;
+      }
+
+      for (const project of selectedProjects) {
+        const mr_status = await this.fetchMRStatus(project.project_id, project.current_branch, project.target_branch, true);
+        const commits_ahead_str = await this.runGit(project.local_repo_path, `rev-list --count origin/${project.target_branch}..${project.current_branch}`);
+        const commits_ahead = parseInt(commits_ahead_str || '0');
+        this.dataSource.data = this.dataSource.data.map(p => p.project_id === project.project_id ? { ...p, is_selected: false, mr_status, commits_ahead } : p);
+      }
+
+      const settings = await window.electronAPI.getSettings();
+      if (settings.selectedAssigneeId) this.selectedAssigneeId = settings.selectedAssigneeId;
+      if (settings.selectedReviewerId) this.selectedReviewerId = settings.selectedReviewerId;
+      this.labels.forEach(l => l.is_selected = false);
+
+      this.mrTitle = '';
+      this.mrDescription = '';
+      this.loaderService.hide();
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  async fetchMRStatus(projectId: number, sourceBranch: string, targetBranch: string, showMessage = false): Promise<'Created' | 'Merged' | 'Rejected' | 'No MR' | 'Error'> {
+    try {
+      const project = this.dataSource.data.find(e => e.project_id == projectId);
+
+      if (showMessage) {
+        this.loaderService.showLoading(`Loading ${project?.project_name} info...`);
+      }
+
+      const url = `${this.gitlabApiBase}/projects/${projectId}/merge_requests?source_branch=${encodeURIComponent(sourceBranch)}&target_branch=${encodeURIComponent(targetBranch)}&state=all`;
+
+      console.log(this.token);
+      const res = await fetch(url, {
+        headers: { 'PRIVATE-TOKEN': this.token }
+      });
+
+      const mrs = await res.json();
+
+      if (!Array.isArray(mrs) || mrs.length === 0) return 'No MR';
+
+      const latest = mrs[0]; // Assuming sorted by created date
+      if (latest.state === 'merged') return 'Merged';
+      if (latest.state === 'closed') return 'Rejected';
+      return 'Created';
+    } catch (error) {
+      this.handleError(error);
+      return 'Error';
+    }
+  }
 
   extractErrorMessage(responseText: string): string {
     try {
@@ -243,32 +270,32 @@ export class Home implements OnInit {
   showMRResultsSummary(results: { project: string, status: string, message: string }[]) {
     const successes = results.filter(r => r.status === 'success');
     const errors = results.filter(r => r.status !== 'success');
-  
+
     if (successes.length > 0) {
       // Prepare success message: show count + projects
       const projectsSuccess = successes.map(r => r.project).join(', ');
       const successMessage = `✅ ${successes.length} success: ${projectsSuccess}`;
       this.snackBar.open(successMessage, 'Close', {
-        duration: 15000,
+        duration: 2000,
         horizontalPosition: 'center',
         verticalPosition: 'bottom',
         panelClass: ['success-snackbar']
       });
     }
-  
+
     if (errors.length > 0) {
       // Prepare error message: count + projects + short messages (truncate long messages)
       const errorDetails = errors.map(r => `${r.project} (${r.message.length > 20 ? r.message.substring(0, 17) + '...' : r.message})`).join(', ');
       const errorMessage = `❌ ${errors.length} error: ${errorDetails}`;
       this.snackBar.open(errorMessage, 'Close', {
-        duration: 15000,
+        duration: 2000,
         horizontalPosition: 'center',
         verticalPosition: 'bottom',
         panelClass: ['error-snackbar']
       });
     }
   }
-  
+
 
   getMRStatusClass(status: string | undefined): string {
     switch ((status || '').toLowerCase()) {
@@ -280,6 +307,36 @@ export class Home implements OnInit {
   }
 
   isAnySelected(): boolean {
-    return this.filteredProjects.some(p => p.is_selected);
+    return this.dataSource.data.some(p => p.is_selected);
   }
+
+
+  handleError(error: unknown, fallbackMessage: string = 'An unexpected error occurred'): void {
+    this.loaderService.hide();
+
+    let message = fallbackMessage;
+
+    if (error instanceof Error) {
+      message = error.message;
+    } else if (typeof error === 'string') {
+      message = error;
+    } else if (typeof error === 'object' && error !== null) {
+      try {
+        message = JSON.stringify(error);
+      } catch {
+        message = fallbackMessage;
+      }
+    } else {
+      message = String(error);
+    }
+
+    this.snackBar.open(message, 'Close', {
+      duration: 3000,
+      horizontalPosition: 'center',
+      verticalPosition: 'bottom',
+      panelClass: ['error-snackbar']
+    });
+  }
+
 }
+
