@@ -4,15 +4,6 @@
 .settings-container {
   @extend .page-container;
 
-  // Settings-specific styles (if any)
-  .defaults {
-    // Default options section can have specific styling here if needed
-  }
-
-  .projects {
-    // Projects section can have specific styling here if needed
-  }
-
 
   .theme-toggle-container {
     display: flex;

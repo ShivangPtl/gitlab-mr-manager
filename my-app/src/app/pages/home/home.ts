@@ -14,7 +14,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatInputModule } from '@angular/material/input';
 import { MatTableDataSource } from '@angular/material/table';
 import { LoaderService } from '../../services/loader';
-
+import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 
 declare const window: any;
 
@@ -28,7 +28,8 @@ declare const window: any;
     MatOptionModule,
     MatTableModule,
     MatButtonModule,
-    MatInputModule
+    MatInputModule,
+    MatSnackBarModule
   ],
   templateUrl: './home.html',
   styleUrls: ['./home.scss']
@@ -37,7 +38,7 @@ declare const window: any;
 
 
 export class Home implements OnInit {
-  constructor(private loaderService: LoaderService) { }
+  constructor(private loaderService: LoaderService, private snackBar: MatSnackBar) { }
   gitlabApiBase = 'https://git.promptdairytech.com/api/v4';
   assignees: UserItem[] = [];
   reviewers: UserItem[] = [];
@@ -57,9 +58,11 @@ export class Home implements OnInit {
     current_branch: string;
     target_branch: string;
     commits_ahead: number;
+    mr_status?: 'Created' | 'Merged' | 'Rejected' | 'No MR';
   }[] = [];
-
+  token: string = '';
   async ngOnInit() {
+    this.token = (await window.electronAPI.getToken()).token;
     const settings = await window.electronAPI.getSettings();
 
     this.assignees = [
@@ -84,30 +87,7 @@ export class Home implements OnInit {
     if (settings.selectedReviewerId) this.selectedReviewerId = settings.selectedReviewerId;
     if (settings.labels) this.labels = settings.labels;
 
-    const projects: ProjectSettingModel[] = settings.projects || [];
-    const targetBranch: string = settings.defaultBranch || 'master_ah';
-
-    const validProjects = projects.filter(p => p.is_selected && p.local_repo_path);
-
-    for (const project of validProjects) {
-      const current_branch = await this.runGit(project.local_repo_path, 'rev-parse --abbrev-ref HEAD');
-      const commits_ahead_str = await this.runGit(
-        project.local_repo_path,
-        `rev-list --count origin/${targetBranch}..${current_branch}`
-      );
-      const commits_ahead = parseInt(commits_ahead_str || '0');
-
-      this.filteredProjects.push({
-        ...project,
-        current_branch,
-        target_branch: targetBranch,
-        commits_ahead,
-        is_selected: false
-      });
-    }
-
-    this.dataSource.data = this.filteredProjects;
-    this.lastRefreshed = new Date();
+    this.loadProjectsWithCommitInfo('Loading projects info...');
   }
 
   async runGit(path: string, command: string): Promise<string> {
@@ -121,12 +101,13 @@ export class Home implements OnInit {
       const selected = this.filteredProjects.filter(p => p.is_selected);
       if (!selected.length) {
         alert('Please select at least one project.');
+        this.loaderService.hide();
         return;
       }
 
-      const { token } = await window.electronAPI.getToken();
-      if (!token) {
+      if (!this.token) {
         alert('Missing GitLab token.');
+        this.loaderService.hide();
         return;
       }
 
@@ -152,7 +133,7 @@ export class Home implements OnInit {
           const response = await fetch(`https://git.promptdairytech.com/api/v4/projects/${proj.project_id}/merge_requests`, {
             method: 'POST',
             headers: {
-              'PRIVATE-TOKEN': token,
+              'PRIVATE-TOKEN': this.token,
               'Content-Type': 'application/x-www-form-urlencoded'
             },
             body: formData.toString()
@@ -171,52 +152,80 @@ export class Home implements OnInit {
         }
       }
 
-      this.showMRResultsSummary(results);
+      this.loaderService.showLoading('Updating MR status...');
+      await this.updateMrStatus(selected);
       this.loaderService.hide();
+      this.showMRResultsSummary(results);
     } catch (error) {
       this.loaderService.hide();
     }
   }
 
-  async refreshCommitsAhead() {
+  async loadProjectsWithCommitInfo(message: string): Promise<void> {
     try {
-      this.loaderService.showLoading('Refreshing commit info...');
-
+      this.loaderService.showLoading(message);
+      this.filteredProjects = [];
+  
       const settings = await window.electronAPI.getSettings();
       const targetBranch: string = settings.defaultBranch || 'master_ah';
-
-      this.filteredProjects = [];
-
+    
       const validProjects = (settings.projects || []).filter((p: ProjectSettingModel) => p.is_selected && p.local_repo_path);
-
+    
       for (const project of validProjects) {
-        await this.runGit(project.local_repo_path, 'fetch origin');
+        await this.runGit(project.local_repo_path, `fetch origin ${targetBranch}:refs/remotes/origin/${targetBranch}`);
+  
         const current_branch = await this.runGit(project.local_repo_path, 'rev-parse --abbrev-ref HEAD');
-        const commits_ahead_str = await this.runGit(
-          project.local_repo_path,
-          `rev-list --count origin/${targetBranch}..${current_branch}`
-        );
+        const commits_ahead_str = await this.runGit(project.local_repo_path, `rev-list --count origin/${targetBranch}..${current_branch}`);
         const commits_ahead = parseInt(commits_ahead_str || '0');
-
+    
+        const mr_status = await this.fetchMRStatus(project.project_id, current_branch, targetBranch);
+    
         this.filteredProjects.push({
           ...project,
           current_branch,
           target_branch: targetBranch,
           commits_ahead,
-          is_selected: false // clear any existing selections
+          mr_status,
+          is_selected: false
         });
       }
-
+    
       this.dataSource.data = this.filteredProjects;
       this.lastRefreshed = new Date();
-
       this.loaderService.hide();
     } catch (error) {
       this.loaderService.hide();
       alert(error);
     }
   }
+  
+  async updateMrStatus(projects: any[]): Promise<void> {
+    for (const project of projects) {
+      const mr_status = await this.fetchMRStatus(project.project_id, project.current_branch, project.target_branch);
+      const commits_ahead_str = await this.runGit(project.local_repo_path, `rev-list --count origin/${project.target_branch}..${project.current_branch}`);
+      const commits_ahead = parseInt(commits_ahead_str || '0');
+      this.filteredProjects = this.filteredProjects.map(p => p.project_id === project.project_id ? { ...p,is_selected: false, mr_status, commits_ahead } : p);
+      this.dataSource.data = this.filteredProjects;
+    }
+  }
 
+  async fetchMRStatus(projectId: number, sourceBranch: string, targetBranch: string): Promise<'Created' | 'Merged' | 'Rejected' | 'No MR'> {
+    const url = `${this.gitlabApiBase}/projects/${projectId}/merge_requests?source_branch=${encodeURIComponent(sourceBranch)}&target_branch=${encodeURIComponent(targetBranch)}&state=all`;
+  
+    console.log(this.token);
+    const res = await fetch(url, {
+      headers: { 'PRIVATE-TOKEN': this.token }
+    });
+  
+    const mrs = await res.json();
+  
+    if (!Array.isArray(mrs) || mrs.length === 0) return 'No MR';
+  
+    const latest = mrs[0]; // Assuming sorted by created date
+    if (latest.state === 'merged') return 'Merged';
+    if (latest.state === 'closed') return 'Rejected';
+    return 'Created';
+  }  
 
   extractErrorMessage(responseText: string): string {
     try {
@@ -231,18 +240,46 @@ export class Home implements OnInit {
     return 'Unknown error';
   }
 
-
   showMRResultsSummary(results: { project: string, status: string, message: string }[]) {
-    const success = results.filter(r => r.status === 'success').length;
-    const failed = results.length - success;
-
-    let message = `✅ ${success} succeeded\n❌ ${failed} failed\n\n`;
-
-    for (const r of results) {
-      message += `${r.project}: ${r.status.toUpperCase()} - ${r.message}\n`;
+    const successes = results.filter(r => r.status === 'success');
+    const errors = results.filter(r => r.status !== 'success');
+  
+    if (successes.length > 0) {
+      // Prepare success message: show count + projects
+      const projectsSuccess = successes.map(r => r.project).join(', ');
+      const successMessage = `✅ ${successes.length} success: ${projectsSuccess}`;
+      this.snackBar.open(successMessage, 'Close', {
+        duration: 15000,
+        horizontalPosition: 'center',
+        verticalPosition: 'bottom',
+        panelClass: ['success-snackbar']
+      });
     }
+  
+    if (errors.length > 0) {
+      // Prepare error message: count + projects + short messages (truncate long messages)
+      const errorDetails = errors.map(r => `${r.project} (${r.message.length > 20 ? r.message.substring(0, 17) + '...' : r.message})`).join(', ');
+      const errorMessage = `❌ ${errors.length} error: ${errorDetails}`;
+      this.snackBar.open(errorMessage, 'Close', {
+        duration: 15000,
+        horizontalPosition: 'center',
+        verticalPosition: 'bottom',
+        panelClass: ['error-snackbar']
+      });
+    }
+  }
+  
 
-    alert(message);
+  getMRStatusClass(status: string | undefined): string {
+    switch ((status || '').toLowerCase()) {
+      case 'created': return 'created';
+      case 'merged': return 'merged';
+      case 'rejected': return 'rejected';
+      default: return 'none';
+    }
   }
 
+  isAnySelected(): boolean {
+    return this.filteredProjects.some(p => p.is_selected);
+  }
 }

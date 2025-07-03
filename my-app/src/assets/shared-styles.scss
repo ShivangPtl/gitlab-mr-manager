@@ -1,84 +1,3 @@
-// shared-styles.scss - Common styles with light/dark theme support
-
-// Theme variables
-// :root {
-//   // Dark theme (default)
-//   --bg-primary: #1e1e1e;
-//   --bg-secondary: #2e2e2e;
-//   --bg-tertiary: #2b2b2b;
-//   --bg-header: #333;
-//   --text-primary: #e5e5e5;
-//   --text-secondary: #ccc;
-//   --text-tertiary: #aaa;
-//   --border-color: #444;
-//   --hover-bg: #444;
-//   --active-bg: #555;
-//   --accent-color: #7986cb;
-//   --accent-hover: rgba(121, 134, 203, 0.06);
-//   --button-bg: #f56c6c;
-//   --button-hover: #e04c4c;
-// }
-
-// // Light theme variables
-// .light-theme {
-//   --bg-primary: #ffffff;
-//   --bg-secondary: #f5f5f5;
-//   --bg-tertiary: #fafafa;
-//   --bg-header: #e0e0e0;
-//   --text-primary: #333333;
-//   --text-secondary: #666666;
-//   --text-tertiary: #888888;
-//   --border-color: #e0e0e0;
-//   --hover-bg: #f0f0f0;
-//   --active-bg: #e8e8e8;
-//   --accent-color: #1976d2;
-//   --accent-hover: rgba(25, 118, 210, 0.06);
-//   --button-bg: #1976d2;
-//   --button-hover: #1565c0;
-// }
-
-:root {
-  --bg-primary: #1f1f1f;
-  --bg-secondary: #2a2a2a;
-  --bg-tertiary: #333333;
-  --bg-header: #252526;
-
-  --text-primary: #f0f0f0;
-  --text-secondary: #c2c2c2;
-  --text-tertiary: #9e9e9e;
-
-  --border-color: #3a3a3a;
-  --hover-bg: #383838;
-  --active-bg: #454545;
-
-  --accent-color: #4f83cc;           /* Blueish purple */
-  --accent-hover: rgba(79, 131, 204, 0.1);
-
-  --button-bg: #ff6b6b;              /* Soft red */
-  --button-hover: #e85c5c;
-}
-
-.light-theme {
-  --bg-primary: #ffffff;
-  --bg-secondary: #f9f9f9;
-  --bg-tertiary: #f0f0f0;
-  --bg-header: #eeeeee;
-
-  --text-primary: #212121;
-  --text-secondary: #555555;
-  --text-tertiary: #777777;
-
-  --border-color: #dddddd;
-  --hover-bg: #f4f4f4;
-  --active-bg: #e8e8e8;
-
-  --accent-color: #1565c0;           /* Deeper blue for better contrast */
-  --accent-hover: rgba(21, 101, 192, 0.08);
-
-  --button-bg: #e53935;              /* Material red */
-  --button-hover: #d32f2f;
-}
-
 
 // Base container styling
 .page-container {
@@ -240,16 +159,17 @@
   display: flex;
   justify-content: flex-end;
 
-  ::ng-deep button.mat-raised-button {
-    background-color: var(--button-bg);
-    color: #fff;
+  .themed-btn {
+    background-color: var(--theme-btn-bg);
+    color: var(--theme-btn-text);
     padding: 0.6rem 1.2rem;
     font-size: 1rem;
     border-radius: 4px;
-    transition: background-color 0.3s ease;
-
+    transition: background-color 0.3s ease, color 0.3s ease;
+    border: none;
+  
     &:hover {
-      background-color: var(--button-hover);
+      background-color: var(--theme-btn-hover);
     }
   }
 }

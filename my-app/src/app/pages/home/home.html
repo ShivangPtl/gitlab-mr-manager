@@ -68,8 +68,19 @@
       <td mat-cell *matCellDef="let project">{{ project.commits_ahead }}</td>
     </ng-container>
 
-    <tr mat-header-row *matHeaderRowDef="['select', 'project', 'branch', 'target', 'ahead']"></tr>
-    <tr mat-row *matRowDef="let row; columns: ['select', 'project', 'branch', 'target', 'ahead'];"></tr>
+    <!-- MR Status -->
+    <ng-container matColumnDef="mr_status">
+      <th mat-header-cell *matHeaderCellDef> MR Status </th>
+      <td mat-cell *matCellDef="let project">
+        <span class="mr-status" [ngClass]="getMRStatusClass(project.mr_status)">
+          {{ project.mr_status || 'No MR' }}
+        </span>
+      </td>
+    </ng-container>
+
+
+    <tr mat-header-row *matHeaderRowDef="['select', 'project', 'branch', 'target', 'ahead', 'mr_status']"></tr>
+    <tr mat-row *matRowDef="let row; columns: ['select', 'project', 'branch', 'target', 'ahead', 'mr_status'];"></tr>
   </table>
 
   <!-- MR Meta -->
@@ -96,8 +107,8 @@
 
     <!-- Right: Buttons -->
     <div class="button-group">
-      <button mat-raised-button color="accent" (click)="refreshCommitsAhead()">🔄 Refresh</button>
-      <button mat-raised-button color="primary" (click)="createMergeRequests()">🚀 Create MR</button>
+      <button mat-raised-button class="themed-btn" (click)="loadProjectsWithCommitInfo('Refreshing commit info...')">🔄 Refresh</button>
+      <button mat-raised-button class="themed-btn" (click)="createMergeRequests()" [disabled]="!isAnySelected()">🚀 Create MR</button>
     </div>
   </div>
 

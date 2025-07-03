@@ -17,42 +17,15 @@ html {
 }
 
 @import url('https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&display=swap');
 
-// Root variables (default dark theme)
-// :root {
-//   --bg-primary: #1e1e1e;
-//   --bg-secondary: #2e2e2e;
-//   --bg-tertiary: #2b2b2b;
-//   --bg-header: #333;
-//   --text-primary: #e5e5e5;
-//   --text-secondary: #ccc;
-//   --text-tertiary: #aaa;
-//   --border-color: #444;
-//   --hover-bg: #444;
-//   --active-bg: #555;
-//   --accent-color: #7986cb;
-//   --accent-hover: rgba(121, 134, 203, 0.06);
-//   --button-bg: #f56c6c;
-//   --button-hover: #e04c4c;
-// }
+@import url('https://fonts.googleapis.com/css2?family=Cascadia+Code:wght@400;600&display=swap'); /* unofficial, see note */
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Ubuntu+Mono:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inconsolata:wght@400;700&display=swap');
 
-// // Light theme class
-// .light-theme {
-//   --bg-primary: #ffffff;
-//   --bg-secondary: #f5f5f5;
-//   --bg-tertiary: #fafafa;
-//   --bg-header: #e0e0e0;
-//   --text-primary: #333333;
-//   --text-secondary: #666666;
-//   --text-tertiary: #888888;
-//   --border-color: #e0e0e0;
-//   --hover-bg: #f0f0f0;
-//   --active-bg: #e8e8e8;
-//   --accent-color: #1976d2;
-//   --accent-hover: rgba(25, 118, 210, 0.06);
-//   --button-bg: #1976d2;
-//   --button-hover: #1565c0;
-// }
+
 
 :root {
   --bg-primary: #1f1f1f;
@@ -73,11 +46,26 @@ html {
 
   --button-bg: #ff6b6b;              /* Soft red */
   --button-hover: #e85c5c;
+
+  --theme-btn-bg: #ffffff;
+  --theme-btn-text: #1e1e1e;
+  --theme-btn-hover: #dddddd;
+
+  --mat-sys-body-medium-font: 'Roboto Mono', monospace;
+  --mat-sys-body-large-font: 'Roboto Mono', monospace;
+  --mat-sys-body-small-font: 'Roboto Mono', monospace;
+  --mat-sys-headline-font: 'Roboto Mono', monospace;
+  --mat-sys-display-font: 'Roboto Mono', monospace;
+  --mat-sys-label-font: 'Roboto Mono', monospace;
+
+  --theme-btn-disabled-bg: color-mix(in srgb, var(--theme-btn-bg) 50%, #ccc);
+  --theme-btn-disabled-text: color-mix(in srgb, var(--theme-btn-text) 50%, #999);
+ 
 }
 
 .light-theme {
   --bg-primary: #ffffff;
-  --bg-secondary: #f9f9f9;
+  --bg-secondary: #ececec;
   --bg-tertiary: #f0f0f0;
   --bg-header: #eeeeee;
 
@@ -94,16 +82,31 @@ html {
 
   --button-bg: #e53935;              /* Material red */
   --button-hover: #d32f2f;
+
+  --theme-btn-bg: #1976d2;  // or any preferred color
+  --theme-btn-text: #ffffff;
+  --theme-btn-hover: #1565c0;
+
+  --mat-sys-body-medium-font: 'Roboto Mono', monospace;
+  --mat-sys-body-large-font: 'Roboto Mono', monospace;
+  --mat-sys-body-small-font: 'Roboto Mono', monospace;  
+  --mat-sys-headline-font: 'Roboto Mono', monospace;
+  --mat-sys-display-font: 'Roboto Mono', monospace;
+  --mat-sys-label-font: 'Roboto Mono', monospace;
+
+  --theme-btn-disabled-bg: color-mix(in srgb, var(--theme-btn-bg) 50%, #ccc);
+  --theme-btn-disabled-text: color-mix(in srgb, var(--theme-btn-text) 50%, #999);
 }
 
 
 body {
   margin: 0;
   padding: 0;
-  font-family: 'Source Sans Pro', sans-serif;
+  font-family: 'Roboto Mono', monospace;
   background-color: var(--bg-primary);
   color: var(--text-primary);
   transition: background-color 0.3s ease, color 0.3s ease;
+  font-size: 15px;
 }
 
 html, body { 
@@ -136,3 +139,4 @@ html, body {
     }
   }
 }
+/* src/styles.scss */
