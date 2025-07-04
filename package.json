@@ -31,10 +31,12 @@
   "author": "",
   "license": "ISC",
   "description": "",
+  "dependencies": {
+    "electron": "^37.1.0",
+    "electron-store": "^10.1.0"
+  },
   "devDependencies": {
     "@angular/cli": "^20.0.4",
-    "electron": "^37.1.0",
-    "electron-builder": "^26.0.12",
-    "electron-store": "^10.1.0"
+    "electron-builder": "^26.0.12"
   }
 }

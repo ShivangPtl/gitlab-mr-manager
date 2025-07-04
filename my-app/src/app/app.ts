@@ -29,7 +29,6 @@ export class App {
 
     this.isLoading$ = this.loaderService.loading$;
     this.loaderMessage$ = this.loaderService.message$;
-    console.log(this.loaderMessage$);
     this.loaderType$ = this.loaderService.loaderType$;
   }
   protected title = 'my-app';

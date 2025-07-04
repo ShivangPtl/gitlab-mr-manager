@@ -235,7 +235,6 @@ export class Home implements OnInit {
 
       const url = `${this.gitlabApiBase}/projects/${projectId}/merge_requests?source_branch=${encodeURIComponent(sourceBranch)}&target_branch=${encodeURIComponent(targetBranch)}&state=all`;
 
-      console.log(this.token);
       const res = await fetch(url, {
         headers: { 'PRIVATE-TOKEN': this.token }
       });
