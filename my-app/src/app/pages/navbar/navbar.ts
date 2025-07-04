@@ -5,21 +5,30 @@ import { MatTabLabel } from '@angular/material/tabs';
 import { MatIcon } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 
+declare const window: any;
+
 @Component({
   selector: 'app-navbar',
   templateUrl: './navbar.html',
   styleUrls: ['./navbar.scss'],
   standalone: true,
-  imports: [MatTabGroup, MatTabLabel, MatIcon, MatButtonModule, MatTabsModule]
+  imports: [MatTabGroup, MatTabLabel, MatButtonModule, MatTabsModule]
 })
 export class Navbar {
   selectedTabIndex = 0;
-  userName = 'Shivang Patel';
+  userName = '';
 
-  constructor(private router: Router) {}
+  token: string = '';
+
+  constructor(private router: Router) {
+    
+  }
  
 
-  ngOnInit() {
+  async ngOnInit() {
+    const tokenData = await window.electronAPI.getToken();
+    this.token = tokenData.token;
+    this.userName = tokenData.username;
     // Set initial tab based on current route
     this.setInitialTab();
   }
@@ -39,9 +48,12 @@ export class Navbar {
     this.router.navigate([route]);
   }
 
-  logout() {
+  async logout() {
     // Implement logout logic
     console.log('Logging out...');
+
+    await window.electronAPI.clearToken();
+    this.router.navigate(['/login']);
     // Clear authentication, redirect to login, etc.
   }
 

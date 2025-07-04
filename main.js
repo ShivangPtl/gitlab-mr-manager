@@ -34,6 +34,7 @@ function createWindow() {
   ipcMain.handle('clear-token', () => {
     store.delete('gitlabToken');
     store.delete('gitlabUser');
+    store.delete('settings');
   });  
 
 
