@@ -60,7 +60,8 @@ export class Home implements OnInit {
       { user_id: 119, user_name: 'Shivang Patel' },
       { user_id: 120, user_name: 'Kiran Gami' },
       { user_id: 106, user_name: 'Ekta Gupta' },
-      { user_id: 148, user_name: 'Jigisha Patel' }
+      { user_id: 148, user_name: 'Jigisha Patel' },
+      { user_id: 86, user_name: 'Jaydip Prajapati' }, 
     ];
 
     this.reviewers = [...this.assignees];

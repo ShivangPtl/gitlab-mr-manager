@@ -56,14 +56,21 @@ export class Settings implements OnInit {
       { project_id: 925, project_name: 'AmulOrgAPI', local_repo_path: '', is_selected: false },
       { project_id: 897, project_name: 'Ah.Service', local_repo_path: '', is_selected: false },
       { project_id: 31, project_name: 'Org.UI', local_repo_path: '', is_selected: false },
-      { project_id: 30, project_name: 'Config.UI', local_repo_path: '', is_selected: false }
+      { project_id: 30, project_name: 'Config.UI', local_repo_path: '', is_selected: false },
+    
+      // AdoptCattle
+      { project_id: 1076, project_name: 'AdoptCattle.Api', local_repo_path: '', is_selected: false },
+      { project_id: 1077, project_name: 'AdoptCattle.Ui', local_repo_path: '', is_selected: false },
+      { project_id: 1074, project_name: 'Common (AdoptCattle)', local_repo_path: '', is_selected: false },
+      { project_id: 1075, project_name: 'Identity (AdoptCattle)', local_repo_path: '', is_selected: false }
     ];
 
     const userList: UserItem[] = [
       { user_id: 119, user_name: 'Shivang Patel' },
       { user_id: 120, user_name: 'Kiran Gami' },
       { user_id: 106, user_name: 'Ekta Gupta' },
-      { user_id: 148, user_name: 'Jigisha Patel' }
+      { user_id: 148, user_name: 'Jigisha Patel' },
+      { user_id: 86, user_name: 'Jaydip Prajapati' },
     ];
 
     this.projects = defaultProjects;
