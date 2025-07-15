@@ -60,7 +60,12 @@ html {
 
   --theme-btn-disabled-bg: color-mix(in srgb, var(--theme-btn-bg) 50%, #ccc);
   --theme-btn-disabled-text: color-mix(in srgb, var(--theme-btn-text) 50%, #999);
- 
+
+  --dialog-bg: #2a2a2a;
+  --dialog-text: #eee;
+  --dialog-header-bg: #333;
+  --dialog-border: #444;
+  --mat-dialog-subhead-color: var(--text-secondary);  
 }
 
 .light-theme {
@@ -96,6 +101,13 @@ html {
 
   --theme-btn-disabled-bg: color-mix(in srgb, var(--theme-btn-bg) 50%, #ccc);
   --theme-btn-disabled-text: color-mix(in srgb, var(--theme-btn-text) 50%, #999);
+
+  --dialog-bg: #fff;
+  --dialog-text: #222;
+  --dialog-header-bg: #f5f5f5;
+  --dialog-border: #ddd;
+
+  --mat-dialog-subhead-color: var(--text-secondary);
 }
 
 
