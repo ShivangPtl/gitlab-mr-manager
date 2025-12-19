@@ -14,13 +14,13 @@
     background: var(--bg-secondary);
     border: 1px solid var(--border-color);
     transition: all 0.3s ease;
-    
+
     &:hover {
       background: var(--hover-bg);
       border-color: var(--accent-color);
     }
   }
-  
+
   .theme-icon {
     color: var(--text-secondary);
     font-size: 1.2rem;
@@ -28,37 +28,59 @@
     height: 1.2rem;
     transition: color 0.3s ease;
   }
-  
+
   .theme-toggle {
     ::ng-deep .mat-mdc-slide-toggle-bar {
       background-color: var(--bg-tertiary);
       border: 1px solid var(--border-color);
     }
-  
+
     ::ng-deep .mat-mdc-slide-toggle-thumb {
       background-color: var(--text-primary);
     }
-  
+
     &.mat-checked {
       ::ng-deep .mat-mdc-slide-toggle-bar {
         background-color: var(--accent-color);
         opacity: 0.6;
       }
-  
+
       ::ng-deep .mat-mdc-slide-toggle-thumb {
         background-color: var(--accent-color);
       }
     }
   }
-  
   // Light theme specific styling
   :host-context(.light-theme) .theme-icon:first-child {
     color: var(--accent-color);
   }
-  
-  // Dark theme specific styling  
+  // Dark theme specific styling
   :host-context(.dark-theme) .theme-icon:last-child {
     color: var(--accent-color);
   }
+
+
+  .branch-inline-input {
+    height: 34px !important;
+    padding: 0 10px;
+    border-radius: 6px;
+    outline: none;
+    border: 1px solid var(--border-color);
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    font-size: 14px;
+    width: 140px;
+    transition: border-color 0.25s ease, background 0.25s ease;
+  }
+
+    .branch-inline-input:focus {
+      border-color: var(--accent-color);
+      background: var(--bg-secondary);
+    }
+
+    .branch-inline-input:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
 }
 

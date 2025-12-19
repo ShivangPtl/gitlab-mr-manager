@@ -42,6 +42,8 @@ export class Settings implements OnInit {
   assignees: UserItem[] = [];
   reviewers: UserItem[] = [];
   defaultBranch = 'master_ah';
+  sourceBranch = '';
+  useCustomBranch = true;
   selectedAssigneeId = 119;
   selectedReviewerId = 119;
   darkMode = true;
@@ -79,6 +81,8 @@ export class Settings implements OnInit {
 
     window.electronAPI.getSettings().then((data: any) => {
       if (data.projects) this.projects = data.projects;
+      this.useCustomBranch = data.useCustomBranch;
+      if (data.sourceBranch) this.sourceBranch = data.sourceBranch;
       if (data.defaultBranch) this.defaultBranch = data.defaultBranch;
       if (data.selectedAssigneeId) this.selectedAssigneeId = data.selectedAssigneeId;
       if (data.selectedReviewerId) this.selectedReviewerId = data.selectedReviewerId;
@@ -96,6 +100,8 @@ export class Settings implements OnInit {
   async save(showAlert: boolean = true) {
     const settings = {
       projects: this.projects,
+      useCustomBranch: this.useCustomBranch,
+      sourceBranch: this.sourceBranch,
       defaultBranch: this.defaultBranch,
       selectedAssigneeId: this.selectedAssigneeId,
       selectedReviewerId: this.selectedReviewerId,
@@ -105,7 +111,7 @@ export class Settings implements OnInit {
 
     this.snackBar.open('Settings saved successfully!', 'Close', {
       duration: 2000,
-      horizontalPosition: 'center',
+      horizontalPosition: 'center',   
       verticalPosition: 'bottom',
       panelClass: ['success-snackbar']
     });

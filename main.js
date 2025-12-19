@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
 const path = require('path');
 const ElectronStore = require('electron-store');
 const store = new ElectronStore.default();
@@ -59,6 +59,11 @@ function createWindow() {
       });
     });
   });
+
+  ipcMain.on('open-external', (event, url) => {
+    shell.openExternal(url);
+  });
+
 
   const isDev = !app.isPackaged;
 

@@ -1,0 +1,72 @@
+<app-navbar></app-navbar>
+
+<div class="mr-container">
+
+  <h2 style="margin-top:0;">Pending Merge Requests</h2>
+
+  <table mat-table [dataSource]="dataSource" class="mat-elevation-z2 full-width-table">
+
+    <!-- Project -->
+    <ng-container matColumnDef="project">
+      <th mat-header-cell *matHeaderCellDef> Project </th>
+      <td mat-cell *matCellDef="let row">{{ row.project_name }}</td>
+    </ng-container>
+
+    <!-- Source -->
+    <ng-container matColumnDef="source">
+      <th mat-header-cell *matHeaderCellDef> Source </th>
+      <td mat-cell *matCellDef="let row">{{ row.source_branch }}</td>
+    </ng-container>
+
+    <!-- Target -->
+    <ng-container matColumnDef="target">
+      <th mat-header-cell *matHeaderCellDef> Target </th>
+      <td mat-cell *matCellDef="let row">{{ row.target_branch }}</td>
+    </ng-container>
+
+    <!-- Author -->
+    <ng-container matColumnDef="author">
+      <th mat-header-cell *matHeaderCellDef> Created By </th>
+      <td mat-cell *matCellDef="let row">{{ row.author }}</td>
+    </ng-container>
+
+    <!-- Assignee -->
+    <ng-container matColumnDef="assignee">
+      <th mat-header-cell *matHeaderCellDef> Assignee </th>
+      <td mat-cell *matCellDef="let row">{{ row.assignee }}</td>
+    </ng-container>
+
+    <!-- Created -->
+    <ng-container matColumnDef="created">
+      <th mat-header-cell *matHeaderCellDef> Created At </th>
+      <td mat-cell *matCellDef="let row">{{ row.created_at }}</td>
+    </ng-container>
+
+    <!-- Status -->
+    <ng-container matColumnDef="status">
+      <th mat-header-cell *matHeaderCellDef> Status </th>
+      <td mat-cell *matCellDef="let row" class="status-col pending">{{ row.status }}</td>
+    </ng-container>
+
+    <!-- URL -->
+    <ng-container matColumnDef="url">
+      <th mat-header-cell *matHeaderCellDef> Open </th>
+      <td mat-cell *matCellDef="let row">
+        <a (click)="openDefaultBrowser(row.url)" class="pointer">🔗</a>
+      </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="displayColumns"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayColumns;"></tr>
+
+  </table>
+
+  <div class="actions">
+    <span class="refresh-info">
+      ⏱️ Last refreshed: {{ lastRefreshed | date: 'dd/MM/yyyy hh:mm a' }}
+    </span>
+
+    <button mat-raised-button class="themed-btn" (click)="refreshMRs()">🔄 Refresh</button>
+  </div>
+
+</div>

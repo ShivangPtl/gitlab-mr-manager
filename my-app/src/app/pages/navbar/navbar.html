@@ -13,12 +13,11 @@
 <!-- navbar.component.html -->
 <nav class="navbar">
   <div class="left">
-    <mat-tab-group 
-      [(selectedIndex)]="selectedTabIndex" 
-      (selectedIndexChange)="onTabChange($event)"
-      class="navbar-tabs"
-      animationDuration="200ms">
-      
+    <mat-tab-group [(selectedIndex)]="selectedTabIndex"
+                   (selectedIndexChange)="onTabChange($event)"
+                   class="navbar-tabs"
+                   animationDuration="200ms">
+
       <mat-tab>
         <ng-template mat-tab-label>
           <span class="tab-text">🏠 Home</span>
@@ -27,9 +26,15 @@
 
       <mat-tab>
         <ng-template mat-tab-label>
+          <span class="tab-text">🔀 Merge Requests</span>
+        </ng-template>
+      </mat-tab>
+
+      <mat-tab>
+        <ng-template mat-tab-label>
           <span class="tab-text">🚧 Pipelines</span>
         </ng-template>
-      </mat-tab>      
+      </mat-tab>
 
       <mat-tab>
         <ng-template mat-tab-label>

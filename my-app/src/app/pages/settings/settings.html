@@ -5,6 +5,18 @@
     <h2 style="margin-top: 0;">Default Options</h2>
 
     <div class="controls">
+      <div class="theme-toggle-container">
+        <mat-label class="branch-icon">Active Branch</mat-label>
+
+        <mat-slide-toggle [(ngModel)]="useCustomBranch" (change)="save()"  color="primary">
+        </mat-slide-toggle>
+        <input matInput
+               class="branch-inline-input"
+               [(ngModel)]="sourceBranch"
+               [disabled]="!useCustomBranch"
+               placeholder="Branch name" />
+      </div>
+
       <mat-form-field appearance="fill">
         <mat-label>Target Branch</mat-label>
         <input matInput [(ngModel)]="defaultBranch" />

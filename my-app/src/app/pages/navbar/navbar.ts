@@ -40,8 +40,10 @@ export class Navbar {
     if (index === 0) {
       this.goTo('/home');
     } else if (index === 1) {
+      this.goTo('/merge-requests');
+    }else if (index === 2) {
       this.goTo('/pipelines');
-    } else if (index === 2) {
+    } else if (index === 3) {
       this.goTo('/settings');
     }
   }
@@ -63,8 +65,10 @@ export class Navbar {
     // Set tab based on current route
     const currentUrl = this.router.url;
     if (currentUrl.includes('/settings')) {
-      this.selectedTabIndex = 2;
+      this.selectedTabIndex = 3;
     } else if (currentUrl.includes('/pipelines')) {
+      this.selectedTabIndex = 2;
+    }else if (currentUrl.includes('/merge-requests')) {
       this.selectedTabIndex = 1;
     } else if (currentUrl.includes('/home')) {
       this.selectedTabIndex = 0;

@@ -9,4 +9,5 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getSettings: () => ipcRenderer.invoke('get-settings'),
 
   runGitCommand: (repoPath, args) => ipcRenderer.invoke('run-git-command', repoPath, args),
+  openExternal: (url) => ipcRenderer.send('open-external', url)
 });
