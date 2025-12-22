@@ -14,34 +14,20 @@
 <nav class="navbar">
   <div class="left">
     <mat-tab-group [(selectedIndex)]="selectedTabIndex"
-                   (selectedIndexChange)="onTabChange($event)"
-                   class="navbar-tabs"
-                   animationDuration="200ms">
+               (selectedIndexChange)="onTabChange($event)"
+               class="navbar-tabs"
+               animationDuration="200ms">
 
-      <mat-tab>
-        <ng-template mat-tab-label>
-          <span class="tab-text">🏠 Home</span>
-        </ng-template>
-      </mat-tab>
-
-      <mat-tab>
-        <ng-template mat-tab-label>
-          <span class="tab-text">🔀 Merge Requests</span>
-        </ng-template>
-      </mat-tab>
-
-      <mat-tab>
-        <ng-template mat-tab-label>
-          <span class="tab-text">🚧 Pipelines</span>
-        </ng-template>
-      </mat-tab>
-
-      <mat-tab>
-        <ng-template mat-tab-label>
-          <span class="tab-text">⚙️ Settings</span>
-        </ng-template>
-      </mat-tab>
+      <ng-container *ngFor="let t of tabsVisible">
+        <mat-tab>
+          <ng-template mat-tab-label>
+            <span class="tab-text">{{ t.icon }} {{ t.label }}</span>
+          </ng-template>
+        </mat-tab>
+      </ng-container>
+    
     </mat-tab-group>
+
   </div>
   
   <div class="right">

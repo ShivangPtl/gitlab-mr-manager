@@ -18,9 +18,10 @@ function createWindow() {
 
   win.setMenu(null);
 
-  ipcMain.handle('save-token', async (event, token, username) => {
+  ipcMain.handle('save-token', async (event, token, username, isAdmin) => {
     store.set('gitlabToken', token);
     store.set('gitlabUser', username);
+    store.set('gitlabAdmin', isAdmin);
     return true;
   });
   
@@ -28,12 +29,14 @@ function createWindow() {
     return {
       token: store.get('gitlabToken'),
       username: store.get('gitlabUser'),
+      isAdmin: store.get('gitlabAdmin'),
     };
   });
   
   ipcMain.handle('clear-token', () => {
     store.delete('gitlabToken');
     store.delete('gitlabUser');
+    store.delete('gitlabAdmin');
     store.delete('settings');
   });  
 

@@ -75,6 +75,13 @@ export class MergeRequests implements OnInit {
 
     const output: MRTableRow[] = [];
 
+    if(settings.projects == undefined || settings.projects.length === 0) {
+      this.dataSource.data = [];
+      this.lastRefreshed = new Date();
+      this.loader.hide();
+      return;
+    }
+
     for (const proj of settings.projects) {
       if (!proj.is_selected) continue;
 

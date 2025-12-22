@@ -5,6 +5,7 @@ interface PipelineRow {
   user: string;
   created_at: string;
   full_pipeline: PipelineDetails;
+  link: string;
 }
 
 interface PipelineDetails {

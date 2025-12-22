@@ -4,6 +4,7 @@ import { Home } from './pages/home/home';
 import { Settings } from './pages/settings/settings';
 import { Pipelines } from './pages/pipelines/pipelines';
 import { MergeRequests } from './pages/merge-requests/merge-requests';
+import { CreateBranch } from './pages/create-branch/create-branch';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -11,6 +12,7 @@ export const routes: Routes = [
   { path: 'home', component: Home },
   { path: 'merge-requests', component: MergeRequests },
   { path: 'pipelines', component: Pipelines },
+  { path: 'create-branch', component: CreateBranch },
   { path: 'settings', component: Settings },
   { path: '**', redirectTo: 'login' }
 ];

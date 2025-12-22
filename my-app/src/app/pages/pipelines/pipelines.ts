@@ -130,7 +130,8 @@ export class Pipelines implements OnInit {
       status: pipeline.status?.toUpperCase() || 'UNKNOWN',
       user: pipeline.user?.name || '-',
       created_at: pipeline.createdAt ? this.formatDateTime(pipeline.createdAt) : '-',
-      full_pipeline: pipelineDetails
+      full_pipeline: pipelineDetails,
+      link: `https://git.promptdairytech.com/pdp/${projectName}/-/pipeline_schedules`
     };
   }
 
@@ -252,6 +253,8 @@ formatDateTime(dateStr: string) {
     return `${hStr}${mStr}${sStr}`;
   }
   
-  
+  openDefaultBrowser(url: string) {
+    window.electronAPI.openExternal(url);
+  }
 }
 

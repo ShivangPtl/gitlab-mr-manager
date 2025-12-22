@@ -14,6 +14,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { GitlabAuth } from '../../services/gitlab-auth';
 
 declare const window: any;
 
@@ -37,7 +38,7 @@ declare const window: any;
 ]
 })
 export class Settings implements OnInit {
-  constructor(private snackBar: MatSnackBar){}
+  constructor(private snackBar: MatSnackBar, private authService: GitlabAuth){}
   projects: ProjectSettingModel[] = [];
   assignees: UserItem[] = [];
   reviewers: UserItem[] = [];
@@ -67,17 +68,9 @@ export class Settings implements OnInit {
       { project_id: 1075, project_name: 'Identity (AdoptCattle)', local_repo_path: '', is_selected: false }
     ];
 
-    const userList: UserItem[] = [
-      { user_id: 119, user_name: 'Shivang Patel' },
-      { user_id: 120, user_name: 'Kiran Gami' },
-      { user_id: 106, user_name: 'Ekta Gupta' },
-      { user_id: 148, user_name: 'Jigisha Patel' },
-      { user_id: 86, user_name: 'Jaydip Prajapati' },
-    ];
-
     this.projects = defaultProjects;
-    this.assignees = userList;
-    this.reviewers = userList;
+    this.assignees = this.authService.userList;
+    this.reviewers = this.authService.userList;
 
     window.electronAPI.getSettings().then((data: any) => {
       if (data.projects) this.projects = data.projects;
@@ -105,7 +98,8 @@ export class Settings implements OnInit {
       defaultBranch: this.defaultBranch,
       selectedAssigneeId: this.selectedAssigneeId,
       selectedReviewerId: this.selectedReviewerId,
-      darkMode: this.darkMode
+      darkMode: this.darkMode,
+      adminList: this.assignees
     };
     await window.electronAPI.saveSettings(settings);
 

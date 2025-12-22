@@ -1,0 +1,100 @@
+<div class="create-branch-container ">
+  <section class="defaults mat-theme">
+    <h2 style="margin-top: 0;">Branch Configuration </h2>
+
+    <div class="controls">
+
+      <mat-form-field appearance="fill">
+        <mat-label>Base Branch</mat-label>
+        <input matInput [(ngModel)]="baseBranch" />
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>New Branch</mat-label>
+        <input matInput [(ngModel)]="newBranchName" />
+      </mat-form-field>
+
+      <div class="theme-toggle-container">
+        <mat-label class="branch-icon">Protect Branch</mat-label>
+
+        <mat-slide-toggle [(ngModel)]="isProtected" color="primary">
+        </mat-slide-toggle>
+      </div>
+
+    </div>
+  </section>
+
+
+  <section class="projects">
+    <h2 style="margin-top: 0;">Projects</h2>
+
+    <table mat-table [dataSource]="dataSource" class="mat-elevation-z2 full-width-table">
+
+      <!-- Select -->
+      <ng-container matColumnDef="select">
+        <th mat-header-cell *matHeaderCellDef>Select</th>
+        <td mat-cell *matCellDef="let project">
+          <mat-checkbox [(ngModel)]="project.is_selected"></mat-checkbox>
+        </td>
+      </ng-container>
+
+      <!-- Project Name -->
+      <ng-container matColumnDef="name">
+        <th mat-header-cell *matHeaderCellDef>Project Name</th>
+        <td mat-cell *matCellDef="let project">{{ project.project_name }}</td>
+      </ng-container>
+
+      <!-- Branch Status -->
+      <ng-container matColumnDef="branch_status">
+        <th mat-header-cell *matHeaderCellDef>Branch Status</th>
+        <td mat-cell *matCellDef="let project">
+          <span class="status" [ngClass]="[getStatusClass(project.branch_status), project.branch_status === '-' ? 'no-dot' : '']">
+            {{ project.branch_status || '-' }}
+          </span>
+        </td>
+      </ng-container>
+
+      <!-- Protection Status -->
+      <ng-container matColumnDef="protection_status">
+        <th mat-header-cell *matHeaderCellDef>Protection</th>
+        <td mat-cell *matCellDef="let project">
+          <span class="status" [ngClass]="[getStatusClass(project.protection_status), project.protection_status === '-' ? 'no-dot' : '']">
+            {{ project.protection_status || '-' }}
+          </span>
+        </td>
+      </ng-container>
+
+      <!-- Open Link -->
+      <ng-container matColumnDef="link">
+        <th mat-header-cell *matHeaderCellDef> Open </th>
+        <td mat-cell *matCellDef="let project">
+          <a class="pointer" (click)="openDefaultBrowser(project.web_url)" *ngIf="project.web_url; else noLink" class="pointer">🔗</a>
+    <ng-template #noLink>-</ng-template>
+        </td>
+      </ng-container>
+
+      <!-- Header + Rows -->
+      <tr mat-header-row *matHeaderRowDef="['select','name','branch_status','protection_status', 'link']"></tr>
+      <tr mat-row *matRowDef="let row; columns: ['select','name','branch_status','protection_status', 'link'];"></tr>
+
+    </table>
+  </section>
+
+
+  <div class="actions">
+    <!-- Left: Last Refreshed Info -->
+    <div class="refresh-info">
+      ⏱️ Last refreshed: {{ lastRefreshed | date: 'dd/MM/yyyy hh:mm a' }}
+    </div>
+
+    <!-- Right: Buttons -->
+    <!-- <div class="button-group">
+      <button mat-raised-button class="themed-btn" (click)="isAnySelected() ? updateMrStatus() : loadProjectsWithCommitInfo()">🔄 Refresh</button>
+      <button mat-raised-button class="themed-btn" (click)="createMergeRequests()" [disabled]="!isAnySelected()">🚀 Create MR</button>
+    </div> -->
+    <div class="button-group">
+      <button mat-raised-button class="themed-btn" (click)="refreshBranchStatus()" [disabled]="!isAnySelected()">🔄 Refresh</button>
+      <button mat-raised-button class="themed-btn" (click)="createBranches()" [disabled]="!isAnySelected()">🚀 Create Branch</button>
+    </div>
+  </div>
+</div>

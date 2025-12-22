@@ -4,6 +4,8 @@ import { MatTabGroup, MatTabsModule } from '@angular/material/tabs';
 import { MatTabLabel } from '@angular/material/tabs';
 import { MatIcon } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
+import { UserItem } from '../../models/user-item.model';
+import { CommonModule } from '@angular/common';
 
 declare const window: any;
 
@@ -12,7 +14,7 @@ declare const window: any;
   templateUrl: './navbar.html',
   styleUrls: ['./navbar.scss'],
   standalone: true,
-  imports: [MatTabGroup, MatTabLabel, MatButtonModule, MatTabsModule]
+  imports: [MatTabGroup, MatTabLabel, MatButtonModule, MatTabsModule, CommonModule]
 })
 export class Navbar {
   selectedTabIndex = 0;
@@ -20,33 +22,58 @@ export class Navbar {
 
   token: string = '';
 
+  isAdmin = false;
+  tabs: { label: string; route: string; icon: string; adminOnly?: boolean }[] = [
+    { label: "Home", route: "/home", icon: "🏠" },
+    { label: "Merge Requests", route: "/merge-requests", icon: "🔀" },
+    { label: "Pipelines", route: "/pipelines", icon: "🚧" },
+    { label: "Create Branch", route: "/create-branch", icon: "🛠️", adminOnly: true },
+    { label: "Settings", route: "/settings", icon: "⚙️" }
+  ];
+
+
   constructor(private router: Router) {
     
   }
  
 
   async ngOnInit() {
+    const settings = await window.electronAPI.getSettings();
     const tokenData = await window.electronAPI.getToken();
     this.token = tokenData.token;
     this.userName = tokenData.username;
+    this.isAdmin = tokenData.isAdmin;
     // Set initial tab based on current route
+
+    const adminList: UserItem[] = settings.adminList ?? [];
+
+    //this.isAdmin = adminList.some(u => u.user_name === tokenData.username);
+
     this.setInitialTab();
   }
 
-  onTabChange(index: number) {
-    this.selectedTabIndex = index;
+  // onTabChange(index: number) {
+  //   this.selectedTabIndex = index;
     
-    // Navigate based on selected tab
-    if (index === 0) {
-      this.goTo('/home');
-    } else if (index === 1) {
-      this.goTo('/merge-requests');
-    }else if (index === 2) {
-      this.goTo('/pipelines');
-    } else if (index === 3) {
-      this.goTo('/settings');
-    }
+  //   // Navigate based on selected tab
+  //   if (index === 0) {
+  //     this.goTo('/home');
+  //   } else if (index === 1) {
+  //     this.goTo('/merge-requests');
+  //   } else if (index === 2) {
+  //     this.goTo('/pipelines');
+  //   } else if (index === 3) {
+  //     this.goTo('/create-branch');
+  //   } else if (index === 4) {
+  //     this.goTo('/settings');
+  //   }
+  // }
+
+  onTabChange(index: number) {
+    const tab = this.tabsVisible[index];
+    if (tab) this.goTo(tab.route);
   }
+
 
   goTo(route: string) {
     this.router.navigate([route]);
@@ -62,16 +89,14 @@ export class Navbar {
   }
 
   private setInitialTab() {
-    // Set tab based on current route
     const currentUrl = this.router.url;
-    if (currentUrl.includes('/settings')) {
-      this.selectedTabIndex = 3;
-    } else if (currentUrl.includes('/pipelines')) {
-      this.selectedTabIndex = 2;
-    }else if (currentUrl.includes('/merge-requests')) {
-      this.selectedTabIndex = 1;
-    } else if (currentUrl.includes('/home')) {
-      this.selectedTabIndex = 0;
-    }
+
+    const index = this.tabsVisible.findIndex(t => currentUrl.includes(t.route));
+    this.selectedTabIndex = index >= 0 ? index : 0;
+  }
+
+
+  get tabsVisible() {
+    return this.tabs.filter(t => !t.adminOnly || this.isAdmin);
   }
 }

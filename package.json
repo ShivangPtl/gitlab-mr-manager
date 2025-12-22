@@ -1,6 +1,6 @@
 {
-  "name": "gitlab-mr-manager",
-  "version": "2.0.0",
+  "name": "gitlab-manager",
+  "version": "3.0.0",
   "main": "main.js",
   "scripts": {
     "build:angular": "cd my-app && npx ng build --configuration production --base-href ./",
@@ -9,8 +9,8 @@
     "dist": "npm run build:angular && electron-builder"
   },
   "build": {
-    "appId": "com.gitlab.mrmanager",
-    "productName": "GitLab MR Manager",
+    "appId": "com.gitlab.manager",
+    "productName": "GitLab Manager",
     "files": [
       "main.js",
       "preload.js",
@@ -32,7 +32,7 @@
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
-      "shortcutName": "GitLab MR Manager",
+      "shortcutName": "GitLab Manager",
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true
     }

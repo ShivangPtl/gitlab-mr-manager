@@ -1,5 +1,3 @@
-<app-navbar></app-navbar>
-
 <div class="home-container">
 
   <!-- Table -->
@@ -48,8 +46,16 @@
       </td>
     </ng-container>
 
-    <tr mat-header-row *matHeaderRowDef="['project', 'type', 'user', 'created','status', 'info']"></tr>
-    <tr mat-row *matRowDef="let row; columns: ['project', 'type', 'user', 'created','status', 'info'];"></tr> 
+    <!-- URL -->
+    <ng-container matColumnDef="link">
+      <th mat-header-cell *matHeaderCellDef> Open </th>
+      <td mat-cell *matCellDef="let row">
+        <a (click)="openDefaultBrowser(row.link)" class="pointer">🔗</a>
+      </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="['project', 'type', 'user', 'created','status', 'info', 'link']"></tr>
+    <tr mat-row *matRowDef="let row; columns: ['project', 'type', 'user', 'created','status', 'info', 'link'];"></tr> 
   </table>
 
   <!-- Action Section -->
