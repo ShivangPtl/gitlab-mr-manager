@@ -151,4 +151,17 @@ html, body {
     }
   }
 }
+
+  .config-tooltip {
+    max-width: 600px !important;   /* allow wide tooltip */
+    // white-space: pre-line;         /* preserve \n line breaks */
+    font-size: 13px;
+    line-height: 1.6;
+    padding: 8px 12px;
+    
+    word-break: keep-all !important;            /* ❌ stop mid-word breaks */
+    overflow-wrap: normal !important;         /* ❌ stop ugly wrapping */
+    
+    font-family: monospace;  
+  }
 /* src/styles.scss */

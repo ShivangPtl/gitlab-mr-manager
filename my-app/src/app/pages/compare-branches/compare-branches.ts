@@ -1,0 +1,340 @@
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { MatFormField, MatFormFieldModule } from '@angular/material/form-field';
+import { MatSelectModule } from '@angular/material/select';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatOptionModule } from '@angular/material/core';
+import { ProjectSettingModel } from '../../models/project-settings.model';
+import { Navbar } from '../../pages/navbar/navbar';
+import { MatTableModule } from '@angular/material/table';
+import { MatButtonModule } from '@angular/material/button';
+import { MatInputModule } from '@angular/material/input';
+import { MatTableDataSource } from '@angular/material/table';
+import { LoaderService } from '../../services/loader';
+import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
+import { ProjectListModel } from '../../models/project-list.model';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatTooltip } from '@angular/material/tooltip';
+import { MatIcon } from "@angular/material/icon";
+import { ConfigDiffDialogComponent } from './config-diff-dialog/config-diff-dialog';
+import { MatDialog } from '@angular/material/dialog';
+
+declare const window: any;
+@Component({
+  selector: 'app-compare-branches',
+  imports: [CommonModule, FormsModule, Navbar,
+    MatFormFieldModule,
+    MatSelectModule,
+    MatCheckboxModule,
+    MatOptionModule,
+    MatTableModule,
+    MatButtonModule,
+    MatInputModule,
+    MatSnackBarModule,
+    MatSlideToggleModule,
+    MatTooltip, MatIcon],
+  templateUrl: './compare-branches.html',
+  styleUrl: './compare-branches.scss'
+})
+export class CompareBranches {
+
+  sourceBranch = '';
+  targetBranch = 'master_ah';
+
+  token = '';
+  displayedColumns = [
+    'select',
+    'name',
+    'branches',
+    'ahead',
+    'behind',
+    'deploy',
+    'config'
+  ];
+  dataSource = new MatTableDataSource<any>();
+  lastRefreshed: Date | null = null;
+
+  /** SAME PATTERNS AS C# */
+  configFilePatterns = [
+    /^appsettings.*\.json$/i,
+    /^ocelot.*\.json$/i
+  ];
+  baseUrl = 'https://git.promptdairytech.com/api/v4';
+
+  constructor(private loaderService: LoaderService, private snackBar: MatSnackBar, private dialog: MatDialog) {}
+  async ngOnInit() {
+    this.token = (await window.electronAPI.getToken()).token;
+    this.loadProjects();
+  }
+
+  async loadProjects() {
+    const settings = await window.electronAPI.getSettings();
+    this.dataSource.data = (settings.projects || []).filter((p : any) => p.is_selected);
+
+    const validProjects = (settings.projects || []).filter(
+      (p: ProjectSettingModel) => p.is_selected);
+    
+    this.dataSource.data = validProjects.map((p : any) => ({
+      ...p,
+      is_selected: false,
+      ahead: '-',
+      behind: '-',
+      configFiles: [],
+      configDiffs: [], 
+      sourceBranchExists: true,
+      targetBranchExists: true
+    }));
+  }
+
+  async branchExists(projectId: number, branch: string): Promise<boolean> {
+    const res = await fetch(
+      `${this.baseUrl}/projects/${projectId}/repository/branches/${encodeURIComponent(branch)}`,
+      { headers: { 'PRIVATE-TOKEN': this.token } }
+    );
+    return res.ok;
+  }
+
+
+  // async compareBranches() {
+  //   if (!this.sourceBranch.trim()) {
+  //     this.snackBar.open('Enter source branch!', 'Close', { duration: 3000 });
+  //     return;
+  //   }
+
+  //   const selected = this.dataSource.data.filter(p => p.is_selected);
+  //   const targetList = selected.length ? selected : this.dataSource.data;
+
+  //   this.loaderService.showLoading('Comparing branches…');
+
+  //   for (const proj of targetList) {
+  //     try {
+  //       // Check if branches exist
+  //       proj.sourceBranchExists = await this.branchExists(proj.project_id, this.sourceBranch);
+  //       proj.targetBranchExists = await this.branchExists(proj.project_id, this.targetBranch);
+
+  //       if (!proj.sourceBranchExists || !proj.targetBranchExists) {
+  //         proj.ahead = '-';
+  //         proj.behind = '-';
+  //         proj.configFiles = [];
+  //         continue;
+  //       }
+
+  //       // Compare API
+  //       const compareUrl =
+  //         `${this.baseUrl}/projects/${proj.project_id}/repository/compare` +
+  //         `?from=${encodeURIComponent(this.targetBranch)}` +
+  //         `&to=${encodeURIComponent(this.sourceBranch)}`;
+
+  //       const response = await fetch(compareUrl, {
+  //         headers: { 'PRIVATE-TOKEN': this.token }
+  //       });
+
+  //       if (!response.ok) {
+  //         proj.ahead = '-';
+  //         proj.behind = '-';
+  //         proj.configFiles = [];
+  //         continue;
+  //       }
+
+  //       const data = await response.json();
+
+  //       proj.ahead = data.commits?.length || 0;
+  //       proj.behind = data.compare_timeout ? 0 : 0;
+
+  //       // proj.configFiles = (data.diffs || [])
+  //       //   .map((d: any) => d.new_path?.split('/').pop())
+  //       //   .filter((file: string) =>
+  //       //     this.configFilePatterns.some(rx => rx.test(file))
+  //       //   );
+
+  //       // 👇👇👇 PUT THIS BLOCK HERE 👇👇👇
+  //       proj.configDiffs = (data.diffs || [])
+  //         .filter((d: any) => {
+  //           const file = d.new_path?.split('/').pop();
+  //           return this.configFilePatterns.some(rx => rx.test(file));
+  //         })
+  //         .map((d: any) => ({
+  //           file: d.new_path,
+  //           diff: d.diff,
+  //           newFile: d.new_file,
+  //           renamedFile: d.renamed_file,
+  //           deletedFile: d.deleted_file
+  //         }));
+
+  //       proj.configFiles = proj.configDiffs.map((d : any) => d.file.split('/').pop());
+
+  //     } catch {
+  //       proj.sourceBranchExists = false;
+  //       proj.targetBranchExists = false;
+  //     }
+  //   }
+
+  //   this.dataSource.data = [...this.dataSource.data];
+  //   this.lastRefreshed = new Date();
+  //   this.loaderService.hide();
+  // }
+
+  async compareBranches() {
+
+    this.dataSource.data = this.dataSource.data.map((p: any) => ({
+      ...p,
+      ahead: '-',
+      behind: '-',
+      configFiles: [],
+      configDiffs: [],
+      sourceBranchExists: true,
+      targetBranchExists: true
+    }));
+
+    if (!this.sourceBranch.trim()) {
+      this.snackBar.open('Enter source branch!', 'Close', { duration: 3000 });
+      return;
+    }
+
+    const selected = this.dataSource.data.filter(p => p.is_selected);
+    const targetList = selected.length ? selected : this.dataSource.data;
+
+    this.loaderService.showLoading('Comparing branches…');
+
+    const headers = { 'PRIVATE-TOKEN': this.token };
+
+    await Promise.all(
+      targetList.map(async (proj: any) => {
+        try {
+          /* 1️⃣ Check branch existence in parallel */
+          const [sourceExists, targetExists] = await Promise.all([
+            this.branchExists(proj.project_id, this.sourceBranch),
+            this.branchExists(proj.project_id, this.targetBranch)
+          ]);
+
+          proj.sourceBranchExists = sourceExists;
+          proj.targetBranchExists = targetExists;
+
+          if (!sourceExists || !targetExists) {
+            proj.ahead = '-';
+            proj.behind = '-';
+            proj.configFiles = [];
+            proj.configDiffs = [];
+            return;
+          }
+
+          /* 2️⃣ Compare BOTH directions in parallel */
+          const [aheadRes, behindRes] = await Promise.all([
+            fetch(
+              `${this.baseUrl}/projects/${proj.project_id}/repository/compare` +
+              `?from=${encodeURIComponent(this.targetBranch)}` +
+              `&to=${encodeURIComponent(this.sourceBranch)}`,
+              { headers }
+            ),
+            fetch(
+              `${this.baseUrl}/projects/${proj.project_id}/repository/compare` +
+              `?from=${encodeURIComponent(this.sourceBranch)}` +
+              `&to=${encodeURIComponent(this.targetBranch)}`,
+              { headers }
+            )
+          ]);
+
+          if (!aheadRes.ok || !behindRes.ok) {
+            proj.ahead = '-';
+            proj.behind = '-';
+            proj.configFiles = [];
+            proj.configDiffs = [];
+            return;
+          }
+
+          const [aheadData, behindData] = await Promise.all([
+            aheadRes.json(),
+            behindRes.json()
+          ]);
+
+          /* 3️⃣ Set ahead / behind */
+          proj.ahead = aheadData.commits?.length || 0;
+          proj.behind = behindData.commits?.length || 0;
+
+          /* 4️⃣ Extract config diffs (only from AHEAD) */
+          proj.configDiffs = (aheadData.diffs || [])
+            .filter((d: any) => {
+              const file = d.new_path?.split('/').pop();
+              return this.configFilePatterns.some(rx => rx.test(file));
+            })
+            .map((d: any) => ({
+              file: d.new_path,
+              diff: d.diff,
+              newFile: d.new_file,
+              renamedFile: d.renamed_file,
+              deletedFile: d.deleted_file
+            }));
+
+          proj.configFiles = proj.configDiffs.map((d: any) =>
+            d.file.split('/').pop()
+          );
+
+        } catch {
+          proj.sourceBranchExists = false;
+          proj.targetBranchExists = false;
+          proj.ahead = '-';
+          proj.behind = '-';
+          proj.configFiles = [];
+          proj.configDiffs = [];
+        }
+      })
+    );
+
+    this.dataSource.data = [...this.dataSource.data];
+    this.lastRefreshed = new Date();
+    this.loaderService.hide();
+  }
+  
+
+  /** DEPLOY STATUS */
+  getDeployIcon(p: any): string {
+    if (!p.sourceBranchExists || (p.ahead === 0 || p.ahead === '-')) return '❌';
+    return '✅';
+  }
+
+  getDeployClass(p: any): string {
+    // if (!p.sourceBranchExists || !p.targetBranchExists) return 'invalid';
+    if (!p.sourceBranchExists || (p.ahead === 0 || p.ahead === '-')) return 'no-deploy';
+    if (p.configFiles?.length) return 'manual';
+    return 'ready';
+  }
+
+  getDeployText(p: any): string {
+    if (!p.sourceBranchExists) return 'Source branch does not exist';
+    if (!p.targetBranchExists) return 'Target branch does not exist';
+    if (p.ahead === 0 || p.ahead === '-') return 'Nothing to deploy';
+    if (p.configFiles?.length) return 'Manual config deployment required';
+    return 'Ready to deploy';
+  }
+
+  openDefaultBrowser(url: string) {
+    window.electronAPI.openExternal(url);
+  }
+
+  openConfigDetails(project: any) {
+    this.dialog.open(ConfigDiffDialogComponent, {
+      width: '800px',
+      maxHeight: '80vh',
+      data: {
+        projectName: project.project_name,
+        sourceBranch: this.sourceBranch,
+        targetBranch: this.targetBranch,
+        diffs: project.configDiffs
+      }
+    });
+  }
+
+  resetDataSource() {
+    this.dataSource.data = this.dataSource.data.map((p: any) => ({
+      ...p,
+      is_selected: false,
+      ahead: '-',
+      behind: '-',
+      configFiles: [],
+      configDiffs: [],
+      sourceBranchExists: true,
+      targetBranchExists: true
+    }));
+  }
+}

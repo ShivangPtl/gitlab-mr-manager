@@ -32,7 +32,7 @@
       color: rgb(217, 82, 82); // Red
     }
 
-    &.no-dot::before {  
+    &.no-dot::before {
       content: '';
     }
   }
@@ -180,4 +180,131 @@
       color: white !important;
     }
   }
+
+  .green { color: #2da44e; }
+  .yellow { color: #d29922; }
+
+  .deploy-icon {
+    font-size: 18px;
+  }
+
+  .ready { color: #2da44e; }
+  .manual { color: #d29922; }
+  .no-deploy { color: #8b949e; }
+
+  .config-warning {
+    color: #f0ad4e;
+    font-size: 13px;
+  }
+
+  code {
+    background: #2a2a2a;
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+
+  .invalid {
+    color: #f85149;
+    border: 1px solid #f85149;
+  }
+
+  .invalid::after {
+    content: ' ✖';
+  }
+
+  .warning{
+    color: #f0ad4e;
+  }
+
+  .text-center{
+    text-align: center;
+  }
+
+  /* Common */
+  .muted {
+    color: #8b949e;
+  }
+  
+  /* Ahead (green) */
+  .ahead-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 13px;
+    color: #2da44e;
+    background: rgba(46, 160, 67, 0.15);
+    // border-radius: 6px;
+    border: 1px solid #2da44e;
+  }
+  
+  .ahead-badge mat-icon {
+    font-size: 16px;
+  }
+  
+  /* Behind (orange/red) */
+  .behind-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 13px;
+    color: #d29922;
+    background: rgba(210, 153, 34, 0.15);
+  }
+  
+  .behind-badge mat-icon {
+    font-size: 16px;
+  }
+
+  .branch-pill-container {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  
+  .branch-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 10px;
+    border-radius: 6px;
+    font-family: monospace;
+    font-size: 13px;
+    line-height: 1.4;
+    white-space: nowrap;
+  }
+  
+  .pill-ok {
+    background: transparent;
+    color: #2da44e;                 /* GitLab green */
+    border: 1px solid #2da44e;
+    background: rgba(46, 160, 67, 0.15);
+    font-family: monospace; /* already ok */
+    font-weight: 600;       /* ⬅ ADD THIS */
+  }
+  
+  .pill-error {
+    background: transparent;
+    color: #f85149;
+    border: 1px solid #f85149;
+  }
+  
+  .pill-close {
+    font-size: 12px;
+    line-height: 12px;
+  }
+  
+  .branch-arrow {
+    color: #8b949e;
+    font-size: 14px;
+    margin: 0 2px;
+  }
+  
+
+
 }

@@ -28,6 +28,7 @@ export class Navbar {
     { label: "Merge Requests", route: "/merge-requests", icon: "🔀" },
     { label: "Pipelines", route: "/pipelines", icon: "🚧" },
     { label: "Create Branch", route: "/create-branch", icon: "🛠️", adminOnly: true },
+    { label: "Compare Branch", route: "/compare-branches", icon: "↔️", adminOnly: true },
     { label: "Settings", route: "/settings", icon: "⚙️" }
   ];
 
