@@ -10,7 +10,7 @@
 @import '../../../assets/shared-styles.scss';
 
 .home-container {
-  @extend .page-container;
+  @extend .page-container ;
 
   // Home-specific styles
   .mr-meta {

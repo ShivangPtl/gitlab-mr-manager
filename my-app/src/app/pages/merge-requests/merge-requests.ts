@@ -121,7 +121,7 @@ export class MergeRequests implements OnInit {
     const query = `
     {
       group(fullPath: "pdp") {
-        projects(first: 1, search: "${projectName}") {
+        projects(first: 5, search: "${projectName}") {
           nodes {
             mergeRequests(
               state: opened,
@@ -155,7 +155,14 @@ export class MergeRequests implements OnInit {
     });
 
     const json = await response.json();
-    return json?.data?.group?.projects?.nodes?.[0]?.mergeRequests?.nodes || [];
+    // return json?.data?.group?.projects?.nodes?.[0]?.mergeRequests?.nodes || [];
+    const projects = json?.data?.group?.projects?.nodes ?? [];
+
+    const allMergeRequests = projects.flatMap(
+      (p:any) => p.mergeRequests?.nodes ?? []
+    );
+
+    return allMergeRequests;
   }
 
   openDefaultBrowser(url: string) {

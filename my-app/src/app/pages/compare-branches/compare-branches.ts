@@ -82,8 +82,8 @@ export class CompareBranches {
       behind: '-',
       configFiles: [],
       configDiffs: [], 
-      sourceBranchExists: true,
-      targetBranchExists: true
+      sourceBranchExists: undefined,
+      targetBranchExists: undefined
     }));
   }
 
@@ -183,8 +183,8 @@ export class CompareBranches {
       behind: '-',
       configFiles: [],
       configDiffs: [],
-      sourceBranchExists: true,
-      targetBranchExists: true
+      sourceBranchExists: undefined,
+      targetBranchExists: undefined
     }));
 
     if (!this.sourceBranch.trim()) {
@@ -333,8 +333,8 @@ export class CompareBranches {
       behind: '-',
       configFiles: [],
       configDiffs: [],
-      sourceBranchExists: true,
-      targetBranchExists: true
+      sourceBranchExists: undefined,
+      targetBranchExists: undefined
     }));
   }
 }

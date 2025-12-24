@@ -21,7 +21,7 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 declare const window: any;
 @Component({
   selector: 'app-create-branch',
-  imports: [CommonModule, FormsModule, Navbar,
+  imports: [CommonModule, FormsModule,
     MatFormFieldModule,
     MatSelectModule,
     MatCheckboxModule,
