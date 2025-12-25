@@ -9,7 +9,7 @@
 
 ## ⬇️ Download (Windows)
 
-👉 **[Download GitLab Project Manager (.exe)]([https://github.com/<your-username>/<your-repo>/releases/latest](https://github.com/ShivangPtl/gitlab-mr-manager/releases/latest)**
+👉 **[Download GitLab Project Manager (.exe)](https://github.com/ShivangPtl/gitlab-mr-manager/releases/latest)**
 
 No setup required — just install and use.
 
