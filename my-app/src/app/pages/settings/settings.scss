@@ -68,6 +68,7 @@
     border: 1px solid var(--border-color);
     background: var(--bg-tertiary);
     color: var(--text-primary);
+    font-family: inherit;
     font-size: 14px;
     width: 140px;
     transition: border-color 0.25s ease, background 0.25s ease;
@@ -82,5 +83,9 @@
       opacity: 0.5;
       cursor: not-allowed;
     }
+
+  .branch-input{
+    width: 12%;
+  }
 }
 

@@ -19,6 +19,10 @@ import { MatTooltip } from '@angular/material/tooltip';
 import { MatIcon } from "@angular/material/icon";
 import { ConfigDiffDialogComponent } from './config-diff-dialog/config-diff-dialog';
 import { MatDialog } from '@angular/material/dialog';
+import { Badge } from "../../components/badge/badge";
+import { BaseService } from '../../services/base-service';
+import { CustomSettings } from '../settings/settings';
+import { getProjectType } from '../../../shared/base';
 
 declare const window: any;
 @Component({
@@ -33,7 +37,7 @@ declare const window: any;
     MatInputModule,
     MatSnackBarModule,
     MatSlideToggleModule,
-    MatTooltip, MatIcon],
+    MatTooltip, MatIcon, Badge],
   templateUrl: './compare-branches.html',
   styleUrl: './compare-branches.scss'
 })
@@ -41,7 +45,7 @@ export class CompareBranches {
 
   sourceBranch = '';
   targetBranch = 'master_ah';
-
+  getProjectType = getProjectType;
   token = '';
   displayedColumns = [
     'select',
@@ -54,6 +58,7 @@ export class CompareBranches {
   ];
   dataSource = new MatTableDataSource<any>();
   lastRefreshed: Date | null = null;
+  customSettings?: CustomSettings;
 
   /** SAME PATTERNS AS C# */
   configFilePatterns = [
@@ -62,17 +67,20 @@ export class CompareBranches {
   ];
   baseUrl = 'https://git.promptdairytech.com/api/v4';
 
-  constructor(private loaderService: LoaderService, private snackBar: MatSnackBar, private dialog: MatDialog) {}
+  constructor(private loaderService: LoaderService, private snackBar: MatSnackBar, private dialog: MatDialog,
+    private baseService: BaseService
+  ) {}
   async ngOnInit() {
+    this.customSettings = await window.electronAPI.getSettings();
     this.token = (await window.electronAPI.getToken()).token;
     this.loadProjects();
   }
 
   async loadProjects() {
-    const settings = await window.electronAPI.getSettings();
-    this.dataSource.data = (settings.projects || []).filter((p : any) => p.is_selected);
+    //const settings = await window.electronAPI.getSettings();
+    this.dataSource.data = (this.customSettings?.projects || []).filter((p : any) => p.is_selected);
 
-    const validProjects = (settings.projects || []).filter(
+    const validProjects = (this.customSettings?.projects || []).filter(
       (p: ProjectSettingModel) => p.is_selected);
     
     this.dataSource.data = validProjects.map((p : any) => ({
@@ -86,94 +94,6 @@ export class CompareBranches {
       targetBranchExists: undefined
     }));
   }
-
-  async branchExists(projectId: number, branch: string): Promise<boolean> {
-    const res = await fetch(
-      `${this.baseUrl}/projects/${projectId}/repository/branches/${encodeURIComponent(branch)}`,
-      { headers: { 'PRIVATE-TOKEN': this.token } }
-    );
-    return res.ok;
-  }
-
-
-  // async compareBranches() {
-  //   if (!this.sourceBranch.trim()) {
-  //     this.snackBar.open('Enter source branch!', 'Close', { duration: 3000 });
-  //     return;
-  //   }
-
-  //   const selected = this.dataSource.data.filter(p => p.is_selected);
-  //   const targetList = selected.length ? selected : this.dataSource.data;
-
-  //   this.loaderService.showLoading('Comparing branches…');
-
-  //   for (const proj of targetList) {
-  //     try {
-  //       // Check if branches exist
-  //       proj.sourceBranchExists = await this.branchExists(proj.project_id, this.sourceBranch);
-  //       proj.targetBranchExists = await this.branchExists(proj.project_id, this.targetBranch);
-
-  //       if (!proj.sourceBranchExists || !proj.targetBranchExists) {
-  //         proj.ahead = '-';
-  //         proj.behind = '-';
-  //         proj.configFiles = [];
-  //         continue;
-  //       }
-
-  //       // Compare API
-  //       const compareUrl =
-  //         `${this.baseUrl}/projects/${proj.project_id}/repository/compare` +
-  //         `?from=${encodeURIComponent(this.targetBranch)}` +
-  //         `&to=${encodeURIComponent(this.sourceBranch)}`;
-
-  //       const response = await fetch(compareUrl, {
-  //         headers: { 'PRIVATE-TOKEN': this.token }
-  //       });
-
-  //       if (!response.ok) {
-  //         proj.ahead = '-';
-  //         proj.behind = '-';
-  //         proj.configFiles = [];
-  //         continue;
-  //       }
-
-  //       const data = await response.json();
-
-  //       proj.ahead = data.commits?.length || 0;
-  //       proj.behind = data.compare_timeout ? 0 : 0;
-
-  //       // proj.configFiles = (data.diffs || [])
-  //       //   .map((d: any) => d.new_path?.split('/').pop())
-  //       //   .filter((file: string) =>
-  //       //     this.configFilePatterns.some(rx => rx.test(file))
-  //       //   );
-
-  //       // 👇👇👇 PUT THIS BLOCK HERE 👇👇👇
-  //       proj.configDiffs = (data.diffs || [])
-  //         .filter((d: any) => {
-  //           const file = d.new_path?.split('/').pop();
-  //           return this.configFilePatterns.some(rx => rx.test(file));
-  //         })
-  //         .map((d: any) => ({
-  //           file: d.new_path,
-  //           diff: d.diff,
-  //           newFile: d.new_file,
-  //           renamedFile: d.renamed_file,
-  //           deletedFile: d.deleted_file
-  //         }));
-
-  //       proj.configFiles = proj.configDiffs.map((d : any) => d.file.split('/').pop());
-
-  //     } catch {
-  //       proj.sourceBranchExists = false;
-  //       proj.targetBranchExists = false;
-  //     }
-  //   }
-
-  //   this.dataSource.data = [...this.dataSource.data];
-  //   this.lastRefreshed = new Date();
-  //   this.loaderService.hide();
-  // }
 
   async compareBranches() {
 
@@ -192,6 +112,11 @@ export class CompareBranches {
       return;
     }
 
+    if (!this.targetBranch.trim()) {
+      this.snackBar.open('Enter target branch!', 'Close', { duration: 3000 });
+      return;
+    }
+
     const selected = this.dataSource.data.filter(p => p.is_selected);
     const targetList = selected.length ? selected : this.dataSource.data;
 
@@ -204,8 +129,8 @@ export class CompareBranches {
         try {
           /* 1️⃣ Check branch existence in parallel */
           const [sourceExists, targetExists] = await Promise.all([
-            this.branchExists(proj.project_id, this.sourceBranch),
-            this.branchExists(proj.project_id, this.targetBranch)
+            this.baseService.branchExists(proj.project_id, this.sourceBranch),
+            this.baseService.branchExists(proj.project_id, this.targetBranch)
           ]);
 
           proj.sourceBranchExists = sourceExists;
@@ -221,18 +146,8 @@ export class CompareBranches {
 
           /* 2️⃣ Compare BOTH directions in parallel */
           const [aheadRes, behindRes] = await Promise.all([
-            fetch(
-              `${this.baseUrl}/projects/${proj.project_id}/repository/compare` +
-              `?from=${encodeURIComponent(this.targetBranch)}` +
-              `&to=${encodeURIComponent(this.sourceBranch)}`,
-              { headers }
-            ),
-            fetch(
-              `${this.baseUrl}/projects/${proj.project_id}/repository/compare` +
-              `?from=${encodeURIComponent(this.sourceBranch)}` +
-              `&to=${encodeURIComponent(this.targetBranch)}`,
-              { headers }
-            )
+            this.baseService.getAhead(proj.project_id, this.targetBranch, this.sourceBranch),
+            this.baseService.getAhead(proj.project_id, this.sourceBranch, this.targetBranch)
           ]);
 
           if (!aheadRes.ok || !behindRes.ok) {
@@ -337,4 +252,15 @@ export class CompareBranches {
       targetBranchExists: undefined
     }));
   }
+
+  getBranchChipType(exists: boolean | undefined): 'success' | 'error' | 'neutral' | '' {
+    if (exists === true) return 'success';
+    if (exists === false) return 'error';
+    return '';
+  }
+
+  get hasSelectedProject(): boolean {
+    return this.customSettings?.projects?.some((p: any) => p.is_selected) || false;
+  }
+  
 }

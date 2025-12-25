@@ -27,6 +27,7 @@ export class Login {
 
     if (result.success && result.username) {
       await window.electronAPI.saveToken(this.accessToken, result.username, result.isAdmin);
+      localStorage.setItem('token', this.accessToken);
       this.router.navigate(['/home']);
     } else {
       this.error = 'Invalid GitLab token. Please try again.';

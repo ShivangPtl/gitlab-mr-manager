@@ -1,16 +1,8 @@
-.success { color: green; }
-.running { color: #2196f3; }
-.failed { color: red; }
-.pending, .created { color: orange; }
-.canceled { color: gray; }
-
-
-
 // Import shared styles
-@import '../../../assets/shared-styles.scss';
+@import '../../../assets/shared-styles.scss';  
 
 .home-container {
-  @extend .page-container ;
+  @extend .page-container;
 
   // Home-specific styles
   .mr-meta {
@@ -41,36 +33,6 @@
         border-radius: 4px;
         transition: background-color 0.3s ease;
       }
-    }
-  }
-
-  .mr-status {
-    font-weight: 500;
-    font-size: 0.9rem;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-  
-    &::before {
-      content: '●';
-      font-size: 1rem;
-      line-height: 1;
-    }
-  
-    &.created {
-      color: #42a5f5; // Blue
-    }
-  
-    &.merged {
-      color: #66bb6a; // Green
-    }
-  
-    &.rejected {
-      color: #ef5350; // Red
-    }
-  
-    &.none {
-      color: var(--text-tertiary);
     }
   }
 

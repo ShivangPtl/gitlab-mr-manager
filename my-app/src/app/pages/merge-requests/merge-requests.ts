@@ -5,6 +5,9 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { LoaderService } from '../../services/loader';
 import { Navbar } from '../navbar/navbar';
+import { Badge } from "../../components/badge/badge";
+import { CustomSettings } from '../settings/settings';
+import { getProjectType } from '../../../shared/base';
 
 declare const window: any;
 
@@ -29,8 +32,9 @@ interface MRTableRow {
     Navbar,
     MatTableModule,
     MatButtonModule,
-    MatIconModule
-  ]
+    MatIconModule,
+    Badge
+]
 })
 export class MergeRequests implements OnInit {
 
@@ -60,59 +64,97 @@ export class MergeRequests implements OnInit {
     'Ankita Hirani'
   ];
 
+  customSettings?: CustomSettings;
+  getProjectType = getProjectType;
+
   constructor(private loader: LoaderService) { }
 
   async ngOnInit(): Promise<void> {
+    this.customSettings = await window.electronAPI.getSettings();
     await this.refreshMRs();
   }
 
   async refreshMRs(): Promise<void> {
-    this.loader.showLoading('Fetching merge requests…');
+    try {
+      this.loader.showLoading('Fetching merge requests…');
 
-    const settings = await window.electronAPI.getSettings();
-    const targetBranch = settings.defaultBranch || 'master_ah';
-    const selectedUsers = this.users;
+      const selectedUsers = this.users;
 
-    const output: MRTableRow[] = [];
-
-    if(settings.projects == undefined || settings.projects.length === 0) {
-      this.dataSource.data = [];
-      this.lastRefreshed = new Date();
-      this.loader.hide();
-      return;
-    }
-
-    for (const proj of settings.projects) {
-      if (!proj.is_selected) continue;
-
-      const mrList = await this.fetchMergeRequests(proj.project_name, targetBranch);
-
-      for (const mr of mrList) {
-        const assignee = mr.assignees?.nodes?.map((x: any) => x.name).join(', ') ?? '-';
-
-        const match =
-          selectedUsers.includes(assignee) ||
-          selectedUsers.includes(mr.author.name);
-
-        if (!match) continue;
-
-        output.push({
-          project_name: proj.project_name,
-          source_branch: mr.sourceBranch,
-          target_branch: mr.targetBranch,
-          author: mr.author.name,
-          assignee,
-          created_at: new Date(mr.createdAt).toLocaleString('en-GB'),
-          status: mr.state.toUpperCase(),
-          url: mr.webUrl
-        });
+      if (!this.customSettings?.projects?.length) {
+        this.dataSource.data = [];
+        this.lastRefreshed = new Date();
+        return;
       }
+
+      const branches = this.getBranches(this.customSettings);
+      const projects = this.customSettings.projects.filter((p: any) => p.is_selected);
+
+      const tasks: Promise<MRTableRow[]>[] = [];
+
+      for (const proj of projects) {
+        for (const branch of branches) {
+          tasks.push(
+            this.processProjectBranchMRs(
+              proj,
+              branch,
+              selectedUsers
+            )
+          );
+        }
+      }
+
+      // 🔥 PARALLEL EXECUTION
+      const results = await Promise.all(tasks);
+
+      this.dataSource.data = results.flat();
+      this.lastRefreshed = new Date();
+
+    } catch (err) {
+      // this.showError(err);
+    } finally {
+      this.loader.hide();
+    }
+  }
+  
+
+  private async processProjectBranchMRs(
+    proj: any,
+    branch: string,
+    selectedUsers: string[]
+  ): Promise<MRTableRow[]> {
+
+    const rows: MRTableRow[] = [];
+
+    const mrList = await this.fetchMergeRequests(
+      proj.project_name,
+      branch
+    );
+
+    for (const mr of mrList) {
+      const assignee =
+        mr.assignees?.nodes?.map((x: any) => x.name).join(', ') ?? '-';
+
+      const match =
+        selectedUsers.includes(assignee) ||
+        selectedUsers.includes(mr.author?.name);
+
+      if (!match) continue;
+
+      rows.push({
+        project_name: proj.project_name,
+        source_branch: mr.sourceBranch,
+        target_branch: mr.targetBranch,
+        author: mr.author.name,
+        assignee,
+        created_at: new Date(mr.createdAt).toLocaleString('en-GB'),
+        status: mr.state == 'opened' ? 'PENDING' : mr.state.toUpperCase(),
+        url: mr.webUrl
+      });
     }
 
-    this.dataSource.data = output;
-    this.lastRefreshed = new Date();
-    this.loader.hide();
+    return rows;
   }
+  
 
 
   async fetchMergeRequests(projectName: string, targetBranch: string): Promise<any[]> {
@@ -167,5 +209,17 @@ export class MergeRequests implements OnInit {
 
   openDefaultBrowser(url: string) {
     window.electronAPI.openExternal(url);
+  }
+
+  private getBranches(settings: any): string[] {
+    return [
+      settings.supportBranch,
+      settings.releaseBranch,
+      settings.liveBranch
+    ].filter(Boolean); // removes undefined/null
+  }
+  
+  get hasSelectedProject(): boolean {
+    return this.customSettings?.projects?.some(p => p.is_selected) ?? false;
   }
 }

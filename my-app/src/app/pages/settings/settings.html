@@ -15,9 +15,19 @@
                placeholder="Branch name" />
       </div>
 
-      <mat-form-field appearance="fill">
-        <mat-label>Target Branch</mat-label>
-        <input matInput [(ngModel)]="defaultBranch" />
+      <mat-form-field appearance="fill" class="branch-input">
+        <mat-label>Support Branch</mat-label>
+        <input matInput [(ngModel)]="supportBranch" />
+      </mat-form-field>
+
+      <mat-form-field appearance="fill" class="branch-input">
+        <mat-label>Release Branch</mat-label>
+        <input matInput [(ngModel)]="releaseBranch" />
+      </mat-form-field>
+
+      <mat-form-field appearance="fill" class="branch-input">
+        <mat-label>Live Branch</mat-label>
+        <input matInput [(ngModel)]="liveBranch" />
       </mat-form-field>
 
       <mat-form-field appearance="fill">
@@ -29,16 +39,6 @@
         </mat-select>
       </mat-form-field>
 
-      <mat-form-field appearance="fill">
-        <mat-label>Default Reviewer</mat-label>
-        <mat-select [(ngModel)]="selectedReviewerId">
-          <mat-option *ngFor="let user of reviewers" [value]="user.user_id">
-            {{ user.user_name }}
-          </mat-option>
-        </mat-select>
-      </mat-form-field>
-
-      <!-- <app-theme-toggle></app-theme-toggle> -->
       <div class="theme-toggle-container">
         <mat-icon class="theme-icon">light_mode</mat-icon>
         <mat-slide-toggle [checked]="darkMode" (change)="onThemeToggle($event)" color="primary">

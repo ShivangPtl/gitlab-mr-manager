@@ -1,0 +1,36 @@
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid;
+  font-weight: 600;
+  white-space: nowrap;
+
+  mat-icon {
+    font-size: 16px;
+  }
+
+  &.badge {
+    border-radius: 12px;
+    padding: 2px 8px;
+  }
+
+  &.pill {
+    border-radius: 6px;
+    padding: 2px 10px;
+    font-family: monospace;
+  }
+
+  &.sm {
+    font-size: 12px;
+  }
+
+  &.md {
+    font-size: 13px;
+  }
+
+  .close {
+    font-size: 12px;
+    line-height: 12px;
+  }
+}

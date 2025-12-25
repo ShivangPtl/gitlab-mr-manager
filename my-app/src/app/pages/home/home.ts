@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -16,6 +16,12 @@ import { MatTableDataSource } from '@angular/material/table';
 import { LoaderService } from '../../services/loader';
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { ProjectListModel } from '../../models/project-list.model';
+import { GitlabAuth } from '../../services/gitlab-auth';
+import { CustomSettings } from '../settings/settings';
+import { Badge } from "../../components/badge/badge";
+import { BaseService } from '../../services/base-service';
+import { MatIcon } from '@angular/material/icon';
+import { getProjectType } from '../../../shared/base';
 
 declare const window: any;
 
@@ -30,8 +36,7 @@ declare const window: any;
     MatTableModule,
     MatButtonModule,
     MatInputModule,
-    MatSnackBarModule
-  ],
+    MatSnackBarModule, Badge, MatIcon],
   templateUrl: './home.html',
   styleUrls: ['./home.scss']
 })
@@ -39,32 +44,29 @@ declare const window: any;
 
 
 export class Home implements OnInit {
-  constructor(private loaderService: LoaderService, private snackBar: MatSnackBar) { }
+  targetBranch = 'master_ah';
+  constructor(private loaderService: LoaderService, private snackBar: MatSnackBar, private authService: GitlabAuth, private cdr: ChangeDetectorRef, private baseService: BaseService) 
+  {
+    this.targetBranch = localStorage.getItem('selectedTargetBranch') || 'master_ah';
+  }
   gitlabApiBase = 'https://git.promptdairytech.com/api/v4';
   assignees: UserItem[] = [];
-  reviewers: UserItem[] = [];
   labels: LabelItem[] = [];
   selectedAssigneeId: number = 119;
-  selectedReviewerId: number = 119;
   mrTitle: string = '';
   mrDescription: string = '';
   dataSource = new MatTableDataSource<ProjectListModel>();
   lastRefreshed: Date | null = null;
   token: string = '';
   loaderType: 'spinner' | 'dots' | 'pulse' | undefined = 'spinner';
+  customSettings?: CustomSettings;
+  showBranchSelector = false;
+  getProjectType = getProjectType;
   async ngOnInit() {
     this.token = (await window.electronAPI.getToken()).token;
-    const settings = await window.electronAPI.getSettings();
+    this.customSettings = await window.electronAPI.getSettings();
 
-    this.assignees = [
-      { user_id: 119, user_name: 'Shivang Patel' },
-      { user_id: 120, user_name: 'Kiran Gami' },
-      { user_id: 106, user_name: 'Ekta Gupta' },
-      { user_id: 148, user_name: 'Jigisha Patel' },
-      { user_id: 86, user_name: 'Jaydip Prajapati' }, 
-    ];
-
-    this.reviewers = [...this.assignees];
+    this.assignees = this.authService.userList;
 
     this.labels = [
       { name: 'Task', is_selected: false },
@@ -76,10 +78,20 @@ export class Home implements OnInit {
       { name: 'Branch Merge', is_selected: false }
     ];
 
-    if (settings.selectedAssigneeId) this.selectedAssigneeId = settings.selectedAssigneeId;
-    if (settings.selectedReviewerId) this.selectedReviewerId = settings.selectedReviewerId;
-    if (settings.labels) this.labels = settings.labels;
+    if (this.customSettings?.selectedAssigneeId) this.selectedAssigneeId = this.customSettings?.selectedAssigneeId;
 
+    const savedBranch = localStorage.getItem('selectedTargetBranch') || 'master_ah';
+    const allowedBranches = [
+      this.customSettings?.supportBranch,
+      this.customSettings?.releaseBranch,
+      this.customSettings?.liveBranch
+    ];
+
+    if (savedBranch && allowedBranches.includes(savedBranch)) {
+      this.targetBranch = savedBranch;
+      this.showBranchSelector = true;
+    }
+    this.cdr.detectChanges(); 
     this.loadProjectsWithCommitInfo();
   }
 
@@ -122,7 +134,7 @@ export class Home implements OnInit {
           formData.append('title', title);
           formData.append('description', description);
           formData.append('assignee_id', this.selectedAssigneeId.toString());
-          formData.append('reviewer_ids[]', this.selectedReviewerId.toString());
+          formData.append('reviewer_ids[]', this.selectedAssigneeId.toString());
           formData.append('labels', selectedLabels);
 
           const response = await fetch(`https://git.promptdairytech.com/api/v4/projects/${proj.project_id}/merge_requests`, {
@@ -156,186 +168,186 @@ export class Home implements OnInit {
     }
   }
 
-  //async loadProjectsWithCommitInfo(): Promise<void> {
-  //  try {
-  //    this.loaderService.showLoading('Loading projects info...');
+//   async loadProjectsWithCommitInfo(): Promise<void> {
+//   try {
+//     this.loaderService.showLoading('Loading projects info...');
 
-  //    const settings = await window.electronAPI.getSettings();
-  //    const targetBranch: string = settings.defaultBranch || 'master_ah';
+//     // const targetBranch: string = this.customSettings?.supportBranch || 'master_ah';
 
-  //    const validProjects = (settings.projects || []).filter((p: ProjectSettingModel) => p.is_selected && p.local_repo_path);
+//     const useCustomBranch: boolean = this.customSettings?.useCustomBranch ?? false;
+//     const sourceBranch: string = this.customSettings?.sourceBranch || this.targetBranch;
 
-  //    //const filteredProjects: ProjectListModel[] = [];
-  //    //for (const project of validProjects) {
-  //    //  this.loaderService.showLoading(`Loading ${project.project_name} info...`);
-  //    //  await this.runGit(project.local_repo_path, `fetch origin ${targetBranch}:refs/remotes/origin/${targetBranch}`);
+//     const validProjects = (this.customSettings?.projects || []).filter(
+//       (p: ProjectSettingModel) => p.is_selected && p.local_repo_path
+//     );
 
-  //    //  const current_branch = await this.runGit(project.local_repo_path, 'rev-parse --abbrev-ref HEAD');
-  //    //  const commits_ahead_str = await this.runGit(project.local_repo_path, `rev-list --count origin/${targetBranch}..${current_branch}`);
-  //    //  const commits_ahead = parseInt(commits_ahead_str || '0');
+//     // Process all projects in parallel
+//     const projectPromises = validProjects.map(async (project : any) => {
+//       try {
+//         this.loaderService.showLoading(  
+//           `Loading repositories....`
+//         );
+        
+//         // Run git operations in parallel where possible
+//         // await this.runGit(
+//         //   project.local_repo_path, 
+//         //   `fetch origin ${this.targetBranch}:refs/remotes/origin/${this.targetBranch}`
+//         // );
 
-  //    //  const mr_status = await this.fetchMRStatus(project.project_id, current_branch, targetBranch);
+//         // --------- CURRENT BRANCH DECISION LOGIC ---------
+//         let current_branch: string;
+//         if (!useCustomBranch) {
+//           current_branch = await this.runGit(
+//             project.local_repo_path,
+//             'rev-parse --abbrev-ref HEAD'
+//           );
+//         } else {
+//           current_branch = sourceBranch;
+//         }
 
-  //    //  filteredProjects.push({
-  //    //    ...project,
-  //    //    current_branch,
-  //    //    target_branch: targetBranch,
-  //    //    commits_ahead,
-  //    //    mr_status,
-  //    //    is_selected: false
-  //    //  });
-  //    //}
-  //    let completed = 0;
-  //    const total = validProjects.length;
-  //    const filteredProjects = await Promise.all(
-  //      validProjects.map(async (project: ProjectSettingModel) => {
-  //        //this.loaderService.showLoading(`Loading ${project.project_name} info...`);
+//         // Ensure branch exists + fetch if missing
+//         // const branchExists = await this.branchExists(project.local_repo_path, current_branch);
 
-  //        this.loaderService.showLoading(
-  //          `Loading repositories...`
-  //        );
+//         const [sourceExists, targetExists] = await Promise.all([
+//           this.baseService.branchExists(project.project_id, current_branch),
+//           this.baseService.branchExists(project.project_id, this.targetBranch)
+//         ]);
 
-  //        const current_branch = await this.runGit(project.local_repo_path, 'rev-parse --abbrev-ref HEAD');
-  //    
-  //        const fetchPromise = this.runGit(
-  //          project.local_repo_path, 
-  //          `fetch origin ${targetBranch}:refs/remotes/origin/${targetBranch}`
-  //        );
-  //    
-  //        const commitsPromise = this.runGit(
-  //          project.local_repo_path, 
-  //          `rev-list --count origin/${targetBranch}..${current_branch}`
-  //        );
-  //    
-  //        const mrPromise = this.fetchMRStatus(project.project_id, current_branch, targetBranch);
-  //    
-  //        const [_, commits_ahead_str, mr_status] = await Promise.all([
-  //          fetchPromise,
-  //          commitsPromise,
-  //          mrPromise
-  //        ]);
+//         project.sourceBranchExists = sourceExists;
+//         project.targetBranchExists = targetExists;
 
-  //        completed++;
-  //        //this.loaderService.showLoading(
-  //        //  `Loading repositories (${completed}/${total})`
-  //        //);
+//         // --------- FETCH COUNT AHEAD ---------
+//         const commits_ahead_str = await this.runGit(
+//           project.local_repo_path,
+//           `rev-list --count origin/${this.targetBranch}..origin/${current_branch}` 
+//         );
 
-  //        this.loaderService.showLoading(`Loading ${project.project_name} info...`);
-  //    
-  //        return {
-  //          ...project,
-  //          current_branch,
-  //          target_branch: targetBranch,
-  //          commits_ahead: parseInt(commits_ahead_str || '0'),
-  //          mr_status,
-  //          is_selected: false
-  //        };
-  //      })
-  //    );
+//         // teas
 
-  //    this.dataSource.data = [];
-  //    this.dataSource.data = filteredProjects;
-  //    this.lastRefreshed = new Date();
-  //    this.loaderService.hide();
-  //  } catch (error) {
-  //    this.handleError(error);
-  //  }
-  //}
+//         if (!project.sourceBranchExists || !project.targetBranchExists) {
+//           return {
+//             ...project,
+//             current_branch,
+//             target_branch: this.targetBranch,
+//             commits_ahead: 0,
+//             mr_status: 'No MR',
+//             is_selected: false
+//           } as ProjectListModel;
+//         }
+
+//         const commits_ahead_res = await this.baseService.getAhead(project.project_id, this.targetBranch, current_branch);
+
+//         if (!commits_ahead_res.ok) {
+//           project.ahead = '-';
+//           return;
+//         }
+
+//         const aheadData = commits_ahead_res.ok ? await commits_ahead_res.json() : null;
+
+//         /* 3️⃣ Set ahead / behind */
+//         const commits_ahead = aheadData?.commits?.length || 0;
+
+
+//         // --------- MR STATUS ---------
+//         const mr_status = await this.fetchMRStatus(
+//           project.project_id,
+//           current_branch,
+//           this.targetBranch
+//         );
+
+
+//         this.loaderService.showLoading(`Loading ${project.project_name} info...`);
+
+//         return {
+//           ...project,
+//           current_branch,
+//           target_branch: this.targetBranch,
+//           commits_ahead,
+//           mr_status,
+//           is_selected: false
+//         } as ProjectListModel;
+//       } catch (error) {
+//         console.error(`Error processing project ${project.project_name}:`, error);
+//         // Return project with error state or skip it
+//         return null;
+//       }
+//     });
+
+//     // Wait for all projects to complete
+//     const results = await Promise.all(projectPromises);
+    
+//     // Filter out any null results (failed projects)
+//     const filteredProjects = results.filter(p => p !== null && p != undefined) as ProjectListModel[];
+
+//     this.dataSource.data = filteredProjects;
+//     await this.updateMrStatus();
+//     this.lastRefreshed = new Date();
+//     this.loaderService.hide();
+//   } catch (error) {
+//     this.handleError(error);
+//   }
+// }
 
   async loadProjectsWithCommitInfo(): Promise<void> {
-  try {
-    this.loaderService.showLoading('Loading projects info...');
-    const settings = await window.electronAPI.getSettings();
-    const targetBranch: string = settings.defaultBranch || 'master_ah';
+    try {
+      this.loaderService.showLoading('Loading projects info...');
 
-    const useCustomBranch: boolean = settings.useCustomBranch ?? true;
-    const sourceBranch: string = settings.sourceBranch || targetBranch;
+      const useCustomBranch: boolean = this.customSettings?.useCustomBranch ?? false;
+      const sourceBranch: string = useCustomBranch ? this.customSettings?.sourceBranch ?? '' : '';
 
-    const validProjects = (settings.projects || []).filter(
-      (p: ProjectSettingModel) => p.is_selected && p.local_repo_path
-    );
+      const validProjects = (this.customSettings?.projects || []).filter(
+        (p: ProjectSettingModel) => p.is_selected && p.local_repo_path
+      );
 
-    // Process all projects in parallel
-    const projectPromises = validProjects.map(async (project : any) => {
-      try {
-        this.loaderService.showLoading(
-          `Loading repositories...`
-        );
-        
-        // Run git operations in parallel where possible
-        await this.runGit(
-          project.local_repo_path, 
-          `fetch origin ${targetBranch}:refs/remotes/origin/${targetBranch}`
-        );
+      const projectPromises = validProjects.map(async (project: any) => {
+        try {
+          this.loaderService.showLoading(`Loading repositories....`);
 
-        // --------- CURRENT BRANCH DECISION LOGIC ---------
-        let current_branch: string;
-        if (!useCustomBranch) {
-          current_branch = await this.runGit(
-            project.local_repo_path,
-            'rev-parse --abbrev-ref HEAD'
+          // Determine current branch
+          const current_branch = !useCustomBranch
+            ? await this.runGit(project.local_repo_path, 'rev-parse --abbrev-ref HEAD')
+            : sourceBranch;
+
+          // Fetch project data with branch validation
+          const {
+            commits_ahead,
+            mr_status,
+            sourceBranchExists,
+            targetBranchExists
+          } = await this.fetchProjectCommitsAndMRStatus(
+            project,
+            current_branch,
           );
-        } else {
-          current_branch = sourceBranch;
+
+          this.loaderService.showLoading(`Loading ${project.project_name} info...`);
+
+          return {
+            ...project,
+            current_branch,
+            target_branch: this.targetBranch,
+            commits_ahead,
+            mr_status,
+            is_selected: false,
+            sourceBranchExists,
+            targetBranchExists
+          } as ProjectListModel;
+        } catch (error) {
+          console.error(`Error processing project ${project.project_name}:`, error);
+          return null;
         }
+      });
 
-        // Ensure branch exists + fetch if missing
-        const branchExists = await this.branchExists(project.local_repo_path, current_branch);
-        
-        if (!branchExists) {
-          await this.runGit(
-            project.local_repo_path,
-            `fetch origin ${current_branch}:refs/remotes/origin/${current_branch}`
-          );
-        }
+      const results = await Promise.all(projectPromises);
+      const filteredProjects = results.filter(p => p !== null && p !== undefined) as ProjectListModel[];
 
-        // --------- FETCH COUNT AHEAD ---------
-        const commits_ahead_str = await this.runGit(
-          project.local_repo_path,
-          `rev-list --count origin/${targetBranch}..origin/${current_branch}`
-        );
-
-        const commits_ahead = parseInt(commits_ahead_str || '0');
-
-        // --------- MR STATUS ---------
-        const mr_status = await this.fetchMRStatus(
-          project.project_id,
-          current_branch,
-          targetBranch
-        );
-
-
-        this.loaderService.showLoading(`Loading ${project.project_name} info...`);
-
-        return {
-          ...project,
-          current_branch,
-          target_branch: targetBranch,
-          commits_ahead,
-          mr_status,
-          is_selected: false
-        } as ProjectListModel;
-      } catch (error) {
-        console.error(`Error processing project ${project.project_name}:`, error);
-        // Return project with error state or skip it
-        return null;
-      }
-    });
-
-    // Wait for all projects to complete
-    const results = await Promise.all(projectPromises);
-    
-    // Filter out any null results (failed projects)
-    const filteredProjects = results.filter(p => p !== null) as ProjectListModel[];
-
-    this.dataSource.data = filteredProjects;
-    await this.updateMrStatus();
-    this.lastRefreshed = new Date();
-    this.loaderService.hide();
-  } catch (error) {
-    this.handleError(error);
+      this.dataSource.data = filteredProjects;
+      this.lastRefreshed = new Date();
+      this.loaderService.hide();
+    } catch (error) {
+      this.handleError(error);
+    }
   }
-}
+
 
 async branchExists(repoPath: string, branch: string): Promise<boolean> {
   try {
@@ -349,123 +361,165 @@ async branchExists(repoPath: string, branch: string): Promise<boolean> {
   }
 }
 
+//   async updateMrStatus(): Promise<void> {
+//   try {
+//     let selectedProjects = this.dataSource.data.filter(p => p.is_selected);
+//     if (selectedProjects.length === 0) {
+//       selectedProjects = this.dataSource.data;
+//     }
+//     if (selectedProjects.length === 0) {
+//       this.snackBar.open('No Projects Found!', 'Close', { duration: 3000 });
+//       this.loaderService.hide();
+//       return;
+//     }
 
-  //async updateMrStatus(): Promise<void> {
-  //  try {
-  //    let selectedProjects = this.dataSource.data.filter(p => p.is_selected);
-  //    if (selectedProjects.length === 0) {
-  //      selectedProjects = this.dataSource.data;
-  //    }
+//     // Process all selected projects in parallel
+//     const updatePromises = selectedProjects.map(async (project) => {
+//       try {
+//         // Run MR status fetch and git commit count in parallel
+//         const [mr_status, commits_ahead_str] = await Promise.all([
+//           this.fetchMRStatus(
+//             project.project_id, 
+//             project.current_branch, 
+//             project.target_branch, 
+//             true
+//           ),
+//           this.runGit(
+//             project.local_repo_path,
+//             `rev-list --count origin/${project.target_branch}..origin/${project.current_branch}`
+//         )
+//         ]);
 
-  //    if (selectedProjects.length === 0) {
-  //      this.snackBar.open('No Projects Found!', 'Close', { duration: 3000 });
-  //      this.loaderService.hide();
-  //      return;
-  //    }
+//         const commits_ahead = parseInt(commits_ahead_str || '0');
 
-  //    for (const project of selectedProjects) {
-  //      const mr_status = await this.fetchMRStatus(project.project_id, project.current_branch, project.target_branch, true);
-  //      const commits_ahead_str = await this.runGit(project.local_repo_path, `rev-list --count origin/${project.target_branch}..${project.current_branch}`);
-  //      const commits_ahead = parseInt(commits_ahead_str || '0');
-  //      this.dataSource.data = this.dataSource.data.map(p => p.project_id === project.project_id ? { ...p, is_selected: false, mr_status, commits_ahead } : p);
-  //    }
+//         return {
+//           project_id: project.project_id,
+//           mr_status,
+//           commits_ahead
+//         };
+//       } catch (error) {
+//         console.error(`Error updating project ${project.project_name}:`, error);
+//         return {
+//           project_id: project.project_id,
+//           mr_status: project.mr_status, // Keep existing status on error
+//           commits_ahead: project.commits_ahead
+//         };
+//       }
+//     });
 
-  //    const settings = await window.electronAPI.getSettings();
-  //    if (settings.selectedAssigneeId) this.selectedAssigneeId = settings.selectedAssigneeId;
-  //    if (settings.selectedReviewerId) this.selectedReviewerId = settings.selectedReviewerId;
-  //    this.labels.forEach(l => l.is_selected = false);
+//     // Wait for all updates to complete
+//     const updates = await Promise.all(updatePromises);
 
-  //    this.mrTitle = '';
-  //    this.mrDescription = '';
-  //    this.loaderService.hide();
-  //  } catch (error) {
-  //    this.handleError(error);
-  //  }
-  //}
+//     // Create a map for O(1) lookup
+//     const updatesMap = new Map(
+//       updates.map(u => [u.project_id, u])
+//     );
+
+//     // Update dataSource once with all changes
+//     this.dataSource.data = this.dataSource.data.map(p => {
+//       const update = updatesMap.get(p.project_id);
+//       if (update) {
+//         return {
+//           ...p,
+//           is_selected: false,
+//           mr_status: update.mr_status,
+//           commits_ahead: update.commits_ahead
+//         };
+//       }
+//       return p;
+//     });
+
+//     // Load settings once at the end
+//     const settings = await window.electronAPI.getSettings();
+//     if (settings.selectedAssigneeId) this.selectedAssigneeId = settings.selectedAssigneeId;
+    
+//     this.labels.forEach(l => l.is_selected = false);
+//     this.mrTitle = '';
+//     this.mrDescription = '';
+//     this.loaderService.hide();
+//   } catch (error) {
+//     this.handleError(error);
+//   }
+// }
 
   async updateMrStatus(): Promise<void> {
-  try {
-    let selectedProjects = this.dataSource.data.filter(p => p.is_selected);
-    if (selectedProjects.length === 0) {
-      selectedProjects = this.dataSource.data;
-    }
-    if (selectedProjects.length === 0) {
-      this.snackBar.open('No Projects Found!', 'Close', { duration: 3000 });
+    try {
+      this.loaderService.showLoading('Refreshing...');
+
+      let selectedProjects = this.dataSource.data.filter(p => p.is_selected);
+      if (selectedProjects.length === 0) {
+        selectedProjects = this.dataSource.data;
+      }
+      if (selectedProjects.length === 0) {
+        this.snackBar.open('No Projects Found!', 'Close', { duration: 3000 });
+        this.loaderService.hide();
+        return;
+      }
+
+      const updatePromises = selectedProjects.map(async (project) => {
+        try {
+          // Fetch project data with branch validation
+          const {
+            commits_ahead,
+            mr_status,
+            sourceBranchExists,
+            targetBranchExists
+          } = await this.fetchProjectCommitsAndMRStatus(
+            project,
+            project.current_branch,
+          );
+
+          return {
+            project_id: project.project_id,
+            mr_status,
+            commits_ahead,
+            sourceBranchExists,
+            targetBranchExists
+          };
+        } catch (error) {
+          console.error(`Error updating project ${project.project_name}:`, error);
+          return {
+            project_id: project.project_id,
+            mr_status: project.mr_status,
+            commits_ahead: project.commits_ahead,
+            sourceBranchExists: project.sourceBranchExists,
+            targetBranchExists: project.targetBranchExists
+          };
+        }
+      });
+
+      const updates = await Promise.all(updatePromises);
+      const updatesMap = new Map(updates.map(u => [u.project_id, u]));
+
+      this.dataSource.data = this.dataSource.data.map(p => {
+        const update = updatesMap.get(p.project_id);
+        if (update) {
+          return {
+            ...p,
+            is_selected: false,
+            mr_status: update.mr_status ?? '-', // Fallback to existing value
+            commits_ahead: update.commits_ahead ?? '-', // Fallback to existing value
+            sourceBranchExists: update.sourceBranchExists ?? p.sourceBranchExists,
+            targetBranchExists: update.targetBranchExists ?? p.targetBranchExists
+          } as ProjectListModel; // Type assertion to ensure correct type
+        }
+        return p;
+      });
+
+      const settings = await window.electronAPI.getSettings();
+      if (settings.selectedAssigneeId) this.selectedAssigneeId = settings.selectedAssigneeId;
+
+      this.labels.forEach(l => l.is_selected = false);
+      this.mrTitle = '';
+      this.mrDescription = '';
+      this.lastRefreshed = new Date();
       this.loaderService.hide();
-      return;
+    } catch (error) {
+      this.handleError(error);
     }
-
-    // Process all selected projects in parallel
-    const updatePromises = selectedProjects.map(async (project) => {
-      try {
-        // Run MR status fetch and git commit count in parallel
-        const [mr_status, commits_ahead_str] = await Promise.all([
-          this.fetchMRStatus(
-            project.project_id, 
-            project.current_branch, 
-            project.target_branch, 
-            true
-          ),
-          this.runGit(
-            project.local_repo_path,
-            `rev-list --count origin/${project.target_branch}..origin/${project.current_branch}`
-        )
-        ]);
-
-        const commits_ahead = parseInt(commits_ahead_str || '0');
-
-        return {
-          project_id: project.project_id,
-          mr_status,
-          commits_ahead
-        };
-      } catch (error) {
-        console.error(`Error updating project ${project.project_name}:`, error);
-        return {
-          project_id: project.project_id,
-          mr_status: project.mr_status, // Keep existing status on error
-          commits_ahead: project.commits_ahead
-        };
-      }
-    });
-
-    // Wait for all updates to complete
-    const updates = await Promise.all(updatePromises);
-
-    // Create a map for O(1) lookup
-    const updatesMap = new Map(
-      updates.map(u => [u.project_id, u])
-    );
-
-    // Update dataSource once with all changes
-    this.dataSource.data = this.dataSource.data.map(p => {
-      const update = updatesMap.get(p.project_id);
-      if (update) {
-        return {
-          ...p,
-          is_selected: false,
-          mr_status: update.mr_status,
-          commits_ahead: update.commits_ahead
-        };
-      }
-      return p;
-    });
-
-    // Load settings once at the end
-    const settings = await window.electronAPI.getSettings();
-    if (settings.selectedAssigneeId) this.selectedAssigneeId = settings.selectedAssigneeId;
-    if (settings.selectedReviewerId) this.selectedReviewerId = settings.selectedReviewerId;
-    
-    this.labels.forEach(l => l.is_selected = false);
-    this.mrTitle = '';
-    this.mrDescription = '';
-    this.loaderService.hide();
-  } catch (error) {
-    this.handleError(error);
   }
-}
 
-  async fetchMRStatus(projectId: number, sourceBranch: string, targetBranch: string, showMessage = false): Promise<'Created' | 'Merged' | 'Rejected' | 'No MR' | 'Error'> {
+  async fetchMRStatus(projectId: number, sourceBranch: string, targetBranch: string, showMessage = true): Promise<'Created' | 'Merged' | 'Rejected' | 'No MR' | 'Error'> {
     try {
       const project = this.dataSource.data.find(e => e.project_id == projectId);
 
@@ -577,5 +631,68 @@ async branchExists(repoPath: string, branch: string): Promise<boolean> {
     });
   }
 
+  onTargetBranchChange(){
+    localStorage.setItem('selectedTargetBranch', this.targetBranch);
+
+    this.loadProjectsWithCommitInfo();
+  }
+
+  getBranchChipType(exists: boolean | undefined): 'success' | 'error' | 'neutral' | '' {
+    if (exists === true) return 'success';
+    if (exists === false) return 'error';
+    return '';
+  }
+
+
+  private async fetchProjectCommitsAndMRStatus(
+    project: any,
+    currentBranch: string,
+  ): Promise<{
+    commits_ahead: number;
+    mr_status: string;
+    sourceBranchExists: boolean;
+    targetBranchExists: boolean;
+  }> {
+    // Check branch existence
+    const [sourceExists, targetExists] = await Promise.all([
+      this.baseService.branchExists(project.project_id, currentBranch),
+      this.baseService.branchExists(project.project_id, this.targetBranch)
+    ]);
+
+    // If branches don't exist, return early with specific branch info
+    if (!sourceExists || !targetExists) {
+      return {
+        commits_ahead: 0,
+        mr_status: 'No MR',
+        sourceBranchExists: sourceExists,
+        targetBranchExists: targetExists
+      };
+    }
+
+    // Fetch commits ahead and MR status in parallel
+    const [mr_status, commits_ahead_res] = await Promise.all([
+      this.fetchMRStatus(
+        project.project_id,
+        currentBranch,
+        this.targetBranch,
+      ),
+      this.baseService.getAhead(project.project_id, this.targetBranch, currentBranch)
+    ]);
+
+    const commits_ahead = commits_ahead_res.ok
+      ? (await commits_ahead_res.json())?.commits?.length || 0
+      : 0;
+
+    return {
+      commits_ahead,
+      mr_status,
+      sourceBranchExists: true,
+      targetBranchExists: true
+    };
+  }
+
+  get hasSelectedProject(): boolean {
+    return this.customSettings?.projects?.some(p => p.is_selected) ?? false;
+  }
 }
 

@@ -7,4 +7,6 @@ export interface ProjectListModel {
     target_branch: string;
     commits_ahead: number;
     mr_status?: 'Created' | 'Merged' | 'Rejected' | 'No MR' | 'Error';
+    sourceBranchExists: boolean;
+    targetBranchExists: boolean;
 }

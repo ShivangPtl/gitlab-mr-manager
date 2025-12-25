@@ -17,6 +17,10 @@ import { LoaderService } from '../../services/loader';
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { ProjectListModel } from '../../models/project-list.model';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { Badge } from "../../components/badge/badge";
+import { MatIcon } from '@angular/material/icon';
+import { CustomSettings } from '../settings/settings';
+import { getProjectType } from '../../../shared/base';
 
 declare const window: any;
 @Component({
@@ -30,8 +34,7 @@ declare const window: any;
     MatButtonModule,
     MatInputModule,
     MatSnackBarModule,
-    MatSlideToggleModule
-  ],
+    MatSlideToggleModule, Badge, MatIcon],
   templateUrl: './create-branch.html',
   styleUrl: './create-branch.scss'
 })
@@ -48,17 +51,19 @@ export class CreateBranch implements OnInit {
 
   constructor(private loaderService: LoaderService, private snackBar: MatSnackBar) {}
   lastRefreshed: Date | null = null;
+  customSettings?: CustomSettings;
+  getProjectType = getProjectType;
   async ngOnInit() {
     this.token = (await window.electronAPI.getToken()).token;
+    this.customSettings = await window.electronAPI.getSettings();
     this.loadProjects();
   }
 
   async loadProjects() {
-    const settings = await window.electronAPI.getSettings();
-    this.dataSource.data = (settings.projects || []).filter((p : any) => p.is_selected);
+    this.dataSource.data = (this.customSettings?.projects || []).filter((p : any) => p.is_selected);
 
-    const validProjects = (settings.projects || []).filter(
-      (p: ProjectSettingModel) => p.is_selected && p.local_repo_path
+    const validProjects = (this.customSettings?.projects || []).filter(
+      (p: ProjectSettingModel) => p.is_selected
     );
     
     this.dataSource.data = validProjects.map((p : any) => ({
@@ -74,6 +79,14 @@ export class CreateBranch implements OnInit {
   }
 
   async createBranches() {
+
+    this.dataSource.data = this.dataSource.data.map((p: any) => ({
+      ...p,
+      branch_status: '-',
+      protection_status: '-',
+      web_url: null
+    }));
+
     if (!this.newBranchName.trim()) {
       this.snackBar.open('Enter branch name!', 'Close', { duration: 3000 });
       return;
@@ -87,7 +100,7 @@ export class CreateBranch implements OnInit {
     }
 
     this.loaderService.showLoading('Creating branches…');
-    for (const proj of selected) {
+    const tasks = selected.map(async (proj) => {
       try {
         // 1️⃣ Create branch
         const createResponse = await fetch(
@@ -145,7 +158,9 @@ export class CreateBranch implements OnInit {
         proj.branch_status = 'Failed';
         proj.protection_status = 'Failed';
       }
-    }
+    });
+
+    await Promise.all(tasks);
 
     // Refresh table
     this.dataSource.data = [...this.dataSource.data];
@@ -161,6 +176,14 @@ export class CreateBranch implements OnInit {
   }
 
   async refreshBranchStatus() {
+
+    this.dataSource.data = this.dataSource.data.map((p: any) => ({
+      ...p,
+      branch_status: '-',
+      protection_status: '-',
+      web_url: null
+    }));
+
     try {
 
       if (!this.newBranchName.trim()) {
@@ -174,7 +197,7 @@ export class CreateBranch implements OnInit {
       const selected = this.dataSource.data.filter(p => p.is_selected);
       const targetList = selected.length ? selected : this.dataSource.data;
 
-      for (const proj of targetList) {
+      const tasks = targetList.map(async (proj) => {
 
         const response = await fetch(
         `${this.baseUrl}/projects/${proj.project_id}/repository/branches/${encodeURIComponent(this.newBranchName)}`,
@@ -187,9 +210,9 @@ export class CreateBranch implements OnInit {
         if (response.ok) {
           const info = await response.json();
 
-          proj.branch_status = info.merged ? 'Merged' : 'Exists';
+          proj.branch_status = 'Created';
 
-          proj.protection_status = info.protected ? 'Protected' : '-';
+          proj.protection_status = info.protected ? 'Protected' : 'UnProtected';
           proj.web_url = info.web_url || null;
         } 
         else {
@@ -198,7 +221,9 @@ export class CreateBranch implements OnInit {
           proj.web_url = null;
         }
 
-      }
+      });
+
+      await Promise.all(tasks);
 
       // Refresh UI
       this.dataSource.data = [...this.dataSource.data];
@@ -221,19 +246,11 @@ export class CreateBranch implements OnInit {
     this.lastRefreshed = new Date();
   }
 
-  getStatusClass(status: string) {
-    switch ((status || '').toLowerCase()) {
-      case 'exists': return 'exists';
-      case 'protected': return 'protected';
-      case 'created': return 'created';
-      case 'merged': return 'created';
-      case 'not found': return 'not-found';
-      default: return '';
-    }
-  }
-
   openDefaultBrowser(url: string) {
     window.electronAPI.openExternal(url);
   }
 
+  get hasSelectedProject(): boolean {
+    return this.customSettings?.projects?.some(p => p.is_selected) || false;
+  }
 }

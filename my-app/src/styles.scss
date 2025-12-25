@@ -66,6 +66,9 @@ html {
   --dialog-header-bg: #333;
   --dialog-border: #444;
   --mat-dialog-subhead-color: var(--text-secondary);  
+
+  --bg-success-150: rgba(46, 160, 67, 0.15);
+  --clr-success: #2da44e;
 }
 
 .light-theme {
@@ -119,6 +122,7 @@ body {
   color: var(--text-primary);
   transition: background-color 0.3s ease, color 0.3s ease;
   font-size: 15px;
+  cursor: default;
 }
 
 html, body { 
@@ -164,4 +168,149 @@ html, body {
     
     font-family: monospace;  
   }
+
+  a {
+    color: var(--accent-color);
+    font-size: 18px;
+    text-decoration: none;
+    transition: 0.2s;
+    
+    &:hover {
+      opacity: 0.6;
+    }
+  }
 /* src/styles.scss */
+
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  background-color: var(--card-bg);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  
+  mat-icon {
+    font-size: 64px;
+    width: 64px;
+    height: 64px;
+    color: var(--text-tertiary);
+    margin-bottom: 16px;
+    opacity: 0.5;
+  }
+  
+  h3 {
+    margin: 0 0 8px 0;
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+  
+  p {
+    margin: 0;
+    color: var(--text-tertiary);
+    font-size: 0.9rem;
+  }
+}
+
+
+/* ======================================================
+   GLOBAL MATERIAL TABLE TYPOGRAPHY (ALL COMPONENTS)
+   ====================================================== */
+
+.mat-mdc-table {
+  background-color: transparent;
+  font-family: 'Inter', 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Header row */
+.mat-mdc-header-row {
+  background-color: var(--bg-header);
+}
+
+/* Header cells */
+.mat-mdc-header-cell {
+  font-family: 'Inter', 'Segoe UI', Roboto, sans-serif;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* Body cells */
+.mat-mdc-cell {
+  font-size: 0.88rem;
+  color: var(--text-primary);
+}
+
+/* =====================================
+   Common utility: Center table column
+   ===================================== */
+
+.col-center {
+  text-align: center !important;
+}
+
+.col-center .mat-mdc-header-cell {
+  text-align: center !important;
+}
+
+.col-center .mat-mdc-cell {
+  text-align: center !important;
+}
+
+/* Optional: better alignment for badges/icons */
+.col-center .mat-mdc-cell {
+  display: flex;
+  justify-content: center !important;
+  align-items: center !important;
+}
+
+
+/* =========================================
+   MAT-SELECT OPTION – SELECTED VISIBILITY FIX
+   ========================================= */
+
+/* Normal option text */
+.mat-mdc-option .mdc-list-item__primary-text {
+  color: var(--text-primary) !important;
+  font-weight: 500;
+}
+
+/* Hovered option */
+.mat-mdc-option:hover .mdc-list-item__primary-text {
+  color: var(--text-primary) !important;
+}
+
+/* ✅ SELECTED option (KEY FIX) */
+.mat-mdc-option.mat-mdc-option-active {
+  background-color: rgba(79, 131, 204, 0.18) !important; /* accent bg */
+}
+
+.mat-mdc-option.mat-mdc-option-active
+.mdc-list-item__primary-text {
+  color: #ffffff !important;   /* FORCE white text */
+  font-weight: 600;
+}
+
+/* Disabled option */
+.mat-mdc-option.mat-mdc-option-disabled
+.mdc-list-item__primary-text {
+  color: var(--text-tertiary) !important;
+}
+
+/* =========================================
+   MAT-SELECT CHECKMARK (PSEUDO-CHECKBOX)
+   ========================================= */
+
+/* Optional: soften unchecked box (if visible) */
+.mat-mdc-option
+.mat-pseudo-checkbox {
+  border-color: rgba(255, 255, 255, 0.35) !important;
+  --mat-pseudo-checkbox-minimal-selected-checkmark-color: var(--text-primary) !important;
+}

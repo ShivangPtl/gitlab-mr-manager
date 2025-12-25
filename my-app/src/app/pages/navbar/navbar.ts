@@ -25,10 +25,10 @@ export class Navbar {
   isAdmin = false;
   tabs: { label: string; route: string; icon: string; adminOnly?: boolean }[] = [
     { label: "Home", route: "/home", icon: "🏠" },
-    { label: "Merge Requests", route: "/merge-requests", icon: "🔀" },
-    { label: "Pipelines", route: "/pipelines", icon: "🚧" },
-    { label: "Create Branch", route: "/create-branch", icon: "🛠️", adminOnly: true },
-    { label: "Compare Branch", route: "/compare-branches", icon: "↔️", adminOnly: true },
+    { label: "Merge Requests", route: "/merge-requests", icon: "🧩" },
+    { label: "Pipelines", route: "/pipelines", icon: "🚀" },
+    { label: "Create Branch", route: "/create-branch", icon: "🌿", adminOnly: true },
+    { label: "Compare Branch", route: "/compare-branches", icon: "🔍", adminOnly: true },
     { label: "Settings", route: "/settings", icon: "⚙️" }
   ];
 
@@ -45,10 +45,6 @@ export class Navbar {
     this.userName = tokenData.username;
     this.isAdmin = tokenData.isAdmin;
     // Set initial tab based on current route
-
-    const adminList: UserItem[] = settings.adminList ?? [];
-
-    //this.isAdmin = adminList.some(u => u.user_name === tokenData.username);
 
     this.setInitialTab();
   }

@@ -16,6 +16,9 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { PipelineDetailsDialogComponent } from './pipeline-details-dialog/pipeline-details-dialog';
+import { Badge } from '../../components/badge/badge';
+import { CustomSettings } from '../settings/settings';
+import { getProjectType } from '../../../shared/base';
 
 declare const window: any;
 
@@ -39,66 +42,147 @@ declare const window: any;
     MatTooltipModule,
     MatDialogModule,
     MatIconModule,
-
+    Badge
   ],
 })
 export class Pipelines implements OnInit {
+  targetBranch = 'master_ah';
+  getProjectType = getProjectType;
   constructor(
     private loader: LoaderService,
     private snackBar: MatSnackBar,
     private dialog: MatDialog
-  ) { }
+  ) {
+    this.targetBranch = localStorage.getItem('selectedTargetBranch') || 'master_ah';
+   }
 
   columns = ['project', 'type', 'status', 'user', 'created', 'info'];
   dataSource = new MatTableDataSource<PipelineRow>();
   lastRefreshed: Date | null = null;
-
+  customSettings?: CustomSettings;
+  showBranchSelector = false;
   async ngOnInit() {
+    this.customSettings = await window.electronAPI.getSettings();
+
+    const savedBranch = localStorage.getItem('selectedTargetBranch');
+    const allowedBranches = [
+      this.customSettings?.supportBranch,
+      this.customSettings?.releaseBranch,
+      this.customSettings?.liveBranch
+    ];
+
+    if (savedBranch && allowedBranches.includes(savedBranch)) {
+      this.targetBranch = savedBranch;
+      this.showBranchSelector = true;
+    }
+
     await this.refreshPipelines();
   }
+
+  private async processProjectPipelines(proj: any, branch: string): Promise<PipelineRow[]> {
+
+    const rows: PipelineRow[] = [];
+
+    const pipelines = await this.fetchPipelines(
+      proj.project_name,
+      branch
+    );
+
+    let goodPipeline: any = null;
+    const pendingPipelines: any[] = [];
+
+    for (const p of pipelines) {
+      const status = p.status?.toLowerCase();
+
+      if (!goodPipeline && ['running', 'success', 'failed', 'canceled'].includes(status)) {
+        goodPipeline = p;
+      }
+
+      if (['pending', 'created'].includes(status)) {
+        pendingPipelines.push(p);
+      }
+    }
+
+    if (goodPipeline) {
+      rows.push(this.toRow(proj.project_name, 'Latest', goodPipeline));
+    }
+
+    for (const p of pendingPipelines) {
+      rows.push(this.toRow(proj.project_name, 'Pending/Created', p));
+    }
+
+    return rows;
+  }
+  
+
+  // async refreshPipelines() {
+  //   try {
+  //     this.loader.showLoading('Fetching pipelines…');
+  //     const selectedProjects = this.customSettings?.projects || [];
+  //     const branch = this.targetBranch;
+
+  //     const rows: PipelineRow[] = [];
+
+  //     for (const proj of selectedProjects) {
+  //       const pipelines = await this.fetchPipelines(proj.project_name, branch);
+
+  //       let goodPipeline: any = null;
+  //       const pendingPipelines: any[] = [];
+
+  //       for (const p of pipelines) {
+  //         const status = p.status?.toLowerCase();
+  //         if (!goodPipeline && ['running', 'success', 'failed', 'canceled'].includes(status)) {
+  //           goodPipeline = p;
+  //         }
+  //         if (['pending', 'created'].includes(status)) {
+  //           pendingPipelines.push(p);
+  //         }
+  //       }
+
+  //       if (goodPipeline) {
+  //         rows.push(this.toRow(proj.project_name, 'Latest', goodPipeline));
+  //       }
+  //       for (const p of pendingPipelines) {
+  //         rows.push(this.toRow(proj.project_name, 'Pending/Created', p));
+  //       }
+  //     }
+
+  //     this.dataSource.data = rows;
+  //     this.lastRefreshed = new Date();
+
+  //     this.loader.hide();
+  //   } catch (err) {
+  //     this.loader.hide();
+  //     this.showError(err);
+  //   }
+  // }
 
   async refreshPipelines() {
     try {
       this.loader.showLoading('Fetching pipelines…');
-      const settings = await window.electronAPI.getSettings();
-      const selectedProjects = settings.projects;
-      const branch = settings.defaultBranch || 'master_ah';
 
-      const rows: PipelineRow[] = [];
+      const selectedProjects = this.customSettings?.projects || [];
+      const branch = this.targetBranch;
 
-      for (const proj of selectedProjects) {
-        const pipelines = await this.fetchPipelines(proj.project_name, branch);
+      // 🔥 Create parallel tasks
+      const tasks = selectedProjects.map(proj =>
+        this.processProjectPipelines(proj, branch)
+      );
 
-        let goodPipeline: any = null;
-        const pendingPipelines: any[] = [];
+      // 🔥 Run in parallel
+      const results = await Promise.all(tasks);
 
-        for (const p of pipelines) {
-          const status = p.status?.toLowerCase();
-          if (!goodPipeline && ['running', 'success', 'failed', 'canceled'].includes(status)) {
-            goodPipeline = p;
-          }
-          if (['pending', 'created'].includes(status)) {
-            pendingPipelines.push(p);
-          }
-        }
-
-        if (goodPipeline) {
-          rows.push(this.toRow(proj.project_name, 'Latest', goodPipeline));
-        }
-        for (const p of pendingPipelines) {
-          rows.push(this.toRow(proj.project_name, 'Pending/Created', p));
-        }
-      }
-
-      this.dataSource.data = rows;
+      // Flatten results
+      this.dataSource.data = results.flat();
       this.lastRefreshed = new Date();
 
-      this.loader.hide();
     } catch (err) {
-      this.loader.hide();
       this.showError(err);
+    } finally {
+      this.loader.hide();
     }
   }
+  
 
   toRow(projectName: string, type: string, pipeline: any): PipelineRow {
     const isRunning = pipeline.status?.toLowerCase() === 'running';

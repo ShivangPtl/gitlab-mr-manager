@@ -1,13 +1,16 @@
 <div class="mr-container">
 
-  <h2 style="margin-top:0;">Pending Merge Requests</h2>
+  <h2 style="margin-top:0;" *ngIf="hasSelectedProject && dataSource.data.length > 0">Pending Merge Requests</h2>
 
-  <table mat-table [dataSource]="dataSource" class="mat-elevation-z2 full-width-table">
+  <div *ngIf="hasSelectedProject && dataSource.data.length > 0; else noData">
+    <table mat-table [dataSource]="dataSource" class="mat-elevation-z2 full-width-table">
 
     <!-- Project -->
     <ng-container matColumnDef="project">
       <th mat-header-cell *matHeaderCellDef> Project </th>
-      <td mat-cell *matCellDef="let row">{{ row.project_name }}</td>
+      <td mat-cell *matCellDef="let row">
+        <app-badge [type]="row.project_name" [label]="getProjectType(row.project_name)"></app-badge>
+      </td>
     </ng-container>
 
     <!-- Source -->
@@ -42,14 +45,16 @@
 
     <!-- Status -->
     <ng-container matColumnDef="status">
-      <th mat-header-cell *matHeaderCellDef> Status </th>
-      <td mat-cell *matCellDef="let row" class="status-col pending">{{ row.status }}</td>
+      <th mat-header-cell *matHeaderCellDef class="col-center"> Status </th>
+      <td mat-cell *matCellDef="let row" class="col-center">
+        <app-badge [type]="row.status" [label]="row.status"></app-badge>
+      </td>
     </ng-container>
 
     <!-- URL -->
     <ng-container matColumnDef="url">
-      <th mat-header-cell *matHeaderCellDef> Open </th>
-      <td mat-cell *matCellDef="let row">
+      <th mat-header-cell *matHeaderCellDef class="col-center"> Open </th>
+      <td mat-cell *matCellDef="let row" class="col-center">
         <a (click)="openDefaultBrowser(row.url)" class="pointer">🔗</a>
       </td>
     </ng-container>
@@ -57,9 +62,29 @@
     <tr mat-header-row *matHeaderRowDef="displayColumns"></tr>
     <tr mat-row *matRowDef="let row; columns: displayColumns;"></tr>
 
-  </table>
+    </table>
+  </div>
 
-  <div class="actions">
+  <ng-template #noData>
+    <div class="empty-state" *ngIf="hasSelectedProject; else noProjects" >
+      <mat-icon>merge</mat-icon>
+      <h3>No Pending Merge Requests</h3>
+      <p>All merge requests are up to date.</p>
+    </div>
+  </ng-template>
+
+  <ng-template #noProjects>
+    <div class="empty-state">
+      <mat-icon>folder_off</mat-icon>
+      <h3>No Project Selected</h3>
+      <p>
+        Please select a project in
+        <strong>Settings</strong>.
+      </p>
+    </div>
+    </ng-template>
+
+  <div class="actions" *ngIf="hasSelectedProject">
     <span class="refresh-info">
       ⏱️ Last refreshed: {{ lastRefreshed | date: 'dd/MM/yyyy hh:mm a' }}
     </span>

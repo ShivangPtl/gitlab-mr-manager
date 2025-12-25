@@ -7,22 +7,7 @@
 table {
   margin-bottom: 20px;
 }
-
-.status-col {
-  font-weight: 700;
-  color: orange;
-}
-
-a {
-  color: var(--accent-color);
-  font-size: 18px;
-  text-decoration: none;
-  transition: 0.2s;
-}
-
-  a:hover {
-    opacity: 0.6;
-  }
+  
 
 .actions {
   display: flex;
@@ -32,8 +17,4 @@ a {
 
 .refresh-info {
   opacity: 0.7;
-}
-
-.pending {
-  color: orange !important;
 }

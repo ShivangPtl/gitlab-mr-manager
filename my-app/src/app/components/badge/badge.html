@@ -1,0 +1,10 @@
+<span class="status-chip badge" 
+  [class.sm]="size === 'sm'" [class.md]="size === 'md'" [ngStyle]="{
+    color: color,
+    background: background,
+    borderColor: borderColor || color
+  }">
+  <mat-icon *ngIf="icon" inline>{{ icon }}</mat-icon>
+
+  <span class="label">{{ label }}</span>
+</span>
