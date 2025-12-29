@@ -64,7 +64,7 @@ export class Pipelines implements OnInit {
   async ngOnInit() {
     this.customSettings = await window.electronAPI.getSettings();
 
-    const savedBranch = localStorage.getItem('selectedTargetBranch');
+    const savedBranch = localStorage.getItem('selectedTargetBranch') || 'master_ah';
     const allowedBranches = [
       this.customSettings?.supportBranch,
       this.customSettings?.releaseBranch,
