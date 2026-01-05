@@ -1,6 +1,6 @@
 {
   "name": "gitlab-manager",
-  "version": "4.2.0",
+  "version": "4.4.0",
   "main": "main.js",
   "scripts": {
     "build:angular": "cd my-app && npx ng build --configuration production --base-href ./",
