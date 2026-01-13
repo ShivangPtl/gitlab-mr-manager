@@ -127,6 +127,8 @@ body {
 
 html, body { 
   height: 100%; 
+  margin: 0;
+  overflow: hidden;
 }
 
 // Smooth transitions for theme switching
@@ -313,4 +315,56 @@ html, body {
 .mat-pseudo-checkbox {
   border-color: rgba(255, 255, 255, 0.35) !important;
   --mat-pseudo-checkbox-minimal-selected-checkmark-color: var(--text-primary) !important;
+}
+
+
+/* ============================================
+   CUSTOM SCROLLBAR STYLES
+   ============================================ */
+
+// For Webkit browsers (Chrome, Safari, Edge)
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 10px;
+  border: 2px solid var(--bg-primary);
+  transition: background-color 0.3s ease;
+  
+  &:hover {
+    background: var(--text-secondary);
+  }
+  
+  &:active {
+    background: var(--accent-color);
+  }
+}
+
+// For Firefox
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-color) var(--bg-primary);
+}
+
+// Smooth scrolling
+html {
+  scroll-behavior: smooth;
+}
+
+// Optional: Hide scrollbar on specific elements
+.hide-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+  
+  &::-webkit-scrollbar {
+    display: none;  /* Chrome, Safari, Opera */
+  }
 }

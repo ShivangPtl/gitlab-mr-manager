@@ -222,4 +222,15 @@ export class MergeRequests implements OnInit {
   get hasSelectedProject(): boolean {
     return this.customSettings?.projects?.some(p => p.is_selected) ?? false;
   }
+
+  getBranchType(branch: string): 'support' | 'release' | 'live' | '' {
+    const settings = this.customSettings;
+    if (!settings) return 'support';
+    
+    if (branch === settings.supportBranch) return 'support';
+    if (branch === settings.releaseBranch) return 'release';
+    if (branch === settings.liveBranch) return 'live';
+    
+    return '';
+  }
 }

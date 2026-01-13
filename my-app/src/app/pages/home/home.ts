@@ -22,6 +22,7 @@ import { Badge } from "../../components/badge/badge";
 import { BaseService } from '../../services/base-service';
 import { MatIcon } from '@angular/material/icon';
 import { getProjectType } from '../../../shared/base';
+// import { LogService } from '../../services/log-service';
 
 declare const window: any;
 
@@ -45,7 +46,8 @@ declare const window: any;
 
 export class Home implements OnInit {
   targetBranch = 'master_ah';
-  constructor(private loaderService: LoaderService, private snackBar: MatSnackBar, private authService: GitlabAuth, private cdr: ChangeDetectorRef, private baseService: BaseService) 
+  constructor(private loaderService: LoaderService, private snackBar: MatSnackBar, private authService: GitlabAuth, private cdr: ChangeDetectorRef, 
+    private baseService: BaseService) 
   {
     this.targetBranch = localStorage.getItem('selectedTargetBranch') || 'master_ah';
   }
@@ -89,6 +91,9 @@ export class Home implements OnInit {
 
     if (savedBranch && allowedBranches.includes(savedBranch)) {
       this.targetBranch = savedBranch;
+      this.showBranchSelector = true;
+    }else{
+      this.targetBranch = allowedBranches[0] || 'master_ah';
       this.showBranchSelector = true;
     }
     this.cdr.detectChanges(); 
@@ -168,132 +173,19 @@ export class Home implements OnInit {
     }
   }
 
-//   async loadProjectsWithCommitInfo(): Promise<void> {
-//   try {
-//     this.loaderService.showLoading('Loading projects info...');
-
-//     // const targetBranch: string = this.customSettings?.supportBranch || 'master_ah';
-
-//     const useCustomBranch: boolean = this.customSettings?.useCustomBranch ?? false;
-//     const sourceBranch: string = this.customSettings?.sourceBranch || this.targetBranch;
-
-//     const validProjects = (this.customSettings?.projects || []).filter(
-//       (p: ProjectSettingModel) => p.is_selected && p.local_repo_path
-//     );
-
-//     // Process all projects in parallel
-//     const projectPromises = validProjects.map(async (project : any) => {
-//       try {
-//         this.loaderService.showLoading(  
-//           `Loading repositories....`
-//         );
-        
-//         // Run git operations in parallel where possible
-//         // await this.runGit(
-//         //   project.local_repo_path, 
-//         //   `fetch origin ${this.targetBranch}:refs/remotes/origin/${this.targetBranch}`
-//         // );
-
-//         // --------- CURRENT BRANCH DECISION LOGIC ---------
-//         let current_branch: string;
-//         if (!useCustomBranch) {
-//           current_branch = await this.runGit(
-//             project.local_repo_path,
-//             'rev-parse --abbrev-ref HEAD'
-//           );
-//         } else {
-//           current_branch = sourceBranch;
-//         }
-
-//         // Ensure branch exists + fetch if missing
-//         // const branchExists = await this.branchExists(project.local_repo_path, current_branch);
-
-//         const [sourceExists, targetExists] = await Promise.all([
-//           this.baseService.branchExists(project.project_id, current_branch),
-//           this.baseService.branchExists(project.project_id, this.targetBranch)
-//         ]);
-
-//         project.sourceBranchExists = sourceExists;
-//         project.targetBranchExists = targetExists;
-
-//         // --------- FETCH COUNT AHEAD ---------
-//         const commits_ahead_str = await this.runGit(
-//           project.local_repo_path,
-//           `rev-list --count origin/${this.targetBranch}..origin/${current_branch}` 
-//         );
-
-//         // teas
-
-//         if (!project.sourceBranchExists || !project.targetBranchExists) {
-//           return {
-//             ...project,
-//             current_branch,
-//             target_branch: this.targetBranch,
-//             commits_ahead: 0,
-//             mr_status: 'No MR',
-//             is_selected: false
-//           } as ProjectListModel;
-//         }
-
-//         const commits_ahead_res = await this.baseService.getAhead(project.project_id, this.targetBranch, current_branch);
-
-//         if (!commits_ahead_res.ok) {
-//           project.ahead = '-';
-//           return;
-//         }
-
-//         const aheadData = commits_ahead_res.ok ? await commits_ahead_res.json() : null;
-
-//         /* 3️⃣ Set ahead / behind */
-//         const commits_ahead = aheadData?.commits?.length || 0;
-
-
-//         // --------- MR STATUS ---------
-//         const mr_status = await this.fetchMRStatus(
-//           project.project_id,
-//           current_branch,
-//           this.targetBranch
-//         );
-
-
-//         this.loaderService.showLoading(`Loading ${project.project_name} info...`);
-
-//         return {
-//           ...project,
-//           current_branch,
-//           target_branch: this.targetBranch,
-//           commits_ahead,
-//           mr_status,
-//           is_selected: false
-//         } as ProjectListModel;
-//       } catch (error) {
-//         console.error(`Error processing project ${project.project_name}:`, error);
-//         // Return project with error state or skip it
-//         return null;
-//       }
-//     });
-
-//     // Wait for all projects to complete
-//     const results = await Promise.all(projectPromises);
-    
-//     // Filter out any null results (failed projects)
-//     const filteredProjects = results.filter(p => p !== null && p != undefined) as ProjectListModel[];
-
-//     this.dataSource.data = filteredProjects;
-//     await this.updateMrStatus();
-//     this.lastRefreshed = new Date();
-//     this.loaderService.hide();
-//   } catch (error) {
-//     this.handleError(error);
-//   }
-// }
-
-  async loadProjectsWithCommitInfo(): Promise<void> {
+  async loadProjectsWithCommitInfo(): Promise<void> {    
     try {
+      window.electronAPI.logInfo("==== loadProjectsWithCommitInfo STARTED ====");
       this.loaderService.showLoading('Loading projects info...');
 
       const useCustomBranch: boolean = this.customSettings?.useCustomBranch ?? false;
       const sourceBranch: string = useCustomBranch ? this.customSettings?.sourceBranch ?? '' : '';
+
+      window.electronAPI.logInfo("Settings", {
+        useCustomBranch,
+        sourceBranch,
+        targetBranch: this.targetBranch
+      });
 
       const validProjects = (this.customSettings?.projects || []).filter(
         (p: ProjectSettingModel) => p.is_selected && p.local_repo_path
@@ -308,6 +200,11 @@ export class Home implements OnInit {
             ? await this.runGit(project.local_repo_path, 'rev-parse --abbrev-ref HEAD')
             : sourceBranch;
 
+          window.electronAPI.logInfo("Detected branch", {
+            project: project.project_name,
+            current_branch
+          });
+
           // Fetch project data with branch validation
           const {
             commits_ahead,
@@ -318,6 +215,14 @@ export class Home implements OnInit {
             project,
             current_branch,
           );
+
+          window.electronAPI.logInfo("Branch check result", {
+            project: project.project_name,
+            commits_ahead,
+            mr_status,
+            sourceBranchExists,
+            targetBranchExists
+          });
 
           this.loaderService.showLoading(`Loading ${project.project_name} info...`);
 
@@ -332,6 +237,10 @@ export class Home implements OnInit {
             targetBranchExists
           } as ProjectListModel;
         } catch (error) {
+          window.electronAPI.logError("Project failed", {
+            project: project.project_name,
+            error: error
+          });
           console.error(`Error processing project ${project.project_name}:`, error);
           return null;
         }
@@ -341,9 +250,12 @@ export class Home implements OnInit {
       const filteredProjects = results.filter(p => p !== null && p !== undefined) as ProjectListModel[];
 
       this.dataSource.data = filteredProjects;
+      window.electronAPI.logInfo("Final project list", filteredProjects);
       this.lastRefreshed = new Date();
       this.loaderService.hide();
+      window.electronAPI.logInfo("==== loadProjectsWithCommitInfo COMPLETED ====");
     } catch (error) {
+      window.electronAPI.logError("loadProjectsWithCommitInfo CRASHED", error);
       this.handleError(error);
     }
   }
@@ -653,14 +565,33 @@ async branchExists(repoPath: string, branch: string): Promise<boolean> {
     sourceBranchExists: boolean;
     targetBranchExists: boolean;
   }> {
+
+    window.electronAPI.logInfo("Checking branches", {
+      project: project.project_name,
+      source: currentBranch,
+      target: this.targetBranch
+    });
+
     // Check branch existence
     const [sourceExists, targetExists] = await Promise.all([
       this.baseService.branchExists(project.project_id, currentBranch),
       this.baseService.branchExists(project.project_id, this.targetBranch)
     ]);
 
+    window.electronAPI.logInfo("Branch API response", {
+      project: project.project_name,
+      sourceExists,
+      targetExists
+    });
+
     // If branches don't exist, return early with specific branch info
     if (!sourceExists || !targetExists) {
+      window.electronAPI.logWarn("Branch missing", {
+        project: project.project_name,
+        sourceExists,
+        targetExists
+      });
+
       return {
         commits_ahead: 0,
         mr_status: 'No MR',

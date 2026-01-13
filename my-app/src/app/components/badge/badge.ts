@@ -78,7 +78,11 @@ const STATUS_MAP: Record<string, {
 
   api: { colorGroup: 'cyan', icon: 'cloud'},
   common: { colorGroup: 'purple', icon: 'layers'},
-  ui: { colorGroup: 'orange', icon: 'devices'}
+  ui: { colorGroup: 'orange', icon: 'devices'},
+
+  support: { colorGroup: 'blue', icon: 'build' },
+  release: { colorGroup: 'amber', icon: 'rocket_launch' },
+  live: { colorGroup: 'orange', icon: 'public' },
 };
 
 @Component({

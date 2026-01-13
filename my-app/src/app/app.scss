@@ -1,5 +1,27 @@
 .app-container {
-  // min-height: 100vh;
+  min-height: 100vh;
+  height: 100vh; // Add this
+  overflow-y: auto; // Add this - make the container scrollable
+  overflow-x: hidden; // Prevent horizontal scroll
   background: var(--bg-primary);
   transition: background-color 0.3s ease;
+  display: flex;
+  flex-direction: column;
+
+
+  // Make sure navbar stays at top
+  app-navbar {
+    flex-shrink: 0; // Prevent navbar from shrinking
+  }
+
+  // Router outlet marker element
+  router-outlet {
+    display: none;
+  }
+
+  // Content after router outlet should grow
+  router-outlet + * {
+    flex: 1;
+    overflow-y: auto; // Allow content to scroll if needed
+  }
 }

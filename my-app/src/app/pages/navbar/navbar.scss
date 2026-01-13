@@ -3,6 +3,9 @@
 // navbar.component.scss
 :host {
   display: block;
+  position: sticky; // Move sticky to host
+  top: 0;
+  z-index: 1000;
 }
 
 .navbar {
@@ -13,6 +16,8 @@
   background: var(--bg-secondary);
   border-bottom: 1px solid var(--border-color);
   transition: background-color 0.3s ease;
+  backdrop-filter: blur(10px); // Optional: adds a nice blur effect
+  -webkit-backdrop-filter: blur(10px); // Safari support
 
   .left {
     display: flex;

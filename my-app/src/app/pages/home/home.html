@@ -122,8 +122,8 @@
   <!-- MR Meta -->
   <section class="mr-meta" *ngIf="dataSource.data.length > 0">
     <mat-form-field appearance="fill" class="full-width">
-      <mat-label>MR Title (optional)</mat-label>
-      <input matInput [(ngModel)]="mrTitle" placeholder="Leave blank to use latest commit message" />
+      <mat-label>MR Title</mat-label>
+      <input matInput [(ngModel)]="mrTitle" placeholder="Leave blank to use latest commit message" required/>
     </mat-form-field>
 
     <mat-form-field appearance="fill" class="full-width">
@@ -144,7 +144,7 @@
     <!-- Right: Buttons -->
     <div class="button-group">
       <button mat-raised-button class="themed-btn" (click)="isAnySelected() ? updateMrStatus() : loadProjectsWithCommitInfo()">🔄 Refresh</button>
-      <button mat-raised-button class="themed-btn" (click)="createMergeRequests()" [disabled]="!isAnySelected()">🚀 Create MR</button>
+      <button mat-raised-button class="themed-btn" (click)="createMergeRequests()" [disabled]="!isAnySelected() || !mrTitle || mrTitle.trim() === ''">🚀 Create MR</button>
     </div>
   </div>
 

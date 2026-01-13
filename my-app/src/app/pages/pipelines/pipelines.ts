@@ -74,6 +74,9 @@ export class Pipelines implements OnInit {
     if (savedBranch && allowedBranches.includes(savedBranch)) {
       this.targetBranch = savedBranch;
       this.showBranchSelector = true;
+    }else{
+      this.targetBranch = allowedBranches[0] || 'master_ah';
+      this.showBranchSelector = true;
     }
 
     await this.refreshPipelines();
@@ -113,49 +116,6 @@ export class Pipelines implements OnInit {
 
     return rows;
   }
-  
-
-  // async refreshPipelines() {
-  //   try {
-  //     this.loader.showLoading('Fetching pipelines…');
-  //     const selectedProjects = this.customSettings?.projects || [];
-  //     const branch = this.targetBranch;
-
-  //     const rows: PipelineRow[] = [];
-
-  //     for (const proj of selectedProjects) {
-  //       const pipelines = await this.fetchPipelines(proj.project_name, branch);
-
-  //       let goodPipeline: any = null;
-  //       const pendingPipelines: any[] = [];
-
-  //       for (const p of pipelines) {
-  //         const status = p.status?.toLowerCase();
-  //         if (!goodPipeline && ['running', 'success', 'failed', 'canceled'].includes(status)) {
-  //           goodPipeline = p;
-  //         }
-  //         if (['pending', 'created'].includes(status)) {
-  //           pendingPipelines.push(p);
-  //         }
-  //       }
-
-  //       if (goodPipeline) {
-  //         rows.push(this.toRow(proj.project_name, 'Latest', goodPipeline));
-  //       }
-  //       for (const p of pendingPipelines) {
-  //         rows.push(this.toRow(proj.project_name, 'Pending/Created', p));
-  //       }
-  //     }
-
-  //     this.dataSource.data = rows;
-  //     this.lastRefreshed = new Date();
-
-  //     this.loader.hide();
-  //   } catch (err) {
-  //     this.loader.hide();
-  //     this.showError(err);
-  //   }
-  // }
 
   async refreshPipelines() {
     try {
