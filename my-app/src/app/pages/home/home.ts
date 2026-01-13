@@ -175,17 +175,10 @@ export class Home implements OnInit {
 
   async loadProjectsWithCommitInfo(): Promise<void> {    
     try {
-      window.electronAPI.logInfo("==== loadProjectsWithCommitInfo STARTED ====");
       this.loaderService.showLoading('Loading projects info...');
 
       const useCustomBranch: boolean = this.customSettings?.useCustomBranch ?? false;
       const sourceBranch: string = useCustomBranch ? this.customSettings?.sourceBranch ?? '' : '';
-
-      window.electronAPI.logInfo("Settings", {
-        useCustomBranch,
-        sourceBranch,
-        targetBranch: this.targetBranch
-      });
 
       const validProjects = (this.customSettings?.projects || []).filter(
         (p: ProjectSettingModel) => p.is_selected && p.local_repo_path
@@ -200,11 +193,6 @@ export class Home implements OnInit {
             ? await this.runGit(project.local_repo_path, 'rev-parse --abbrev-ref HEAD')
             : sourceBranch;
 
-          window.electronAPI.logInfo("Detected branch", {
-            project: project.project_name,
-            current_branch
-          });
-
           // Fetch project data with branch validation
           const {
             commits_ahead,
@@ -215,14 +203,6 @@ export class Home implements OnInit {
             project,
             current_branch,
           );
-
-          window.electronAPI.logInfo("Branch check result", {
-            project: project.project_name,
-            commits_ahead,
-            mr_status,
-            sourceBranchExists,
-            targetBranchExists
-          });
 
           this.loaderService.showLoading(`Loading ${project.project_name} info...`);
 
@@ -250,10 +230,8 @@ export class Home implements OnInit {
       const filteredProjects = results.filter(p => p !== null && p !== undefined) as ProjectListModel[];
 
       this.dataSource.data = filteredProjects;
-      window.electronAPI.logInfo("Final project list", filteredProjects);
       this.lastRefreshed = new Date();
       this.loaderService.hide();
-      window.electronAPI.logInfo("==== loadProjectsWithCommitInfo COMPLETED ====");
     } catch (error) {
       window.electronAPI.logError("loadProjectsWithCommitInfo CRASHED", error);
       this.handleError(error);
@@ -566,23 +544,11 @@ async branchExists(repoPath: string, branch: string): Promise<boolean> {
     targetBranchExists: boolean;
   }> {
 
-    window.electronAPI.logInfo("Checking branches", {
-      project: project.project_name,
-      source: currentBranch,
-      target: this.targetBranch
-    });
-
     // Check branch existence
     const [sourceExists, targetExists] = await Promise.all([
       this.baseService.branchExists(project.project_id, currentBranch),
       this.baseService.branchExists(project.project_id, this.targetBranch)
     ]);
-
-    window.electronAPI.logInfo("Branch API response", {
-      project: project.project_name,
-      sourceExists,
-      targetExists
-    });
 
     // If branches don't exist, return early with specific branch info
     if (!sourceExists || !targetExists) {

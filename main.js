@@ -126,13 +126,29 @@ app.on('activate', () => {
 const lastStates = new Map();
 
 async function startPipelineWatcher() {
-  await checkPipelines(); // Run immediately
-  setInterval(checkPipelines, 5 * 60 * 1000); // Every 5 minutes
+  const ONE_MIN = 1 * 60 * 1000;
+  const now = new Date();
+  const next =
+    Math.ceil(now.getTime() / ONE_MIN) * ONE_MIN;
+
+  const delay = next - now.getTime();
+
+  log.info(
+    `⏰ First run in ${Math.round(delay / 1000)} seconds`
+  );
+
+  setTimeout(() => {
+
+    checkPipelines(); // first exact hit
+
+    setInterval(checkPipelines, ONE_MIN);
+
+  }, delay);
 }
 
 async function checkPipelines() {
   try {
-    //log.info('🔁 Checking pipelines...');
+    log.info('🔁 Checking pipelines...');
 
     const settings = store.get('settings') || {};
     const projects = getWatchedProjects(settings);
