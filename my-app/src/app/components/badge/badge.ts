@@ -83,6 +83,9 @@ const STATUS_MAP: Record<string, {
   support: { colorGroup: 'blue', icon: 'build' },
   release: { colorGroup: 'amber', icon: 'rocket_launch' },
   live: { colorGroup: 'orange', icon: 'public' },
+
+  pending_mr: { colorGroup: 'amber', icon: 'call_merge' },
+  changes_after_deployment: { colorGroup: 'orange', icon: 'sync_problem' },
 };
 
 @Component({

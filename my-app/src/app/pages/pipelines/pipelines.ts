@@ -86,9 +86,9 @@ export class Pipelines implements OnInit {
     this.isAdmin = tokenData.isAdmin;
 
     if(this.isAdmin){
-      this.columns = ['select', 'project', 'user', 'created', 'status', 'info', 'link'];
+      this.columns = ['select', 'project', 'user', 'deployed', 'status', 'openMRs', 'changes', 'info', 'link'];
     }else{
-      this.columns = ['project', 'user', 'created', 'status', 'info', 'link'];
+      this.columns = ['project', 'user', 'deployed', 'status', 'openMRs', 'changes', 'info', 'link'];
     }
 
     const savedBranch = localStorage.getItem('selectedTargetBranch') || 'master_ah';
@@ -110,149 +110,117 @@ export class Pipelines implements OnInit {
     this.startPipelinePolling();
   }
 
-  // private async processProjectPipelines(proj: any, branch: string): Promise<PipelineRow[]> {
-
-  //   const rows: PipelineRow[] = [];
+  // private async processProjectPipelines(
+  //   proj: any,
+  //   branch: string
+  // ): Promise<PipelineRow> {
 
   //   const pipelines = await this.fetchPipelines(
   //     proj.project_name,
   //     branch
   //   );
 
-  //   let goodPipeline: any = null;
-  //   const pendingPipelines: any[] = [];
+  //   // ✅ Sort pipelines by createdAt DESC
+  //   const latestPipeline = pipelines
+  //     .sort((a, b) =>
+  //       new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  //     )[0];
 
-  //   for (const p of pipelines) {
-  //     const status = p.status?.toLowerCase();
+  //   const matchedSchedule = await this.getMatchedSchedule(
+  //     proj.project_name,
+  //     branch
+  //     );
 
-  //     if (!goodPipeline && ['running', 'success', 'failed', 'canceled'].includes(status)) {
-  //       goodPipeline = p;
-  //     }
+  //   // ✅ Always return ONE row
+  //   const row = this.toRow(
+  //     proj.project_name,
+  //     'Latest',
+  //     latestPipeline ?? null
+  //   );
 
-  //     if (['pending', 'created'].includes(status)) {
-  //       pendingPipelines.push(p);
-  //     }
-  //   }
+  //   row.matchedSchedule = matchedSchedule
+  //     ? { id: matchedSchedule.id, name: matchedSchedule.name }
+  //     : null;
 
-  //   if (goodPipeline) {
-  //     rows.push(this.toRow(proj.project_name, 'Latest', goodPipeline));
-  //   }
+  //     // if(latestPipeline?.status?.toLowerCase() === 'running' || latestPipeline?.status?.toLowerCase() === 'pending' 
+  //     // || latestPipeline?.status?.toLowerCase() === 'created'){
+  //     //   this.activePipelines.set(row.project_name, {
+  //     //     scheduleId: matchedSchedule?.id ?? null,
+  //     //     status: latestPipeline?.status,
+  //     //     lastUpdated: new Date()
+  //     //   });
+  //     // }
 
-  //   for (const p of pendingPipelines) {
-  //     rows.push(this.toRow(proj.project_name, 'Pending/Created', p));
-  //   }
+  //   this.addActivePipeline(row);
 
-  //   return rows;
+  //   return row;
   // }
 
-  private async processProjectPipelines(
-    proj: any,
-    branch: string
-  ): Promise<PipelineRow> {
 
-    const pipelines = await this.fetchPipelines(
-      proj.project_name,
-      branch
-    );
-
-    // ✅ Sort pipelines by createdAt DESC
-    const latestPipeline = pipelines
-      .sort((a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      )[0];
-
-    const matchedSchedule = await this.getMatchedSchedule(
-      proj.project_name,
-      branch
-      );
-
-    // ✅ Always return ONE row
-    const row = this.toRow(
-      proj.project_name,
-      'Latest',
-      latestPipeline ?? null
-    );
-
-    row.matchedSchedule = matchedSchedule
-      ? { id: matchedSchedule.id, name: matchedSchedule.name }
-      : null;
-
-      // if(latestPipeline?.status?.toLowerCase() === 'running' || latestPipeline?.status?.toLowerCase() === 'pending' 
-      // || latestPipeline?.status?.toLowerCase() === 'created'){
-      //   this.activePipelines.set(row.project_name, {
-      //     scheduleId: matchedSchedule?.id ?? null,
-      //     status: latestPipeline?.status,
-      //     lastUpdated: new Date()
-      //   });
-      // }
-
-    this.addActivePipeline(row);
-
-    return row;
-  }
   
 
-  async refreshPipelines(onlyActive: boolean = false) {
-    try {
-      if (!onlyActive) {
-        this.loader.showLoading('Fetching pipelines…');
-      }
+  // async refreshPipelines(onlyActive: boolean = false) {
+  //   try {
+  //     if (!onlyActive) {
+  //       this.loader.showLoading('Fetching pipelines…');
+  //     }
 
-      //const selectedProjects = this.customSettings?.projects.filter((p: any) => p.is_selected) || [];
+  //     //const selectedProjects = this.customSettings?.projects.filter((p: any) => p.is_selected) || [];
 
-      let selectedProjects = this.customSettings?.projects.filter(
-        (p: any) => p.is_selected && p.project_name.toLowerCase() !== 'common'  
-      ) || [];
+  //     let selectedProjects = this.customSettings?.projects.filter(
+  //       (p: any) => p.is_selected && p.project_name.toLowerCase() !== 'common'  
+  //     ) || [];
 
-      // if (onlyActive) {
-      //   const activeProjectNames = Array.from(this.activePipelines.keys());
+  //     // if (onlyActive) {
+  //     //   const activeProjectNames = Array.from(this.activePipelines.keys());
 
-      //   selectedProjects = selectedProjects.filter(p =>
-      //     activeProjectNames.includes(p.project_name)
-      //   );
+  //     //   selectedProjects = selectedProjects.filter(p =>
+  //     //     activeProjectNames.includes(p.project_name)
+  //     //   );
 
-      //   // Nothing to refresh
-      //   if (selectedProjects.length === 0) {
-      //     return;
-      //   }
-      // }
+  //     //   // Nothing to refresh
+  //     //   if (selectedProjects.length === 0) {
+  //     //     return;
+  //     //   }
+  //     // }
       
 
-      const branch = this.targetBranch;
+  //     const branch = this.targetBranch;
 
-      // 🔥 Create parallel tasks
-      const tasks = selectedProjects.map(proj =>
-        this.processProjectPipelines(proj, branch)
-      );
+  //     // 🔥 Create parallel tasks
+  //     const tasks = selectedProjects.map(proj =>
+  //       this.processProjectPipelines(proj, branch)
+  //     );
 
-      // 🔥 Run in parallel
-      // const results = await Promise.all(tasks);
+  //     // 🔥 Run in parallel
+  //     // const results = await Promise.all(tasks);
 
-      // Flatten results
-      // this.dataSource.data = results.flat();
-      this.dataSource.data = await Promise.all(tasks);
-      this.lastRefreshed = new Date();
+  //     // Flatten results
+  //     // this.dataSource.data = results.flat();
+  //     this.dataSource.data = await Promise.all(tasks);
+  //     this.lastRefreshed = new Date();
 
-    } catch (err) {
-      this.showError(err);
-    } finally {
-      this.loader.hide();
-    }
-  }
+  //   } catch (err) {
+  //     this.showError(err);
+  //   } finally {
+  //     this.loader.hide();
+  //   }
+  // }
   
 
-  toRow(projectName: string, type: string, pipeline: any | null): PipelineRow {
+  toRow(projectName: string, pipeline: any | null): PipelineRow {
 
     if (!pipeline) {
       return {
         project_name: projectName,
-        type,
         status: 'NOT RUN',
         user: '-',
-        created_at: '-',
+        deployed_at: '-',
         full_pipeline: null,
         link: `https://git.promptdairytech.com/pdp/${projectName}/-/pipelines`,
-        matchedSchedule: null
+        matchedSchedule: null,
+        openMRs: 0,
+        changesSinceDeploy: 0
       };
     }
 
@@ -281,55 +249,56 @@ export class Pipelines implements OnInit {
     };
     return {
       project_name: projectName,
-      type,
       status: pipeline.status?.toUpperCase() || 'UNKNOWN',
       user: pipeline.user?.name || '-',
-      created_at: pipeline.createdAt ? this.formatDateTime(pipeline.createdAt) : '-',
+      deployed_at: pipeline.createdAt ? this.formatDateTime(pipeline.createdAt) : '-',
       full_pipeline: pipelineDetails,
       link: `https://git.promptdairytech.com/pdp/${projectName}/-/pipeline_schedules`,
-      matchedSchedule: null
+      matchedSchedule: null,
+      openMRs: 0,
+      changesSinceDeploy: 0
     };
   }
 
-  async fetchPipelines(projectName: string, branch: string): Promise<any[]> {
-    const query = `
-      {
-        group(fullPath: "pdp") {
-          projects(first: 1, search: "${projectName}") {
-            nodes {
-              pipelines(first: 5${branch ? `, ref: "${branch}"` : ''}) {
-                nodes {
-                  id
-                  status
-                  ref
-                  createdAt
-                  updatedAt
-                  startedAt
-                  finishedAt
-                  duration
-                  user { name }
-                  source
-                }
-              }
-            }
-          }
-        }
-      }`;
+  // async fetchPipelines(projectName: string, branch: string): Promise<any[]> {
+  //   const query = `
+  //     {
+  //       group(fullPath: "pdp") {
+  //         projects(first: 1, search: "${projectName}") {
+  //           nodes {
+  //             pipelines(first: 5${branch ? `, ref: "${branch}"` : ''}) {
+  //               nodes {
+  //                 id
+  //                 status
+  //                 ref
+  //                 createdAt
+  //                 updatedAt
+  //                 startedAt
+  //                 finishedAt
+  //                 duration
+  //                 user { name }
+  //                 source
+  //               }
+  //             }
+  //           }
+  //         }
+  //       }
+  //     }`;
 
-    const response = await fetch('https://git.promptdairytech.com/api/graphql', {
-      method: 'POST',
-      headers: {
-        'PRIVATE-TOKEN': this.token,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ query })
-    });
+  //   const response = await fetch('https://git.promptdairytech.com/api/graphql', {
+  //     method: 'POST',
+  //     headers: {
+  //       'PRIVATE-TOKEN': this.token,
+  //       'Content-Type': 'application/json'
+  //     },
+  //     body: JSON.stringify({ query })
+  //   });
 
-    const json = await response.json();
+  //   const json = await response.json();
 
-    const nodes = json?.data?.group?.projects?.nodes?.[0]?.pipelines?.nodes || [];
-    return nodes;
-  }
+  //   const nodes = json?.data?.group?.projects?.nodes?.[0]?.pipelines?.nodes || [];
+  //   return nodes;
+  // }
 
   getStatusClass(status: string) {
     switch ((status || '').toLowerCase()) {
@@ -418,76 +387,78 @@ export class Pipelines implements OnInit {
     window.electronAPI.openExternal(url);
   }
 
-  private async getMatchedSchedule(
-    projectName: string,
-    branch: string
-  ): Promise<{ id: string; name: string } | null> {
+  // private async getMatchedSchedule(
+  //   projectName: string,
+  //   branch: string
+  // ): Promise<{ id: string; name: string } | null> {
 
-    const token = (await window.electronAPI.getToken()).token;
+  //   const token = (await window.electronAPI.getToken()).token;
 
-    const query = `
-    {
-      group(fullPath: "pdp") {
-        projects(first: 1, search: "${projectName}") {
-          nodes {
-            pipelineSchedules(first: 20) {
-              nodes {
-                id
-                description
-                ref
-              }
-            }
-          }
-        }
-      }
-    }`;
+  //   const query = `
+  //   {
+  //     group(fullPath: "pdp") {
+  //       projects(first: 1, search: "${projectName}") {
+  //         nodes {
+  //           pipelineSchedules(first: 20) {
+  //             nodes {
+  //               id
+  //               description
+  //               ref
+  //             }
+  //           }
+  //         }
+  //       }
+  //     }
+  //   }`;
 
-    const response = await fetch('https://git.promptdairytech.com/api/graphql', {
-      method: 'POST',
-      headers: {
-        'PRIVATE-TOKEN': token,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ query })
-    });
+  //   const response = await fetch('https://git.promptdairytech.com/api/graphql', {
+  //     method: 'POST',
+  //     headers: {
+  //       'PRIVATE-TOKEN': token,
+  //       'Content-Type': 'application/json'
+  //     },
+  //     body: JSON.stringify({ query })
+  //   });
 
-    const json = await response.json();
+  //   const json = await response.json();
 
-    const schedules =
-      json?.data?.group?.projects?.nodes?.[0]?.pipelineSchedules?.nodes || [];
+  //   const schedules =
+  //     json?.data?.group?.projects?.nodes?.[0]?.pipelineSchedules?.nodes || [];
 
-    if (!schedules.length) return null;
+  //   if (!schedules.length) return null;
 
-    const branchLower = branch.toLowerCase();
+  //   const branchLower = branch.toLowerCase();
 
-    // ✅ Priority 1: exact ref match
-    const refMatch = schedules.find((s: any) =>
-      s.ref?.toLowerCase() === branchLower
-    );
-    if (refMatch) {
-      return { id: refMatch.id, name: refMatch.description };
-    }
+  //   // ✅ Priority 1: exact ref match
+  //   const refMatch = schedules.find((s: any) =>
+  //     s.ref?.toLowerCase() === branchLower
+  //   );
+  //   if (refMatch) {
+  //     return { id: refMatch.id, name: refMatch.description };
+  //   }
 
-    // // ✅ Priority 2: description-based fallback
-    // if (branchLower.includes('support')) {
-    //   return schedules.find((s: any) =>
-    //     s.description?.toLowerCase().includes('support')
-    //   ) ?? null;
-    // }
+  //   // // ✅ Priority 2: description-based fallback
+  //   // if (branchLower.includes('support')) {
+  //   //   return schedules.find((s: any) =>
+  //   //     s.description?.toLowerCase().includes('support')
+  //   //   ) ?? null;
+  //   // }
 
-    // if (branchLower.includes('release')) {
-    //   return schedules.find((s: any) =>
-    //     s.description?.toLowerCase().includes('release')
-    //   ) ?? null;
-    // }
+  //   // if (branchLower.includes('release')) {
+  //   //   return schedules.find((s: any) =>
+  //   //     s.description?.toLowerCase().includes('release')
+  //   //   ) ?? null;
+  //   // }
 
-    // // UAT / Live
-    // return schedules.find((s: any) =>
-    //   s.description?.toLowerCase().includes('uat')
-    // ) ?? null;
+  //   // // UAT / Live
+  //   // return schedules.find((s: any) =>
+  //   //   s.description?.toLowerCase().includes('uat')
+  //   // ) ?? null;
 
-    return null;
-  }
+  //   return null;
+  // }
+
+
   
   toggleSelection(row: PipelineRow, checked: boolean) {
     if (checked) {
@@ -689,5 +660,226 @@ export class Pipelines implements OnInit {
 
     console.log(this.activePipelines);
   }
+
+
+  private async fetchAllProjectsPipelines(branch: string) {
+
+    const projects = this.customSettings?.projects
+      .filter((p: any) => p.is_selected && p.project_name.toLowerCase() !== 'common')
+      || [];
+
+    const q = projects.map(p => `
+      ${p.project_name.replace(/[.-]/g, '_')}:
+      project(fullPath:"pdp/${p.project_name}") {
+        name
+        pipelines(first:5, ref:"${branch}") {
+          nodes {
+            id
+            status
+            ref
+            createdAt
+            startedAt
+            finishedAt
+            user { name }
+            source
+            sha
+          }
+        }
+      }
+    `).join('\n');
+
+    const query = `{ ${q} }`;
+
+    const res = await fetch('https://git.promptdairytech.com/api/graphql', {
+      method: 'POST',
+      headers: {
+        'PRIVATE-TOKEN': this.token,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ query })
+    });
+
+    return (await res.json())?.data || {};
+  }
+  
+
+  private async fetchAllSchedules() {
+
+    const projects = this.customSettings?.projects
+      .filter((p: any) => p.is_selected && p.project_name.toLowerCase() !== 'common')
+      || [];
+
+    const q = projects.map(p => `
+      ${p.project_name.replace(/[.-]/g, '_')}:
+      project(fullPath:"pdp/${p.project_name}") {
+        pipelineSchedules(first:20) {
+          nodes {
+            id
+            description
+            ref
+          }
+        }
+      }
+    `).join('\n');
+
+    const query = `{ ${q} }`;
+
+    const res = await fetch('https://git.promptdairytech.com/api/graphql', {
+      method: 'POST',
+      headers: {
+        'PRIVATE-TOKEN': this.token,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ query })
+    });
+
+    return (await res.json())?.data || {};
+  }
+ 
+  async refreshPipelines(onlyActive: boolean = false) {
+
+    try {
+
+      this.loader.showLoading('Fetching pipelines…');
+
+      const branch = this.targetBranch;
+
+      const [pipelineData, scheduleData] = await Promise.all([
+        this.fetchAllProjectsPipelines(branch),
+        this.fetchAllSchedules()
+      ]);
+
+      const rows: PipelineRow[] = [];
+      const deploySha: Record<string, string> = {};
+
+      for (const key of Object.keys(pipelineData)) {
+
+        const proj = pipelineData[key];
+        const pipelines = proj?.pipelines?.nodes || [];
+
+        const latest = pipelines.sort((a: any, b: any) =>
+          new Date(b.createdAt).getTime() -
+          new Date(a.createdAt).getTime()
+        )[0];
+
+        const lastDeploy = pipelines
+          .filter((p: any) => p.source === 'schedule' && p.status === 'SUCCESS')
+          .sort((a: any, b: any) =>
+            new Date(b.createdAt).getTime() -
+            new Date(a.createdAt).getTime()
+          )[0];
+
+        const lastDeploySha = lastDeploy?.sha || null;
+        if (lastDeploySha) {
+          deploySha[key] = lastDeploy.sha
+        }
+        const row = this.toRow(key, latest ?? null);
+        row.deployed_at = lastDeploy ? this.formatDateTime(lastDeploy.createdAt) : '-';
+        // schedule match
+        const schedules = scheduleData[key]?.pipelineSchedules?.nodes || [];
+
+        const match = schedules.find((s: any) =>
+          s.ref?.toLowerCase() === branch.toLowerCase()
+        );
+
+        row.matchedSchedule = match ? { id: match.id, name: match.description } : null;
+
+        this.addActivePipeline(row);
+        rows.push(row);
+      }
+
+      const mrDiffData = await this.fetchMRsAndDiffs(branch, deploySha);
+
+      rows.forEach(r => {
+        const key = r.project_name.replace(/[.-]/g, '_');
+        const d = mrDiffData[key];
+
+        r.openMRs = d?.mergeRequests?.count || 0;
+        r.changesSinceDeploy = d?.repository?.commits?.count || 0; 
+      });
+
+
+      this.dataSource.data = rows;
+      this.lastRefreshed = new Date();
+
+    } catch (err) {
+      this.showError(err);
+    } finally {
+      this.loader.hide();
+    }
+  }
+   
+
+  private async fetchMRsAndDiffs(branch: string, deploySha: Record<string, string>
+  ) {
+    const projectMap = new Map<string, string>();
+    this.customSettings?.projects.forEach((p: any) => {
+      const key = p.project_name.replace(/[.-]/g, '_');
+      projectMap.set(key, p.project_name);
+    });
+
+    // Single GraphQL call for MRs
+    const mrQuery = Object.keys(deploySha).map(key => {
+      const projectName = projectMap.get(key) || key;
+      return `
+        ${key}:
+        project(fullPath:"pdp/${projectName}") {
+          mergeRequests(state: opened, targetBranches:["${branch}"]) {
+            count
+          }
+        }
+      `;
+    }).join('\n');
+
+    // Execute MR query and all compare calls IN PARALLEL (single network round-trip)
+    const [mrRes, ...compareResults] = await Promise.all([
+      fetch('https://git.promptdairytech.com/api/graphql', {
+        method: 'POST',
+        headers: {
+          'PRIVATE-TOKEN': this.token,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ query: `{ ${mrQuery} }` })
+      }),
+      ...Object.keys(deploySha).map(async key => {
+        const projectName = projectMap.get(key) || key;
+        const encodedPath = encodeURIComponent(`pdp/${projectName}`);
+        const lastSHA = deploySha[key];
+
+        try {
+          const res = await fetch(
+            `https://git.promptdairytech.com/api/v4/projects/${encodedPath}/repository/compare?from=${lastSHA}&to=${branch}`,
+            { headers: { 'PRIVATE-TOKEN': this.token } }
+          );
+
+          if (!res.ok) {
+            console.error(`Compare failed for ${projectName}:`, res.status);
+            return { key, count: 0 };
+          }
+
+          const data = await res.json();
+          return { key, count: data.commits?.length || 0 };
+        } catch (err) {
+          console.error(`Error comparing ${projectName}:`, err);
+          return { key, count: 0 };
+        }
+      })
+    ]);
+
+    const mrData = (await mrRes.json())?.data || {};
+
+    const result: any = {};
+    compareResults.forEach(({ key, count }) => {
+      result[key] = {
+        mergeRequests: mrData[key]?.mergeRequests || { count: 0 },
+        repository: {
+          commits: { count }
+        }
+      };
+    });
+
+    return result;
+  }
+  
 }
 
