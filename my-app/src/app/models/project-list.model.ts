@@ -10,3 +10,4 @@ export interface ProjectListModel {
     sourceBranchExists: boolean;
     targetBranchExists: boolean;
 }
+  

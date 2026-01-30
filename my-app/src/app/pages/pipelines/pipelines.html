@@ -17,64 +17,71 @@
   </div>
 
   <div *ngIf="dataSource.data.length > 0; else noData">
-  <!-- Table -->
+    <!-- Table -->
     <table mat-table [dataSource]="dataSource" class="mat-elevation-z2 full-width-table">
-    <!-- Project Name -->
-    <ng-container matColumnDef="project">
-      <th mat-header-cell *matHeaderCellDef> Project </th>
-      <td mat-cell *matCellDef="let pipeline">
-        <app-badge [label]="pipeline.project_name" [type]="getProjectType(pipeline.project_name)"></app-badge>
-      </td>
-    </ng-container>
+      <!-- Select -->
+      <ng-container matColumnDef="select">
+        <th mat-header-cell *matHeaderCellDef class="col-center"> Select </th>
+        <td mat-cell *matCellDef="let row" class="col-center">
 
-    <!-- Pipeline Type -->
-    <ng-container matColumnDef="type">
-      <th mat-header-cell *matHeaderCellDef> Type </th>
-      <td mat-cell *matCellDef="let pipeline">{{ pipeline.type }}</td>
-    </ng-container>
+          <!-- Show checkbox ONLY if schedule exists -->
+          <mat-checkbox [disabled]="!canRun(row)" [checked]="isSelected(row)"
+            (change)="toggleSelection(row, $event.checked)">
+          </mat-checkbox>
 
-    <!-- Triggered By -->
-    <ng-container matColumnDef="user">
-      <th mat-header-cell *matHeaderCellDef> Triggered By </th>
-      <td mat-cell *matCellDef="let pipeline">{{ pipeline.user }}</td>
-    </ng-container>
+        </td>
+      </ng-container>
 
-    <!-- Created At -->
-    <ng-container matColumnDef="created">
-      <th mat-header-cell *matHeaderCellDef> Created At </th>
-      <td mat-cell *matCellDef="let pipeline">{{ pipeline.created_at }}</td>
-    </ng-container>
 
-    <!-- Pipeline Status -->
-    <ng-container matColumnDef="status">
-      <th mat-header-cell *matHeaderCellDef class="col-center"> Status </th>
-      <td mat-cell *matCellDef="let pipeline" class="col-center">
-        <app-badge [label]="pipeline.status" variant="pill"
-          [type]="pipeline.status">
-        </app-badge>
-      </td>
-    </ng-container>
+      <!-- Project Name -->
+      <ng-container matColumnDef="project">
+        <th mat-header-cell *matHeaderCellDef> Project </th>
+        <td mat-cell *matCellDef="let pipeline">
+          <app-badge [label]="pipeline.project_name" [type]="getProjectType(pipeline.project_name)"></app-badge>
+        </td>
+      </ng-container>
 
-    <!-- Info -->
-    <ng-container matColumnDef="info">
-      <th mat-header-cell *matHeaderCellDef class="col-center"> Info </th>
-      <td mat-cell *matCellDef="let pipeline" class="col-center">
-        <button mat-icon-button (click)="openDetails(pipeline.full_pipeline)">
-          <mat-icon>info</mat-icon>
-        </button>
-      </td>
-    </ng-container>
+      <!-- Triggered By -->
+      <ng-container matColumnDef="user">
+        <th mat-header-cell *matHeaderCellDef> Triggered By </th>
+        <td mat-cell *matCellDef="let pipeline">{{ pipeline.user }}</td>
+      </ng-container>
 
-    <!-- URL -->
-    <ng-container matColumnDef="link">
-      <th mat-header-cell *matHeaderCellDef class="col-center"> Open </th>
-      <td mat-cell *matCellDef="let row" class="col-center">
-        <a (click)="openDefaultBrowser(row.link)" class="pointer">🔗</a>
-      </td>
-    </ng-container>
+      <!-- Created At -->
+      <ng-container matColumnDef="created">
+        <th mat-header-cell *matHeaderCellDef> Created At </th>
+        <td mat-cell *matCellDef="let pipeline">{{ pipeline.created_at }}</td>
+      </ng-container>
 
-    <tr mat-header-row *matHeaderRowDef="['project', 'type', 'user', 'created','status', 'info', 'link']"></tr>
-    <tr mat-row *matRowDef="let row; columns: ['project', 'type', 'user', 'created','status', 'info', 'link'];"></tr> 
+      <!-- Pipeline Status -->
+      <ng-container matColumnDef="status">
+        <th mat-header-cell *matHeaderCellDef class="col-center"> Status </th>
+        <td mat-cell *matCellDef="let pipeline" class="col-center">
+          <app-badge [label]="pipeline.status" variant="pill" [type]="pipeline.status">
+          </app-badge>
+        </td>
+      </ng-container>
+
+      <!-- Info -->
+      <ng-container matColumnDef="info">
+        <th mat-header-cell *matHeaderCellDef class="col-center"> Info </th>
+        <td mat-cell *matCellDef="let pipeline" class="col-center">
+          <button mat-icon-button (click)="openDetails(pipeline.full_pipeline)">
+            <mat-icon>info</mat-icon>
+          </button>
+        </td>
+      </ng-container>
+
+      <!-- URL -->
+      <ng-container matColumnDef="link">
+        <th mat-header-cell *matHeaderCellDef class="col-center"> Open </th>
+        <td mat-cell *matCellDef="let row" class="col-center">
+          <a (click)="openDefaultBrowser(row.link)" class="pointer">🔗</a>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="columns"></tr>
+      <tr mat-row *matRowDef="let row; columns: columns;"></tr>
     </table>
   </div>
 
@@ -95,6 +102,9 @@
 
     <!-- Right: Buttons -->
     <div class="button-group">
+      <button mat-raised-button class="themed-btn" *ngIf="isAdmin" [disabled]="!hasSelectedRows" (click)="runSelected()">
+        ▶ Run
+      </button>
       <button mat-raised-button class="themed-btn" (click)="refreshPipelines()">🔄 Refresh</button>
     </div>
   </div>
