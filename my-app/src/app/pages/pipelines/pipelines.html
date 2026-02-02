@@ -48,9 +48,9 @@
       </ng-container>
 
       <!-- Created At -->
-      <ng-container matColumnDef="created">
-        <th mat-header-cell *matHeaderCellDef> Created At </th>
-        <td mat-cell *matCellDef="let pipeline">{{ pipeline.created_at }}</td>
+      <ng-container matColumnDef="deployed">
+        <th mat-header-cell *matHeaderCellDef> Last Deployed At </th>
+        <td mat-cell *matCellDef="let pipeline">{{ pipeline.deployed_at }}</td>
       </ng-container>
 
       <!-- Pipeline Status -->
@@ -59,6 +59,30 @@
         <td mat-cell *matCellDef="let pipeline" class="col-center">
           <app-badge [label]="pipeline.status" variant="pill" [type]="pipeline.status">
           </app-badge>
+        </td>
+      </ng-container>
+
+      <!-- Open MRs -->
+      <ng-container matColumnDef="openMRs">
+        <th mat-header-cell *matHeaderCellDef class="col-center">
+          <span matTooltip="Open Merge Requests targeting this branch">Open MRs</span>
+        </th>
+        <td mat-cell *matCellDef="let pipeline" class="col-center">
+          <app-badge *ngIf="pipeline.openMRs > 0" [label]="pipeline.openMRs" variant="pill" [type]="'pending_mr'">
+          </app-badge>
+          <span *ngIf="pipeline.openMRs === 0" class="muted">—</span>
+        </td>
+      </ng-container>
+
+      <!-- Changes Since Deploy -->
+      <ng-container matColumnDef="changes">
+        <th mat-header-cell *matHeaderCellDef class="col-center">
+          <span matTooltip="Number of commits since last deployment">Changes</span>
+        </th>
+        <td mat-cell *matCellDef="let pipeline" class="col-center">
+          <app-badge *ngIf="pipeline.changesSinceDeploy > 0" [label]="pipeline.changesSinceDeploy" variant="pill" [type]="'changes_after_deployment'">
+          </app-badge>
+          <span *ngIf="pipeline.changesSinceDeploy === 0" class="muted">—</span>
         </td>
       </ng-container>
 

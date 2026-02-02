@@ -43,7 +43,6 @@ export class MergeRequests implements OnInit {
     'source',
     'target',
     'author',
-    'assignee',
     'created',
     'status',
     'url'
@@ -74,6 +73,49 @@ export class MergeRequests implements OnInit {
     await this.refreshMRs();
   }
 
+  // async refreshMRs(): Promise<void> {
+  //   try {
+  //     this.loader.showLoading('Fetching merge requests…');
+
+  //     const selectedUsers = this.users;
+
+  //     if (!this.customSettings?.projects?.length) {
+  //       this.dataSource.data = [];
+  //       this.lastRefreshed = new Date();
+  //       return;
+  //     }
+
+  //     const branches = this.getBranches(this.customSettings);
+  //     const projects = this.customSettings.projects.filter((p: any) => p.is_selected);
+
+  //     const tasks: Promise<MRTableRow[]>[] = [];
+
+  //     for (const proj of projects) {
+  //       for (const branch of branches) {
+  //         tasks.push(
+  //           this.processProjectBranchMRs(
+  //             proj,
+  //             branch,
+  //             selectedUsers
+  //           )
+  //         );
+  //       }
+  //     }
+
+  //     // 🔥 PARALLEL EXECUTION
+  //     const results = await Promise.all(tasks);
+
+  //     this.dataSource.data = results.flat();
+  //     this.lastRefreshed = new Date();
+
+  //   } catch (err) {
+  //     // this.showError(err);
+  //   } finally {
+  //     this.loader.hide();
+  //   }
+  // }
+
+
   async refreshMRs(): Promise<void> {
     try {
       this.loader.showLoading('Fetching merge requests…');
@@ -89,105 +131,157 @@ export class MergeRequests implements OnInit {
       const branches = this.getBranches(this.customSettings);
       const projects = this.customSettings.projects.filter((p: any) => p.is_selected);
 
-      const tasks: Promise<MRTableRow[]>[] = [];
+      // 🔥 Optimized: fetch all projects & branches in a single call
+      const allMergeRequests = await this.fetchMergeRequests(projects.map(p => p.project_name), branches);
 
-      for (const proj of projects) {
-        for (const branch of branches) {
-          tasks.push(
-            this.processProjectBranchMRs(
-              proj,
-              branch,
-              selectedUsers
-            )
-          );
-        }
-      }
+      // Filter by selected users
+      const rows: MRTableRow[] = allMergeRequests
+        .filter(mr => {
+          const assignee = mr.assignees?.nodes?.map((x: any) => x.name).join(', ') ?? '-';
+          return selectedUsers.includes(mr.author?.name) || selectedUsers.includes(assignee);
+        })
+        .map(mr => ({
+          project_name: mr.projectName,
+          source_branch: mr.sourceBranch,
+          target_branch: mr.targetBranch,
+          author: mr.author.name,
+          assignee: mr.assignees?.nodes?.map((x: any) => x.name).join(', ') ?? '-',
+          created_at: new Date(mr.createdAt).toLocaleString('en-GB'),
+          status: mr.state === 'opened' ? 'PENDING' : mr.state.toUpperCase(),
+          url: mr.webUrl
+        }));
 
-      // 🔥 PARALLEL EXECUTION
-      const results = await Promise.all(tasks);
-
-      this.dataSource.data = results.flat();
+      this.dataSource.data = rows;
       this.lastRefreshed = new Date();
 
     } catch (err) {
-      // this.showError(err);
+      console.error(err);
     } finally {
       this.loader.hide();
     }
   }
+
+
+  // private async processProjectBranchMRs(
+  //   proj: any,
+  //   branch: string,
+  //   selectedUsers: string[]
+  // ): Promise<MRTableRow[]> {
+
+  //   const rows: MRTableRow[] = [];
+
+  //   const mrList = await this.fetchMergeRequests(
+  //     proj.project_name,
+  //     branch
+  //   );
+
+  //   for (const mr of mrList) {
+  //     const assignee =
+  //       mr.assignees?.nodes?.map((x: any) => x.name).join(', ') ?? '-';
+
+  //     const match =
+  //       selectedUsers.includes(assignee) ||
+  //       selectedUsers.includes(mr.author?.name);
+
+  //     if (!match) continue;
+
+  //     rows.push({
+  //       project_name: proj.project_name,
+  //       source_branch: mr.sourceBranch,
+  //       target_branch: mr.targetBranch,
+  //       author: mr.author.name,
+  //       assignee,
+  //       created_at: new Date(mr.createdAt).toLocaleString('en-GB'),
+  //       status: mr.state == 'opened' ? 'PENDING' : mr.state.toUpperCase(),
+  //       url: mr.webUrl
+  //     });
+  //   }
+
+  //   return rows;
+  // }
   
 
-  private async processProjectBranchMRs(
-    proj: any,
-    branch: string,
-    selectedUsers: string[]
-  ): Promise<MRTableRow[]> {
 
-    const rows: MRTableRow[] = [];
+  // async fetchMergeRequests(projectName: string, targetBranch: string): Promise<any[]> {
+  //   const token = (await window.electronAPI.getToken()).token;
 
-    const mrList = await this.fetchMergeRequests(
-      proj.project_name,
-      branch
-    );
-
-    for (const mr of mrList) {
-      const assignee =
-        mr.assignees?.nodes?.map((x: any) => x.name).join(', ') ?? '-';
-
-      const match =
-        selectedUsers.includes(assignee) ||
-        selectedUsers.includes(mr.author?.name);
-
-      if (!match) continue;
-
-      rows.push({
-        project_name: proj.project_name,
-        source_branch: mr.sourceBranch,
-        target_branch: mr.targetBranch,
-        author: mr.author.name,
-        assignee,
-        created_at: new Date(mr.createdAt).toLocaleString('en-GB'),
-        status: mr.state == 'opened' ? 'PENDING' : mr.state.toUpperCase(),
-        url: mr.webUrl
-      });
-    }
-
-    return rows;
-  }
-  
+  //   const query = `
+  //   {
+  //     group(fullPath: "pdp") {
+  //       projects(first: 5, search: "${projectName}") {
+  //         nodes {
+  //           mergeRequests(
+  //             state: opened,
+  //             targetBranches: ["${targetBranch}"],
+  //             sort: CREATED_DESC
+  //           ) {
+  //             nodes {
+  //               title
+  //               webUrl
+  //               sourceBranch
+  //               targetBranch
+  //               state
+  //               author { name }
+  //               assignees { nodes { name } }
+  //               createdAt
+  //             }
+  //           }
+  //         }
+  //       }
+  //     }
+  //   }`;
 
 
-  async fetchMergeRequests(projectName: string, targetBranch: string): Promise<any[]> {
+  //   const response = await fetch('https://git.promptdairytech.com/api/graphql', {
+  //     method: 'POST',
+  //     headers: {
+  //       'PRIVATE-TOKEN': token,
+  //       'Content-Type': 'application/json'
+  //     },
+  //     body: JSON.stringify({ query })
+  //   });
+
+  //   const json = await response.json();
+  //   // return json?.data?.group?.projects?.nodes?.[0]?.mergeRequests?.nodes || [];
+  //   const projects = json?.data?.group?.projects?.nodes ?? [];
+
+  //   const allMergeRequests = projects.flatMap(
+  //     (p:any) => p.mergeRequests?.nodes ?? []
+  //   );
+
+  //   return allMergeRequests;
+  // }
+
+  async fetchMergeRequests(projectNames: string[], branches: string[]): Promise<any[]> {
     const token = (await window.electronAPI.getToken()).token;
 
-    const query = `
-    {
-      group(fullPath: "pdp") {
-        projects(first: 5, search: "${projectName}") {
-          nodes {
-            mergeRequests(
-              state: opened,
-              targetBranches: ["${targetBranch}"],
-              sort: CREATED_DESC
-            ) {
+    // Prepare GraphQL aliases for each project
+    const queries = projectNames
+      .map(p => {
+        const alias = p.replace(/[.-]/g, '_'); // GraphQL alias cannot have dot or dash
+        const branchList = branches.map(b => `"${b}"`).join(', ');
+        return `
+          ${alias}: project(fullPath: "pdp/${p}") {
+            name
+            mergeRequests(state: opened, targetBranches: [${branchList}], sort: CREATED_DESC) {
               nodes {
-                title
                 webUrl
                 sourceBranch
                 targetBranch
                 state
                 author { name }
-                assignees { nodes { name } }
                 createdAt
               }
             }
           }
-        }
-      }
-    }`;
+        `;
+      })
+      .join('\n');
 
+    const query = `{ ${queries} }`;
 
-    const response = await fetch('https://git.promptdairytech.com/api/graphql', {
+    // Fetch from GitLab GraphQL
+    const res = await fetch('https://git.promptdairytech.com/api/graphql', {
       method: 'POST',
       headers: {
         'PRIVATE-TOKEN': token,
@@ -196,16 +290,27 @@ export class MergeRequests implements OnInit {
       body: JSON.stringify({ query })
     });
 
-    const json = await response.json();
-    // return json?.data?.group?.projects?.nodes?.[0]?.mergeRequests?.nodes || [];
-    const projects = json?.data?.group?.projects?.nodes ?? [];
+    const json = await res.json();
+    const data = json?.data || {};
 
-    const allMergeRequests = projects.flatMap(
-      (p:any) => p.mergeRequests?.nodes ?? []
-    );
+    // Flatten all merge requests and attach projectName
+    const allMergeRequests: any[] = [];
+    for (const key in data) {
+      const project = data[key];
+      if (project?.mergeRequests?.nodes) {
+        allMergeRequests.push(
+          ...project.mergeRequests.nodes.map((mr: any) => ({
+            ...mr,
+            projectName: project.name
+          }))
+        );
+      }
+    }
 
     return allMergeRequests;
   }
+  
+  
 
   openDefaultBrowser(url: string) {
     window.electronAPI.openExternal(url);

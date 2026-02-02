@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatFormField, MatFormFieldModule } from '@angular/material/form-field';
@@ -48,7 +48,6 @@ export class CompareBranches {
   getProjectType = getProjectType;
   token = '';
   displayedColumns = [
-    'select',
     'name',
     'branches',
     'ahead',
@@ -66,14 +65,34 @@ export class CompareBranches {
     /^ocelot.*\.json$/i
   ];
   baseUrl = 'https://git.promptdairytech.com/api/v4';
+  showBranchSelector = false;
 
-  constructor(private loaderService: LoaderService, private snackBar: MatSnackBar, private dialog: MatDialog,
+  constructor(private loaderService: LoaderService, private snackBar: MatSnackBar, private dialog: MatDialog, 
+    private cdr: ChangeDetectorRef, 
     private baseService: BaseService
   ) {}
   async ngOnInit() {
     this.customSettings = await window.electronAPI.getSettings();
     this.token = (await window.electronAPI.getToken()).token;
-    this.loadProjects();
+
+    const savedBranch = localStorage.getItem('selectedTargetBranch') || 'master_ah';
+    const allowedBranches = [
+      this.customSettings?.supportBranch,
+      this.customSettings?.releaseBranch,
+      this.customSettings?.liveBranch
+    ];
+
+    if (savedBranch && allowedBranches.includes(savedBranch)) {
+      this.sourceBranch = savedBranch;
+      this.showBranchSelector = true;
+    } else {
+      this.sourceBranch = allowedBranches[0] || 'master_ah';
+      this.showBranchSelector = true;
+    }
+    this.cdr.detectChanges(); 
+
+    await this.loadProjects();
+    await this.compareBranches();
   }
 
   async loadProjects() {
@@ -124,79 +143,73 @@ export class CompareBranches {
 
     const headers = { 'PRIVATE-TOKEN': this.token };
 
-    await Promise.all(
-      targetList.map(async (proj: any) => {
-        try {
-          /* 1️⃣ Check branch existence in parallel */
-          const [sourceExists, targetExists] = await Promise.all([
-            this.baseService.branchExists(proj.project_id, this.sourceBranch),
-            this.baseService.branchExists(proj.project_id, this.targetBranch)
-          ]);
-
-          proj.sourceBranchExists = sourceExists;
-          proj.targetBranchExists = targetExists;
-
-          if (!sourceExists || !targetExists) {
-            proj.ahead = '-';
-            proj.behind = '-';
-            proj.configFiles = [];
-            proj.configDiffs = [];
-            return;
-          }
-
-          /* 2️⃣ Compare BOTH directions in parallel */
-          const [aheadRes, behindRes] = await Promise.all([
-            this.baseService.getAhead(proj.project_id, this.targetBranch, this.sourceBranch),
-            this.baseService.getAhead(proj.project_id, this.sourceBranch, this.targetBranch)
-          ]);
-
-          if (!aheadRes.ok || !behindRes.ok) {
-            proj.ahead = '-';
-            proj.behind = '-';
-            proj.configFiles = [];
-            proj.configDiffs = [];
-            return;
-          }
-
-          const [aheadData, behindData] = await Promise.all([
-            aheadRes.json(),
-            behindRes.json()
-          ]);
-
-          /* 3️⃣ Set ahead / behind */
-          proj.ahead = aheadData.commits?.length || 0;
-          proj.behind = behindData.commits?.length || 0;
-
-          /* 4️⃣ Extract config diffs (only from AHEAD) */
-          proj.configDiffs = (aheadData.diffs || [])
-            .filter((d: any) => {
-              const file = d.new_path?.split('/').pop();
-              return this.configFilePatterns.some(rx => rx.test(file));
-            })
-            .map((d: any) => ({
-              file: d.new_path,
-              diff: d.diff,
-              newFile: d.new_file,
-              renamedFile: d.renamed_file,
-              deletedFile: d.deleted_file
-            }));
-
-          proj.configFiles = proj.configDiffs.map((d: any) =>
-            d.file.split('/').pop()
-          );
-
-        } catch {
-          proj.sourceBranchExists = false;
-          proj.targetBranchExists = false;
-          proj.ahead = '-';
-          proj.behind = '-';
-          proj.configFiles = [];
-          proj.configDiffs = [];
-        }
-      })
+    const projectsWithBranch = await Promise.all(
+      targetList.map(async p => ({
+        ...p,
+        current_branch: this.sourceBranch
+      }))
     );
 
-    this.dataSource.data = [...this.dataSource.data];
+    const graphData = await this.fetchProjectsInfo(
+            projectsWithBranch,
+            this.sourceBranch,
+            this.targetBranch
+          );
+    
+          // 🔄 map response + REST compare
+    const finalData = await Promise.all(
+      projectsWithBranch.map(async p => {
+        const alias = p.project_name.replace(/[^a-zA-Z0-9_]/g, '_');
+        const data = graphData[alias];
+  
+        const sourceSha = data?.repository?.source?.sha;
+        const targetSha = data?.repository?.target?.sha;
+  
+        let commitsAhead = 0;
+        let commitsBehind = 0;
+        let configDiffs: any[] = [];
+        let configFiles: string[] = [];
+  
+        if (sourceSha && targetSha) {
+          const aheadCompare = await this.baseService.getAhead(p.project_id, targetSha, sourceSha); // REST call
+          const aheadJson = await aheadCompare.json();
+
+          const behindCompare = await this.baseService.getAhead(p.project_id, sourceSha, targetSha); // REST call
+          const behindJson = await behindCompare.json();
+  
+          commitsAhead = aheadJson?.commits?.length ?? 0;
+          commitsBehind = behindJson?.commits?.length ?? 0;
+            
+          configDiffs = (aheadJson?.diffs || [])
+          .filter((d: any) => {
+            const file = d.new_path?.split('/').pop();
+            return this.configFilePatterns.some(rx => rx.test(file));
+          })
+          .map((d: any) => ({
+            file: d.new_path,
+            diff: d.diff,
+            newFile: d.new_file,
+            renamedFile: d.renamed_file,
+            deletedFile: d.deleted_file
+          }));
+
+          configFiles = configDiffs.map((d: any) =>
+            d.file.split('/').pop()
+          );
+        }
+
+        return {
+          ...p,
+          ahead: commitsAhead,
+          behind: commitsBehind,
+          sourceBranchExists: sourceSha ? true : false,
+          targetBranchExists: targetSha ? true : false,
+          configDiffs: configDiffs,
+          configFiles: configFiles
+        }
+    }));
+
+    this.dataSource.data = [...finalData];
     this.lastRefreshed = new Date();
     this.loaderService.hide();
   }
@@ -263,4 +276,54 @@ export class CompareBranches {
     return this.customSettings?.projects?.some((p: any) => p.is_selected) || false;
   }
   
+
+  private async fetchProjectsInfo(
+      projects: ProjectSettingModel[],
+      sourceBranch: string,
+      targetBranch: string
+    ) {
+      const token = (await window.electronAPI.getToken()).token;
+  
+      const query = this.buildProjectInfoQuery(
+        projects,
+        sourceBranch,
+        targetBranch
+      );
+  
+      const response = await fetch(
+        'https://git.promptdairytech.com/api/graphql',
+        {
+          method: 'POST',
+          headers: {
+            'PRIVATE-TOKEN': token,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ query })
+        }
+      );
+  
+      const json = await response.json();
+      return json.data || {};
+  }
+
+  private buildProjectInfoQuery(projects: ProjectSettingModel[], sourceBranch: string, targetBranch: string): string {
+
+    const projectQueries = projects.map(p => {
+      const alias = p.project_name.replace(/[^a-zA-Z0-9_]/g, '_');
+
+      return `${alias}: project(fullPath: "pdp/${p.project_name}") {
+                  repository {
+                    source: commit(ref: "${sourceBranch}") {
+                      sha
+                    }
+  
+                    target: commit(ref: "${targetBranch}") {
+                      sha
+                    }
+                  }
+                }`;
+    }).join('\n');
+
+    return `{ ${projectQueries} }`;
+    }
 }

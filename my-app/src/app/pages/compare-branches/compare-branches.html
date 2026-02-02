@@ -1,12 +1,25 @@
 <div class="create-branch-container ">
   <section class="defaults mat-theme" *ngIf="hasSelectedProject">
-    <h2 style="margin-top: 0;">Branch Compare </h2>
-
     <div class="controls">
 
-      <mat-form-field appearance="fill">
+      <!-- <mat-form-field appearance="fill">
         <mat-label>Source Branch</mat-label>
         <input matInput [(ngModel)]="sourceBranch" (input)="resetDataSource()" />
+      </mat-form-field> -->
+
+      <mat-form-field appearance="fill" class="control-item">
+        <mat-label>Source Branch</mat-label>
+        <mat-select [(ngModel)]="sourceBranch" (ngModelChange)="compareBranches()">
+          <mat-option [value]="customSettings?.supportBranch">
+            {{ 'Support(' + customSettings?.supportBranch + ')' }}
+          </mat-option>
+          <mat-option [value]="customSettings?.releaseBranch">
+            {{ 'Release(' + customSettings?.releaseBranch + ')' }}
+          </mat-option>
+          <mat-option [value]="customSettings?.liveBranch">
+            {{ 'Live(' + customSettings?.liveBranch + ')' }}
+          </mat-option>
+        </mat-select>
       </mat-form-field>
 
       <mat-form-field appearance="fill">
@@ -26,7 +39,6 @@
 
 
   <section class="projects">
-    <h2 style="margin-top: 0;" *ngIf="hasSelectedProject">Projects</h2>
     <div *ngIf="hasSelectedProject; else noData">
       <table mat-table [dataSource]="dataSource" class="mat-elevation-z2 full-width-table">
 

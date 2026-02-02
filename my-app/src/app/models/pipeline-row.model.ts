@@ -1,15 +1,17 @@
 interface PipelineRow {
   project_name: string;
-  type: string;
   status: string;
   user: string;
-  created_at: string;
+  deployed_at: string;
   full_pipeline: PipelineDetails | null;
   link: string;
   matchedSchedule: {
     id: string;
     name: string;
   } | null;
+
+  openMRs: number;
+  changesSinceDeploy: number;
 }
 
 interface PipelineDetails {
