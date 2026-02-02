@@ -165,7 +165,7 @@ export class Home implements OnInit {
         this.loaderService.hide();
       }
 
-      await this.updateMrStatus();
+      await this.loadProjectsWithCommitInfo();
       this.loaderService.hide();
       this.showMRResultsSummary(results);
     } catch (error) {
@@ -173,267 +173,82 @@ export class Home implements OnInit {
     }
   }
 
-  async loadProjectsWithCommitInfo(): Promise<void> {    
+  async loadProjectsWithCommitInfo(): Promise<void> {
     try {
       this.loaderService.showLoading('Loading projects info...');
 
-      const useCustomBranch: boolean = this.customSettings?.useCustomBranch ?? false;
-      const sourceBranch: string = useCustomBranch ? this.customSettings?.sourceBranch ?? '' : '';
+      const useCustomBranch = this.customSettings?.useCustomBranch ?? false;
+      const sourceBranch = useCustomBranch
+        ? this.customSettings?.sourceBranch ?? ''
+        : '';
 
       const validProjects = (this.customSettings?.projects || []).filter(
-        (p: ProjectSettingModel) => p.is_selected && p.local_repo_path
+        p => p.is_selected && p.local_repo_path
       );
 
-      const projectPromises = validProjects.map(async (project: any) => {
-        try {
-          this.loaderService.showLoading(`Loading repositories....`);
+      // 🔹 get current branches locally
+      const projectsWithBranch = await Promise.all(
+        validProjects.map(async p => ({
+          ...p,
+          current_branch: useCustomBranch
+            ? sourceBranch
+            : await this.runGit(p.local_repo_path, 'rev-parse --abbrev-ref HEAD')
+        }))
+      );
 
-          // Determine current branch
-          const current_branch = !useCustomBranch
-            ? await this.runGit(project.local_repo_path, 'rev-parse --abbrev-ref HEAD')
-            : sourceBranch;
+      // 🔥 ONE GraphQL CALL
+      const graphData = await this.fetchProjectsInfo(
+        projectsWithBranch,
+        sourceBranch,
+        this.targetBranch
+      );
 
-          // Fetch project data with branch validation
-          const {
-            commits_ahead,
-            mr_status,
-            sourceBranchExists,
-            targetBranchExists
-          } = await this.fetchProjectCommitsAndMRStatus(
-            project,
-            current_branch,
-          );
+      // 🔄 map response + REST compare
+      const finalData = await Promise.all(
+        projectsWithBranch.map(async p => {
+          const alias = p.project_name.replace(/[^a-zA-Z0-9_]/g, '_');
+          const data = graphData[alias];
 
-          this.loaderService.showLoading(`Loading ${project.project_name} info...`);
+          const sourceSha = data?.repository?.source?.sha;
+          const targetSha = data?.repository?.target?.sha;
+
+          let commitsAhead = 0;
+          let commitsBehind = 0;
+
+          if (sourceSha && targetSha) {
+            const compare = await this.baseService.getAhead(p.project_id, targetSha, sourceSha); // REST call
+            const json = await compare.json();
+
+            commitsAhead = json?.commits?.length ?? 0;
+            commitsBehind = json?.commits?.length ?? 0;
+          }
+
+          const latest = data?.mergeRequests?.nodes[0]?.state; // Assuming sorted by created date
+          let mrStatus = 'Created';
+          if (latest === undefined) mrStatus = 'No MR';
+          if (latest === 'merged') mrStatus = 'Merged';
+          if (latest === 'closed') mrStatus = 'Rejected';
 
           return {
-            ...project,
-            current_branch,
-            target_branch: this.targetBranch,
-            commits_ahead,
-            mr_status,
+            ...p,
+            commits_ahead: commitsAhead,
+            commits_behind: commitsBehind,
+            mr_status: mrStatus,
+            sourceBranchExists: sourceSha ? true : false,
+            targetBranchExists: targetSha ? true : false,
             is_selected: false,
-            sourceBranchExists,
-            targetBranchExists
+            target_branch: this.targetBranch
           } as ProjectListModel;
-        } catch (error) {
-          window.electronAPI.logError("Project failed", {
-            project: project.project_name,
-            error: error
-          });
-          console.error(`Error processing project ${project.project_name}:`, error);
-          return null;
-        }
-      });
+        })
+      );
 
-      const results = await Promise.all(projectPromises);
-      const filteredProjects = results.filter(p => p !== null && p !== undefined) as ProjectListModel[];
-
-      this.dataSource.data = filteredProjects;
+      this.dataSource.data = finalData;
       this.lastRefreshed = new Date();
       this.loaderService.hide();
+
     } catch (error) {
       window.electronAPI.logError("loadProjectsWithCommitInfo CRASHED", error);
       this.handleError(error);
-    }
-  }
-
-
-async branchExists(repoPath: string, branch: string): Promise<boolean> {
-  try {
-    const output = await this.runGit(
-      repoPath,
-      `rev-parse --verify origin/${branch}`
-    );
-    return !!output;
-  } catch {
-    return false;
-  }
-}
-
-//   async updateMrStatus(): Promise<void> {
-//   try {
-//     let selectedProjects = this.dataSource.data.filter(p => p.is_selected);
-//     if (selectedProjects.length === 0) {
-//       selectedProjects = this.dataSource.data;
-//     }
-//     if (selectedProjects.length === 0) {
-//       this.snackBar.open('No Projects Found!', 'Close', { duration: 3000 });
-//       this.loaderService.hide();
-//       return;
-//     }
-
-//     // Process all selected projects in parallel
-//     const updatePromises = selectedProjects.map(async (project) => {
-//       try {
-//         // Run MR status fetch and git commit count in parallel
-//         const [mr_status, commits_ahead_str] = await Promise.all([
-//           this.fetchMRStatus(
-//             project.project_id, 
-//             project.current_branch, 
-//             project.target_branch, 
-//             true
-//           ),
-//           this.runGit(
-//             project.local_repo_path,
-//             `rev-list --count origin/${project.target_branch}..origin/${project.current_branch}`
-//         )
-//         ]);
-
-//         const commits_ahead = parseInt(commits_ahead_str || '0');
-
-//         return {
-//           project_id: project.project_id,
-//           mr_status,
-//           commits_ahead
-//         };
-//       } catch (error) {
-//         console.error(`Error updating project ${project.project_name}:`, error);
-//         return {
-//           project_id: project.project_id,
-//           mr_status: project.mr_status, // Keep existing status on error
-//           commits_ahead: project.commits_ahead
-//         };
-//       }
-//     });
-
-//     // Wait for all updates to complete
-//     const updates = await Promise.all(updatePromises);
-
-//     // Create a map for O(1) lookup
-//     const updatesMap = new Map(
-//       updates.map(u => [u.project_id, u])
-//     );
-
-//     // Update dataSource once with all changes
-//     this.dataSource.data = this.dataSource.data.map(p => {
-//       const update = updatesMap.get(p.project_id);
-//       if (update) {
-//         return {
-//           ...p,
-//           is_selected: false,
-//           mr_status: update.mr_status,
-//           commits_ahead: update.commits_ahead
-//         };
-//       }
-//       return p;
-//     });
-
-//     // Load settings once at the end
-//     const settings = await window.electronAPI.getSettings();
-//     if (settings.selectedAssigneeId) this.selectedAssigneeId = settings.selectedAssigneeId;
-    
-//     this.labels.forEach(l => l.is_selected = false);
-//     this.mrTitle = '';
-//     this.mrDescription = '';
-//     this.loaderService.hide();
-//   } catch (error) {
-//     this.handleError(error);
-//   }
-// }
-
-  async updateMrStatus(): Promise<void> {
-    try {
-      this.loaderService.showLoading('Refreshing...');
-
-      let selectedProjects = this.dataSource.data.filter(p => p.is_selected);
-      if (selectedProjects.length === 0) {
-        selectedProjects = this.dataSource.data;
-      }
-      if (selectedProjects.length === 0) {
-        this.snackBar.open('No Projects Found!', 'Close', { duration: 3000 });
-        this.loaderService.hide();
-        return;
-      }
-
-      const updatePromises = selectedProjects.map(async (project) => {
-        try {
-          // Fetch project data with branch validation
-          const {
-            commits_ahead,
-            mr_status,
-            sourceBranchExists,
-            targetBranchExists
-          } = await this.fetchProjectCommitsAndMRStatus(
-            project,
-            project.current_branch,
-          );
-
-          return {
-            project_id: project.project_id,
-            mr_status,
-            commits_ahead,
-            sourceBranchExists,
-            targetBranchExists
-          };
-        } catch (error) {
-          console.error(`Error updating project ${project.project_name}:`, error);
-          return {
-            project_id: project.project_id,
-            mr_status: project.mr_status,
-            commits_ahead: project.commits_ahead,
-            sourceBranchExists: project.sourceBranchExists,
-            targetBranchExists: project.targetBranchExists
-          };
-        }
-      });
-
-      const updates = await Promise.all(updatePromises);
-      const updatesMap = new Map(updates.map(u => [u.project_id, u]));
-
-      this.dataSource.data = this.dataSource.data.map(p => {
-        const update = updatesMap.get(p.project_id);
-        if (update) {
-          return {
-            ...p,
-            is_selected: false,
-            mr_status: update.mr_status ?? '-', // Fallback to existing value
-            commits_ahead: update.commits_ahead ?? '-', // Fallback to existing value
-            sourceBranchExists: update.sourceBranchExists ?? p.sourceBranchExists,
-            targetBranchExists: update.targetBranchExists ?? p.targetBranchExists
-          } as ProjectListModel; // Type assertion to ensure correct type
-        }
-        return p;
-      });
-
-      const settings = await window.electronAPI.getSettings();
-      if (settings.selectedAssigneeId) this.selectedAssigneeId = settings.selectedAssigneeId;
-
-      this.labels.forEach(l => l.is_selected = false);
-      this.mrTitle = '';
-      this.mrDescription = '';
-      this.lastRefreshed = new Date();
-      this.loaderService.hide();
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  async fetchMRStatus(projectId: number, sourceBranch: string, targetBranch: string, showMessage = true): Promise<'Created' | 'Merged' | 'Rejected' | 'No MR' | 'Error'> {
-    try {
-      const project = this.dataSource.data.find(e => e.project_id == projectId);
-
-      if (showMessage) {
-        this.loaderService.showLoading(`Loading ${project?.project_name} info...`);
-      }
-
-      const url = `${this.gitlabApiBase}/projects/${projectId}/merge_requests?source_branch=${encodeURIComponent(sourceBranch)}&target_branch=${encodeURIComponent(targetBranch)}&state=all`;
-
-      const res = await fetch(url, {
-        headers: { 'PRIVATE-TOKEN': this.token }
-      });
-
-      const mrs = await res.json();
-
-      if (!Array.isArray(mrs) || mrs.length === 0) return 'No MR';
-
-      const latest = mrs[0]; // Assuming sorted by created date
-      if (latest.state === 'merged') return 'Merged';
-      if (latest.state === 'closed') return 'Rejected';
-      return 'Created';
-    } catch (error) {
-      this.handleError(error);
-      return 'Error';
     }
   }
 
@@ -533,63 +348,70 @@ async branchExists(repoPath: string, branch: string): Promise<boolean> {
     return '';
   }
 
-
-  private async fetchProjectCommitsAndMRStatus(
-    project: any,
-    currentBranch: string,
-  ): Promise<{
-    commits_ahead: number;
-    mr_status: string;
-    sourceBranchExists: boolean;
-    targetBranchExists: boolean;
-  }> {
-
-    // Check branch existence
-    const [sourceExists, targetExists] = await Promise.all([
-      this.baseService.branchExists(project.project_id, currentBranch),
-      this.baseService.branchExists(project.project_id, this.targetBranch)
-    ]);
-
-    // If branches don't exist, return early with specific branch info
-    if (!sourceExists || !targetExists) {
-      window.electronAPI.logWarn("Branch missing", {
-        project: project.project_name,
-        sourceExists,
-        targetExists
-      });
-
-      return {
-        commits_ahead: 0,
-        mr_status: 'No MR',
-        sourceBranchExists: sourceExists,
-        targetBranchExists: targetExists
-      };
-    }
-
-    // Fetch commits ahead and MR status in parallel
-    const [mr_status, commits_ahead_res] = await Promise.all([
-      this.fetchMRStatus(
-        project.project_id,
-        currentBranch,
-        this.targetBranch,
-      ),
-      this.baseService.getAhead(project.project_id, this.targetBranch, currentBranch)
-    ]);
-
-    const commits_ahead = commits_ahead_res.ok
-      ? (await commits_ahead_res.json())?.commits?.length || 0
-      : 0;
-
-    return {
-      commits_ahead,
-      mr_status,
-      sourceBranchExists: true,
-      targetBranchExists: true
-    };
-  }
-
   get hasSelectedProject(): boolean {
     return this.customSettings?.projects?.some(p => p.is_selected) ?? false;
   }
+
+  private buildProjectInfoQuery(projects: ProjectSettingModel[], sourceBranch: string, targetBranch: string): string {
+
+    const projectQueries = projects.map(p => {
+      const alias = p.project_name.replace(/[^a-zA-Z0-9_]/g, '_');
+
+      return `${alias}: project(fullPath: "pdp/${p.project_name}") {
+                repository {
+                  source: commit(ref: "${sourceBranch}") {
+                    sha
+                  }
+
+                  target: commit(ref: "${targetBranch}") {
+                    sha
+                  }
+                }
+
+                mergeRequests(
+                  sourceBranches: ["${sourceBranch}"]
+                  targetBranches: ["${targetBranch}"]
+                ) {
+                  count
+                  nodes {
+                    state
+                  }
+                }
+              }`;
+    }).join('\n');
+
+    return `{ ${projectQueries} }`;
+  }
+  
+  
+  private async fetchProjectsInfo(
+    projects: ProjectSettingModel[],
+    sourceBranch: string,
+    targetBranch: string
+  ) {
+    const token = (await window.electronAPI.getToken()).token;
+
+    const query = this.buildProjectInfoQuery(
+      projects,
+      sourceBranch,
+      targetBranch
+    );
+
+    const response = await fetch(
+      'https://git.promptdairytech.com/api/graphql',
+      {
+        method: 'POST',
+        headers: {
+          'PRIVATE-TOKEN': token,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ query })
+      }
+    );
+
+    const json = await response.json();
+    return json.data || {};
+  }
+  
 }
 

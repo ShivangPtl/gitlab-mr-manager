@@ -210,6 +210,7 @@ export class Pipelines implements OnInit {
 
   toRow(projectName: string, pipeline: any | null): PipelineRow {
 
+    var proName = projectName.replace("_",".");
     if (!pipeline) {
       return {
         project_name: projectName,
@@ -217,7 +218,7 @@ export class Pipelines implements OnInit {
         user: '-',
         deployed_at: '-',
         full_pipeline: null,
-        link: `https://git.promptdairytech.com/pdp/${projectName}/-/pipelines`,
+        link: `https://git.promptdairytech.com/pdp/${proName}/-/pipelines`,
         matchedSchedule: null,
         openMRs: 0,
         changesSinceDeploy: 0
@@ -253,7 +254,7 @@ export class Pipelines implements OnInit {
       user: pipeline.user?.name || '-',
       deployed_at: pipeline.createdAt ? this.formatDateTime(pipeline.createdAt) : '-',
       full_pipeline: pipelineDetails,
-      link: `https://git.promptdairytech.com/pdp/${projectName}/-/pipeline_schedules`,
+      link: `https://git.promptdairytech.com/pdp/${proName}/-/pipeline_schedules`,
       matchedSchedule: null,
       openMRs: 0,
       changesSinceDeploy: 0

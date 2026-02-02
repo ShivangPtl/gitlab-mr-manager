@@ -45,7 +45,7 @@
     <ng-container matColumnDef="select">
       <th mat-header-cell *matHeaderCellDef> Select </th>
       <td mat-cell *matCellDef="let project">
-        <mat-checkbox [(ngModel)]="project.is_selected"></mat-checkbox>
+        <mat-checkbox [(ngModel)]="project.is_selected" [disabled]="!project.sourceBranchExists || !project.targetBranchExists"></mat-checkbox>
       </td>
     </ng-container>
 
@@ -143,7 +143,7 @@
 
     <!-- Right: Buttons -->
     <div class="button-group">
-      <button mat-raised-button class="themed-btn" (click)="isAnySelected() ? updateMrStatus() : loadProjectsWithCommitInfo()">🔄 Refresh</button>
+      <button mat-raised-button class="themed-btn" (click)="loadProjectsWithCommitInfo()">🔄 Refresh</button>
       <button mat-raised-button class="themed-btn" (click)="createMergeRequests()" [disabled]="!isAnySelected() || !mrTitle || mrTitle.trim() === ''">🚀 Create MR</button>
     </div>
   </div>
