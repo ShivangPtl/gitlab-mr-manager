@@ -1,9 +1,11 @@
+require('dotenv').config();
 const { app, BrowserWindow, ipcMain, dialog, shell, Notification } = require('electron');
 const path = require('path');
 const ElectronStore = require('electron-store');
 const store = new ElectronStore.default();
 const { exec } = require('child_process');
 const log = require('electron-log');
+const { generateMultiMRDescription, generateMultiCodeReview } = require('./services/ai-mr.service');
 
 const fetch = (...args) =>
   import('node-fetch').then(({ default: fetch }) => fetch(...args));
@@ -67,6 +69,34 @@ function createWindow() {
       });
     });
   });
+
+  ipcMain.handle('generate-multi-mr-description',
+    async (event,payload)=>{
+      try{
+        const result =
+          await generateMultiMRDescription(payload);
+    
+        return { success:true, description:result };
+      }
+      catch(err){
+        log.error("AI ERROR",err);
+        return { success:false, error:err.message };
+      }
+    });
+
+  ipcMain.handle('generate-multi-code-review',
+    async (event,payload)=>{
+      try{
+        const result =
+          await generateMultiCodeReview(payload);
+    
+        return { success:true, review:result };
+      }
+      catch(err){
+        log.error("AI ERROR",err);
+        return { success:false, error:err.message };
+      }
+    });
 
   ipcMain.on('open-external', (event, url) => {
     shell.openExternal(url);

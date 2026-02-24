@@ -25,8 +25,19 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.send('log-debug', msg, data),
 
   showNotification: (title, body) => 
-    ipcRenderer.send('show-notification', { title, body })
+    ipcRenderer.send('show-notification', { title, body }),
   
+  generateMultiMRDescription: (payload) =>
+    ipcRenderer.invoke(
+      'generate-multi-mr-description',
+      payload
+    ),
+
+  generateMultiCodeReview: (payload) =>
+    ipcRenderer.invoke(
+      'generate-multi-code-review',
+      payload
+    ),
 });
 
 // contextBridge.exposeInMainWorld('logger', {

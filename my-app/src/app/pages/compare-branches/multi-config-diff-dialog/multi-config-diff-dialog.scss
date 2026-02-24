@@ -1,0 +1,97 @@
+.branch-info {
+  font-family: monospace;
+  margin-bottom: 12px;
+  color: #666;
+}
+
+.file-block {
+  margin-bottom: 16px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.file-header {
+  background: #f5f5f5;
+  padding: 8px 12px;
+  display: flex;
+  justify-content: space-between;
+  font-weight: 600;
+}
+
+.file-name {
+  font-family: monospace;
+  font-size: 13px;
+}
+
+.file-badge {
+  background: #ff9800;
+  color: white;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+}
+
+.file-badge.deleted {
+  background: #f44336;
+}
+
+.diff-view {
+  background: #1e1e1e;
+  color: #d4d4d4;
+  padding: 12px;
+  font-size: 12px;
+  overflow-x: auto;
+  font-family: monospace;
+  white-space: pre;
+}
+
+/* 👇 THIS IS IMPORTANT */
+.diff-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  line-height: 1.4;
+  padding: 2px 6px;
+  width: 100%;
+}
+
+
+/* Colors */
+.diff-add {
+  color: #2da44e; /* green */
+  background: rgba(46, 160, 67, 0.15);
+  display:flex;
+  justify-content:space-between;
+}
+
+.diff-remove {
+  color: #f85149; /* red */
+  background: rgba(248, 81, 73, 0.15);
+  display:flex;
+  justify-content:space-between;
+}
+
+.diff-context {
+  color: #d4d4d4;
+}
+
+.diff-meta {
+  color: #8b949e;
+  font-style: italic;
+}
+
+.ai-warning{
+  background:#f9a825;
+  color:black;
+  padding:2px 6px;
+  border-radius:4px;
+  font-size:11px;
+  margin-left:10px;
+  white-space:nowrap;
+  flex-shrink:0;
+}
+  
+  .Low{background:#2e7d32}
+  .Medium{background:#f9a825}
+  .High{background:#c62828}

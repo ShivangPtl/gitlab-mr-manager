@@ -22,6 +22,11 @@ import { Badge } from "../../components/badge/badge";
 import { BaseService } from '../../services/base-service';
 import { MatIcon } from '@angular/material/icon';
 import { getProjectType } from '../../../shared/base';
+import { AiService } from '../../services/ai-mr';
+import { ConfigDiffDialogComponent } from '../compare-branches/config-diff-dialog/config-diff-dialog';
+import { MatDialog } from '@angular/material/dialog';
+import { MultiConfigDiffDialogComponent } from '../compare-branches/multi-config-diff-dialog/multi-config-diff-dialog';
+
 // import { LogService } from '../../services/log-service';
 
 declare const window: any;
@@ -46,9 +51,8 @@ declare const window: any;
 
 export class Home implements OnInit {
   targetBranch = 'master_ah';
-  constructor(private loaderService: LoaderService, private snackBar: MatSnackBar, private authService: GitlabAuth, private cdr: ChangeDetectorRef, 
-    private baseService: BaseService) 
-  {
+  constructor(private loaderService: LoaderService, private snackBar: MatSnackBar, private authService: GitlabAuth, private cdr: ChangeDetectorRef,
+    private baseService: BaseService, private aiService: AiService, private dialog: MatDialog) {
     this.targetBranch = localStorage.getItem('selectedTargetBranch') || 'master_ah';
   }
   gitlabApiBase = 'https://git.promptdairytech.com/api/v4';
@@ -92,11 +96,11 @@ export class Home implements OnInit {
     if (savedBranch && allowedBranches.includes(savedBranch)) {
       this.targetBranch = savedBranch;
       this.showBranchSelector = true;
-    }else{
+    } else {
       this.targetBranch = allowedBranches[0] || 'master_ah';
       this.showBranchSelector = true;
     }
-    this.cdr.detectChanges(); 
+    this.cdr.detectChanges();
     this.loadProjectsWithCommitInfo();
   }
 
@@ -106,7 +110,7 @@ export class Home implements OnInit {
 
   async createMergeRequests() {
     try {
-      this.loaderService.showLoading('Creating MR...'); 
+      this.loaderService.showLoading('Creating MR...');
 
 
       const selected = this.dataSource.data.filter(p => p.is_selected);
@@ -130,7 +134,8 @@ export class Home implements OnInit {
           const commitMsg = await this.runGit(proj.local_repo_path, 'log -1 --pretty=%B');
 
           const title = this.mrTitle?.trim() || commitMsg.split('\n')[0]?.trim() || 'Automated MR';
-          const description = this.mrDescription?.trim()
+          const aiDesc = this.getDescriptionForProject(proj.project_name);
+          const description = aiDesc || this.mrDescription?.trim()
             || (!commitMsg || commitMsg.length > 1000 ? 'Created from GitLabMRManager' : commitMsg.trim());
 
           const formData = new URLSearchParams();
@@ -214,10 +219,17 @@ export class Home implements OnInit {
 
           let commitsAhead = 0;
           let commitsBehind = 0;
+          let commitMessages: string[] = [];
+          let changedFiles: string[] = [];
+          let diffText: string = '';
 
           if (sourceSha && targetSha) {
             const compare = await this.baseService.getAhead(p.project_id, targetSha, sourceSha); // REST call
             const json = await compare.json();
+
+            commitMessages = json?.commits?.map((c: any) => c.title) ?? [];
+            changedFiles = json?.diffs?.map((d: any) => d.new_path) ?? [];
+            diffText = json?.diffs?.map((d: any) => d.diff).join('\n') ?? '';
 
             commitsAhead = json?.commits?.length ?? 0;
             commitsBehind = json?.commits?.length ?? 0;
@@ -233,6 +245,9 @@ export class Home implements OnInit {
             ...p,
             commits_ahead: commitsAhead,
             commits_behind: commitsBehind,
+            ai_commit_messages: commitMessages,
+            ai_changed_files: changedFiles,
+            ai_diff: diffText,
             mr_status: mrStatus,
             sourceBranchExists: sourceSha ? true : false,
             targetBranchExists: targetSha ? true : false,
@@ -244,6 +259,8 @@ export class Home implements OnInit {
 
       this.dataSource.data = finalData;
       this.lastRefreshed = new Date();
+      this.mrDescription = '';
+      this.mrTitle = '';
       this.loaderService.hide();
 
     } catch (error) {
@@ -336,7 +353,7 @@ export class Home implements OnInit {
     });
   }
 
-  onTargetBranchChange(){
+  onTargetBranchChange() {
     localStorage.setItem('selectedTargetBranch', this.targetBranch);
 
     this.loadProjectsWithCommitInfo();
@@ -382,8 +399,8 @@ export class Home implements OnInit {
 
     return `{ ${projectQueries} }`;
   }
-  
-  
+
+
   private async fetchProjectsInfo(
     projects: ProjectSettingModel[],
     sourceBranch: string,
@@ -412,6 +429,167 @@ export class Home implements OnInit {
     const json = await response.json();
     return json.data || {};
   }
-  
+
+
+  async generateAIDescription() {
+
+    const selectedProjects = this.dataSource.data
+      .filter(x => x.is_selected);
+
+    if (selectedProjects.length === 0) return;
+
+    let projectWiseInput = '';
+
+    for (const proj of selectedProjects) {
+
+      const commits = (proj.ai_commit_messages ?? []);
+      const files = (proj.ai_changed_files ?? []);
+      const diff = typeof proj.ai_diff === 'string'
+        ? proj.ai_diff.slice(0, 1000)                    // ← limit diff size to avoid token overflow
+        : '';
+
+      projectWiseInput += `
+Project: ${proj.project_name}
+Branch: ${proj.current_branch} → ${proj.target_branch}
+
+Commits:
+${commits.join('\n')}
+
+Files:
+${files.join('\n')}
+
+Diff:
+${diff}
+
+------
+`;
+    }
+
+    const payload = {
+      multiProjectInput: projectWiseInput
+    };
+
+    const res = await this.aiService.generateMultiMRDescription(payload);
+
+    if (res?.success) {
+      // Fill textarea with all project descriptions combined
+      try {
+        const parsed = typeof res.description === 'string'
+          ? JSON.parse(res.description)
+          : res.description;
+
+        let combined = '';
+        for (const [projectName, description] of Object.entries(parsed)) {
+          combined += `[${projectName}]\n${description}\n\n`;
+        }
+        this.mrDescription = combined.trim();
+
+        setTimeout(() => {
+          const textarea = document.querySelector('.ai-textarea') as HTMLTextAreaElement;
+          if (textarea) {
+            textarea.style.height = 'auto';
+            textarea.style.height = textarea.scrollHeight + 'px';
+          }
+        }, 0);
+
+      } catch (err) {
+        this.handleError('Failed to parse AI response.');
+      }
+    } else {
+      this.handleError('AI did not return valid descriptions.');
+    }
+  }
+
+  // mapDescriptionsToProjects(res: any) {
+  //   try {
+  //     // Step 1: Extract the actual JSON string from wrapper object
+  //     let jsonText = typeof res === 'string' ? res : res?.description ?? res;
+
+  //     // Step 2: If it's still an object, no need to parse
+  //     let parsed = typeof jsonText === 'object' ? jsonText : JSON.parse(jsonText);
+
+  //     // Step 3: Map to projects
+  //     for (const proj of this.dataSource.data) {
+  //       const key = Object.keys(parsed).find(
+  //         k => k.toLowerCase() === proj.project_name.toLowerCase()
+  //       );
+  //       if (key) {
+  //         proj.ai_generated_description = parsed[key];
+  //       }
+  //     }
+
+  //   } catch (err) {
+  //     console.error('Failed to parse AI response:', err);
+  //   }
+  // }
+
+  getDescriptionForProject(projectName: string): string {
+    if (!this.mrDescription?.trim()) return '';
+
+    // Split by [ProjectName] blocks
+    const blocks = this.mrDescription.split(/\[(.+?)\]/g).filter(s => s.trim());
+
+    // blocks alternates: ['ProjectName', 'description', 'ProjectName2', 'description2']
+    for (let i = 0; i < blocks.length - 1; i += 2) {
+      const name = blocks[i].trim();
+      const desc = blocks[i + 1].trim();
+      if (name.toLowerCase() === projectName.toLowerCase()) {
+        return desc;
+      }
+    }
+
+    // Fallback: return full textarea if no block match found
+    return this.mrDescription.trim();
+  }
+
+  autoResize(event: Event) {
+    const textarea = event.target as HTMLTextAreaElement;
+    textarea.style.height = 'auto';
+    textarea.style.height = textarea.scrollHeight + 'px';
+  }
+
+  async runAICodeReview() {
+
+    const selected = this.dataSource.data.filter(p => p.is_selected);
+
+    let reviewInput = '';
+
+    for (const proj of selected) {
+
+      const riskyDiff =
+        (proj.ai_diff ?? '')
+          .split('\n')
+          .filter(l =>
+            l.startsWith('+') ||
+            l.startsWith('-'))
+          .slice(0, 20)
+          .join('\n');
+
+      reviewInput += `
+    Project:${proj.project_name}
+    Diff:
+    ${riskyDiff}
+    -----
+    `;
+    }
+
+    const res = await this.aiService.generateMultiCodeReview({ reviewInput });
+
+    if (res.success) {
+      const parsed = JSON.parse(res.review);
+      this.dataSource.data.forEach(p => {
+        p.aiReviewComments = parsed.filter((x: any) => x.project === p.project_name);
+      });
+    }
+
+
+    this.dialog.open(MultiConfigDiffDialogComponent, {
+      width: '900px',
+      maxHeight: '85vh',
+      data: {
+        projects: selected,
+      }
+    });
+  }
 }
 

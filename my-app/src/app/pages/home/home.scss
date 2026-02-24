@@ -126,5 +126,64 @@
       color: white !important;
     }
   }
+
+  .ai-desc-action{
+    margin-top:10px;
+    display:flex;
+    justify-content:flex-end;
+  }
+
+
+  .ai-textarea-wrapper {
+    position: relative;
+    width: 100%;
+    margin-bottom: 1rem;
+  
+    .ai-placeholder {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 2;
+      pointer-events: all;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+    }
+  
+    .ai-textarea {
+      width: 100%;
+      min-height: 100px;
+      max-height: 500px;
+      background-color: var(--input-bg, #1e1e1e);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 6px;
+      color: var(--text-primary, #ffffff);
+      font-family: monospace;
+      font-size: 13px;
+      line-height: 1.6;
+      padding: 12px;
+      resize: none;          // ← disabled manual resize, auto handles it
+      box-sizing: border-box;
+      overflow: hidden;      // ← hides scrollbar, grows instead
+      transition: border-color 0.2s ease;
+  
+      &:focus {
+        outline: none;
+        border-color: rgba(255, 255, 255, 0.5);
+      }
+  
+      &::placeholder {
+        color: var(--text-tertiary, #888);
+        font-family: inherit;
+      }
+    }
+  }
+
+  .ai-review-btn{
+    background:#2e7d32;
+    color:white;
+  }
 }
 

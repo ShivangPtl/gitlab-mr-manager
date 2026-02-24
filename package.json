@@ -42,9 +42,12 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "dotenv": "^17.3.1",
     "electron-log": "^5.4.3",
     "electron-store": "^10.1.0",
-    "node-fetch": "^3.3.2"
+    "groq-sdk": "^0.37.0",
+    "node-fetch": "^3.3.2",
+    "openai": "^6.22.0"
   },
   "devDependencies": {
     "@angular/cli": "^20.0.4",
