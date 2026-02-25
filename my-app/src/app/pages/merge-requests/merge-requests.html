@@ -67,24 +67,15 @@
 
       <ng-container matColumnDef="ai_review">
         <th mat-header-cell *matHeaderCellDef class="col-center">
-          Review
+          Thread
         </th>
 
         <td mat-cell *matCellDef="let row" class="col-center">
           <!-- <span *ngIf="row.thread_total === 0">—</span> -->
-          <!-- <app-badge *ngIf="row.thread_total === 0" [label]="'-'">
-          </app-badge> -->
-          <!-- <span *ngIf="row.thread_total > 0">
-            🧵 {{row.thread_resolved}} /
-            {{row.thread_total}}
-            <mat-icon *ngIf="row.thread_pending === 0" color="primary">
-              check_circle
-            </mat-icon>
-            <mat-icon *ngIf="row.thread_pending > 0" color="warn">
-              error
-            </mat-icon>
-          </span> -->
-          <app-badge [label]="row.thread_resolved + ' / ' + row.thread_total" [type]="getReviewStatus(row).type">
+          <app-badge *ngIf="row.thread_total === 0" [label]="row.thread_resolved + ' / ' + row.thread_total">
+          </app-badge>
+          <app-badge *ngIf="row.thread_total != 0" [label]="row.thread_resolved + ' / ' + row.thread_total"
+            [type]="getReviewStatus(row).type">
           </app-badge>
         </td>
       </ng-container>
@@ -94,17 +85,26 @@
           AI Review
         </th>
 
-        <td mat-cell *matCellDef="let row" class="col-center">
-          <button mat-icon-button color="primary" matTooltip="Run AI Review" *ngIf="row.thread_pending === 0"
-            (click)="runAIReview(row)">
-            <mat-icon>psychology</mat-icon>
+        <!-- <td mat-cell *matCellDef="let row" class="col-center">
+          <button *ngIf="row.thread_total === 0" class="ai-btn run" (click)="runAIReview(row)">
+            Review
           </button>
 
-          <button mat-icon-button color="accent" matTooltip="Re-Review" *ngIf="row.thread_pending > 0"
-            (click)="runAIReview(row)">
-            <mat-icon>refresh</mat-icon>
+          <button *ngIf="row.thread_total > 0" class="ai-btn run" (click)="runAIReview(row)">
+            Re-Review
           </button>
-        </td>
+        </td> -->
+        <td mat-cell *matCellDef="let row" class="col-center">
+        
+          <button class="ai-action" [ngClass]="getAIAction(row).type" (click)="runAIReview(row)">
+        
+            <mat-icon class="ai-icon">
+              {{getAIAction(row).icon}}
+            </mat-icon>
+        
+            {{getAIAction(row).text}}
+        
+          </button>   </td>
       </ng-container>
 
       <!-- URL -->

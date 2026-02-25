@@ -66,6 +66,10 @@ export class MRReviewSelectionDialog implements OnInit {
     this.dialogRef.close(selected);
   }
 
+  isAnySelected() {
+    return this.data.findings.filter((x: any) => x.selected).length > 0;
+  }
+
   getDiffClass(line: string) {
 
     if (line.startsWith('+'))

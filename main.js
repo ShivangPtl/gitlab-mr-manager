@@ -198,7 +198,7 @@ async function startPipelineWatcher() {
 
 async function checkPipelines() {
   try {
-    log.info('🔁 Checking pipelines...');
+    log.info('Checking pipelines...');
 
     const settings = store.get('settings') || {};
     const projects = getWatchedProjects(settings);

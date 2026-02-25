@@ -227,3 +227,27 @@
   flex-direction: column;
   gap: 8px;
 }
+
+/* PRIMARY ENABLED */
+::ng-deep .mat-mdc-raised-button.mat-primary {
+  background: #2f81f7 !important;
+  color: white !important;
+  transition: 0.2s;
+}
+
+/* 🔴 DISABLED STATE */
+::ng-deep .mat-mdc-raised-button.mat-primary.mat-mdc-button-disabled {
+
+  background: rgba(139, 148, 158, 0.15) !important;   /* subtle grey */
+  color: #6e7681 !important;
+  border: 1px solid #30363d !important;
+
+  cursor: not-allowed !important;
+  box-shadow: none !important;
+  opacity: 0.6 !important;
+}
+
+/* also prevent hover glow */
+::ng-deep .mat-mdc-raised-button.mat-primary.mat-mdc-button-disabled:hover {
+  background: rgba(139, 148, 158, 0.15) !important;
+}

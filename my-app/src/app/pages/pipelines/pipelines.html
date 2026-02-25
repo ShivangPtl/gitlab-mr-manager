@@ -2,7 +2,7 @@
   <div class="controls">
     <mat-form-field appearance="fill" class="control-item" *ngIf="showBranchSelector">
       <mat-label>Target Branch</mat-label>
-      <mat-select [(ngModel)]="targetBranch" (ngModelChange)="refreshPipelines()">
+      <mat-select [(ngModel)]="targetBranch" (ngModelChange)="refreshPipelines(); selectedRows.clear()">
         <mat-option [value]="customSettings?.supportBranch">
           {{ 'Support(' + customSettings?.supportBranch + ')' }}
         </mat-option>

@@ -54,7 +54,7 @@ export class Pipelines implements OnInit {
     private dialog: MatDialog
   ) {
     this.targetBranch = localStorage.getItem('selectedTargetBranch') || 'master_ah';
-   }
+  }
 
   // columns = ['select', 'project', 'type', 'user', 'created', 'status', 'info', 'link'];
 
@@ -85,9 +85,9 @@ export class Pipelines implements OnInit {
     this.customSettings = await window.electronAPI.getSettings();
     this.isAdmin = tokenData.isAdmin;
 
-    if(this.isAdmin){
+    if (this.isAdmin) {
       this.columns = ['select', 'project', 'user', 'deployed', 'status', 'openMRs', 'changes', 'info', 'link'];
-    }else{
+    } else {
       this.columns = ['project', 'user', 'deployed', 'status', 'openMRs', 'changes', 'info', 'link'];
     }
 
@@ -101,7 +101,7 @@ export class Pipelines implements OnInit {
     if (savedBranch && allowedBranches.includes(savedBranch)) {
       this.targetBranch = savedBranch;
       this.showBranchSelector = true;
-    }else{
+    } else {
       this.targetBranch = allowedBranches[0] || 'master_ah';
       this.showBranchSelector = true;
     }
@@ -157,7 +157,7 @@ export class Pipelines implements OnInit {
   // }
 
 
-  
+
 
   // async refreshPipelines(onlyActive: boolean = false) {
   //   try {
@@ -183,7 +183,7 @@ export class Pipelines implements OnInit {
   //     //     return;
   //     //   }
   //     // }
-      
+
 
   //     const branch = this.targetBranch;
 
@@ -206,11 +206,11 @@ export class Pipelines implements OnInit {
   //     this.loader.hide();
   //   }
   // }
-  
+
 
   toRow(projectName: string, pipeline: any | null): PipelineRow {
 
-    var proName = projectName.replace("_",".");
+    var proName = projectName.replace("_", ".");
     if (!pipeline) {
       return {
         project_name: projectName,
@@ -241,10 +241,10 @@ export class Pipelines implements OnInit {
       ),
       runDuration: pipeline.startedAt
         ? this.calculateDuration(
-            pipeline.startedAt,
-            pipeline.finishedAt,
-            isRunning
-          )
+          pipeline.startedAt,
+          pipeline.finishedAt,
+          isRunning
+        )
         : 'Waiting to start…',
       name: pipeline.user.name
     };
@@ -326,11 +326,11 @@ export class Pipelines implements OnInit {
   }
 
   openDetails(pipeline: any) {
-  this.dialog.open(PipelineDetailsDialogComponent, {
-    width: '600px',
-    data: pipeline
-  });
-}
+    this.dialog.open(PipelineDetailsDialogComponent, {
+      width: '600px',
+      data: pipeline
+    });
+  }
 
   formatDateTime(dateStr?: string | null): string {
     if (!dateStr) return '-';
@@ -356,34 +356,34 @@ export class Pipelines implements OnInit {
     isRunning = false
   ): string {
     if (!start) return '-';
-  
+
     const startTime = new Date(start).getTime();
     const endTime = end
       ? new Date(end).getTime()
       : isRunning
         ? Date.now()
         : null;
-  
+
     if (!endTime || endTime < startTime) {
       if (isRunning) return this.formatDiff(Date.now() - startTime) + ' ⏳ (running…)';
       return '-';
     }
-  
+
     return this.formatDiff(endTime - startTime);
   }
-  
+
   private formatDiff(diffMs: number): string {
     const seconds = Math.floor((diffMs / 1000) % 60);
     const minutes = Math.floor((diffMs / (1000 * 60)) % 60);
     const hours = Math.floor(diffMs / (1000 * 60 * 60));
-  
+
     const hStr = hours > 0 ? `${hours}h ` : '';
     const mStr = minutes > 0 ? `${minutes}m ` : '';
     const sStr = `${seconds}s`;
-  
+
     return `${hStr}${mStr}${sStr}`;
   }
-  
+
   openDefaultBrowser(url: string) {
     window.electronAPI.openExternal(url);
   }
@@ -460,7 +460,7 @@ export class Pipelines implements OnInit {
   // }
 
 
-  
+
   toggleSelection(row: PipelineRow, checked: boolean) {
     if (checked) {
       this.selectedRows.add(row);
@@ -472,11 +472,11 @@ export class Pipelines implements OnInit {
   isSelected(row: PipelineRow): boolean {
     return this.selectedRows.has(row);
   }
-  
+
   get hasSelectedRows(): boolean {
     return this.selectedRows.size > 0;
   }
-  
+
   async runSelected() {
     const rows = Array.from(this.selectedRows);
 
@@ -535,8 +535,8 @@ export class Pipelines implements OnInit {
       this.loader.hide();
     }
   }
-  
-  
+
+
   private async playSchedule(scheduleId: string): Promise<void> {
     const token = (await window.electronAPI.getToken()).token;
 
@@ -572,11 +572,11 @@ export class Pipelines implements OnInit {
       throw new Error(errors.join(', '));
     }
   }
-  
+
   private delay(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
-  
+
   canRun(row: PipelineRow): boolean {
     if (!row.matchedSchedule) return false;
 
@@ -594,7 +594,7 @@ export class Pipelines implements OnInit {
 
     return true;
   }
-  
+
   private startPipelinePolling() {
     if (this.pipelinePoller) return; // already running
 
@@ -609,14 +609,14 @@ export class Pipelines implements OnInit {
 
     }, this.POLL_INTERVAL_MS);
   }
-  
+
   private stopPipelinePolling() {
     if (this.pipelinePoller) {
       clearInterval(this.pipelinePoller);
       this.pipelinePoller = null;
     }
   }
-  
+
   private syncActivePipelines() {
     for (const [projectName, tracker] of this.activePipelines.entries()) {
       const row = this.dataSource.data.find(
@@ -702,7 +702,7 @@ export class Pipelines implements OnInit {
 
     return (await res.json())?.data || {};
   }
-  
+
 
   private async fetchAllSchedules() {
 
@@ -736,12 +736,14 @@ export class Pipelines implements OnInit {
 
     return (await res.json())?.data || {};
   }
- 
+
   async refreshPipelines(onlyActive: boolean = false) {
 
     try {
 
-      this.loader.showLoading('Fetching pipelines…');
+      if (!onlyActive) {
+        this.loader.showLoading('Fetching pipelines…');
+      }
 
       const branch = this.targetBranch;
 
@@ -796,7 +798,7 @@ export class Pipelines implements OnInit {
         const d = mrDiffData[key];
 
         r.openMRs = d?.mergeRequests?.count || 0;
-        r.changesSinceDeploy = d?.repository?.commits?.count || 0; 
+        r.changesSinceDeploy = d?.repository?.commits?.count || 0;
       });
 
 
@@ -809,7 +811,7 @@ export class Pipelines implements OnInit {
       this.loader.hide();
     }
   }
-   
+
 
   private async fetchMRsAndDiffs(branch: string, deploySha: Record<string, string>
   ) {
@@ -881,6 +883,6 @@ export class Pipelines implements OnInit {
 
     return result;
   }
-  
+
 }
 

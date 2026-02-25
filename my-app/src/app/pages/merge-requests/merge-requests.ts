@@ -12,6 +12,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MRReviewSelectionDialog } from '../compare-branches/mr-review-selection-dialog/mr-review-selection-dialog';
 import { BaseService } from '../../services/base-service';
 import { AiService } from '../../services/ai-mr';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 declare const window: any;
 
@@ -65,7 +66,7 @@ export class MergeRequests implements OnInit {
     'target',
     'author',
     'created',
-    'review_status',
+    // 'review_status',
     'ai_review',
     'ai_action',
     'url'
@@ -80,7 +81,7 @@ export class MergeRequests implements OnInit {
     'Ekta Gupta',
     'Aman Gupta',
     'Dhriti Patel',
-    'Kulashree Patil',
+    'Kulashree Patil1',
     'Jaimin Vasveliya',
     'Divyesh Nankar',
     'Ankita Hirani'
@@ -89,55 +90,24 @@ export class MergeRequests implements OnInit {
   customSettings?: CustomSettings;
   getProjectType = getProjectType;
 
-  constructor(private loader: LoaderService, private dialog: MatDialog, private baseService: BaseService, private aiService: AiService) { }
+  constructor(private loader: LoaderService, private dialog: MatDialog, private baseService: BaseService, private aiService: AiService,
+    private snackBar: MatSnackBar
+  ) { }
 
   async ngOnInit(): Promise<void> {
     this.customSettings = await window.electronAPI.getSettings();
+
+    const tokenData = await window.electronAPI.getToken();
+    const isAdmin = tokenData.isAdmin;
+
+    if (isAdmin) {
+      this.displayColumns = ['project', 'source', 'target', 'author', 'created', 'ai_review', 'ai_action', 'url'];
+    } else {
+      this.displayColumns = ['project', 'source', 'target', 'author', 'created', 'ai_review', 'url'];
+    }
+
     await this.refreshMRs();
   }
-
-  // async refreshMRs(): Promise<void> {
-  //   try {
-  //     this.loader.showLoading('Fetching merge requests…');
-
-  //     const selectedUsers = this.users;
-
-  //     if (!this.customSettings?.projects?.length) {
-  //       this.dataSource.data = [];
-  //       this.lastRefreshed = new Date();
-  //       return;
-  //     }
-
-  //     const branches = this.getBranches(this.customSettings);
-  //     const projects = this.customSettings.projects.filter((p: any) => p.is_selected);
-
-  //     const tasks: Promise<MRTableRow[]>[] = [];
-
-  //     for (const proj of projects) {
-  //       for (const branch of branches) {
-  //         tasks.push(
-  //           this.processProjectBranchMRs(
-  //             proj,
-  //             branch,
-  //             selectedUsers
-  //           )
-  //         );
-  //       }
-  //     }
-
-  //     // 🔥 PARALLEL EXECUTION
-  //     const results = await Promise.all(tasks);
-
-  //     this.dataSource.data = results.flat();
-  //     this.lastRefreshed = new Date();
-
-  //   } catch (err) {
-  //     // this.showError(err);
-  //   } finally {
-  //     this.loader.hide();
-  //   }
-  // }
-
 
   async refreshMRs(): Promise<void> {
     try {
@@ -200,15 +170,18 @@ export class MergeRequests implements OnInit {
 
         });
 
-      for (const row of rows) {
+      await Promise.all(
+        rows.map(async (row) => {
 
-        const review = await this.getReviewCounts(row);
+          const review = await this.getReviewCounts(row);
 
-        row.thread_total = review.total;
-        row.thread_resolved = review.resolved;
-        row.thread_pending = review.pending;
-        row.mergeable = review.mergeable;
-      }
+          row.thread_total = review.total;
+          row.thread_resolved = review.resolved;
+          row.thread_pending = review.pending;
+          row.mergeable = review.mergeable;
+
+        })
+      );
 
       this.dataSource.data = rows;
       this.lastRefreshed = new Date();
@@ -219,97 +192,6 @@ export class MergeRequests implements OnInit {
       this.loader.hide();
     }
   }
-
-
-  // private async processProjectBranchMRs(
-  //   proj: any,
-  //   branch: string,
-  //   selectedUsers: string[]
-  // ): Promise<MRTableRow[]> {
-
-  //   const rows: MRTableRow[] = [];
-
-  //   const mrList = await this.fetchMergeRequests(
-  //     proj.project_name,
-  //     branch
-  //   );
-
-  //   for (const mr of mrList) {
-  //     const assignee =
-  //       mr.assignees?.nodes?.map((x: any) => x.name).join(', ') ?? '-';
-
-  //     const match =
-  //       selectedUsers.includes(assignee) ||
-  //       selectedUsers.includes(mr.author?.name);
-
-  //     if (!match) continue;
-
-  //     rows.push({
-  //       project_name: proj.project_name,
-  //       source_branch: mr.sourceBranch,
-  //       target_branch: mr.targetBranch,
-  //       author: mr.author.name,
-  //       assignee,
-  //       created_at: new Date(mr.createdAt).toLocaleString('en-GB'),
-  //       status: mr.state == 'opened' ? 'PENDING' : mr.state.toUpperCase(),
-  //       url: mr.webUrl
-  //     });
-  //   }
-
-  //   return rows;
-  // }
-
-
-
-  // async fetchMergeRequests(projectName: string, targetBranch: string): Promise<any[]> {
-  //   const token = (await window.electronAPI.getToken()).token;
-
-  //   const query = `
-  //   {
-  //     group(fullPath: "pdp") {
-  //       projects(first: 5, search: "${projectName}") {
-  //         nodes {
-  //           mergeRequests(
-  //             state: opened,
-  //             targetBranches: ["${targetBranch}"],
-  //             sort: CREATED_DESC
-  //           ) {
-  //             nodes {
-  //               title
-  //               webUrl
-  //               sourceBranch
-  //               targetBranch
-  //               state
-  //               author { name }
-  //               assignees { nodes { name } }
-  //               createdAt
-  //             }
-  //           }
-  //         }
-  //       }
-  //     }
-  //   }`;
-
-
-  //   const response = await fetch('https://git.promptdairytech.com/api/graphql', {
-  //     method: 'POST',
-  //     headers: {
-  //       'PRIVATE-TOKEN': token,
-  //       'Content-Type': 'application/json'
-  //     },
-  //     body: JSON.stringify({ query })
-  //   });
-
-  //   const json = await response.json();
-  //   // return json?.data?.group?.projects?.nodes?.[0]?.mergeRequests?.nodes || [];
-  //   const projects = json?.data?.group?.projects?.nodes ?? [];
-
-  //   const allMergeRequests = projects.flatMap(
-  //     (p:any) => p.mergeRequests?.nodes ?? []
-  //   );
-
-  //   return allMergeRequests;
-  // }
 
   async fetchMergeRequests(projectNames: string[], branches: string[]): Promise<any[]> {
     const token = (await window.electronAPI.getToken()).token;
@@ -408,7 +290,8 @@ export class MergeRequests implements OnInit {
 
 
   async runAIReview(mr: any) {
-
+  try{
+    this.loader.showLoading('AI Review in progress...');
     // 1️⃣ GET COMPARE DIFF
     const diffRes = await this.getMRCompareDiff(mr);
 
@@ -454,6 +337,16 @@ ${riskyLines}
           selected: false
         }));
 
+    if(!findings || findings.length === 0) {
+      this.loader.hide();
+      this.snackBar.open('No risky code detected.', 'Close', {
+        duration: 2000,
+        horizontalPosition: 'center',
+        verticalPosition: 'bottom',
+        panelClass: ['info-snackbar']
+      });
+      return;
+    }
 
     // 5️⃣ OPEN DIALOG
     const dialogRef =
@@ -482,6 +375,11 @@ ${riskyLines}
           selected);
 
       });
+    } catch (error) {
+      console.error('Error running AI review:', error);
+    } finally {
+      this.loader.hide();
+    }
 
   }
 
@@ -625,9 +523,15 @@ ${riskyLines}
         d.notes[0].resolvable === true
     );
 
+    const resolvedThreads = discussions.filter(
+      (d: any) =>
+        d.notes?.length &&
+        d.notes[0].resolvable === true && d.notes[0].resolved === true
+    );
+
     const total = reviewThreads.length;
 
-    const resolved = reviewThreads.filter((d: any) => d.resolved === true).length;
+    const resolved = resolvedThreads.length;
 
     const pending = total - resolved;
 
@@ -657,20 +561,50 @@ ${riskyLines}
 
     // ✅ MR Approved → Ready to merge
     if (row.approval_status) {
-      return { label: 'Approved', type: 'review_approved' };
+      return { label: 'APPROVED', type: 'review_approved' };
     }
 
     // ❌ No review yet
     if (row.thread_total === 0) {
-      return { label: 'Pending', type: 'review_pending' };
+      return { label: 'PENDING', type: 'review_pending' };
     }
 
     // ⚠️ Review done but corrections pending
     if (row.thread_pending > 0) {
-      return { label: 'Fix Required', type: 'review_fix' };
+      return { label: 'FIX REQUIRED', type: 'review_fix' };
     }
 
     // ✅ Review done + all threads resolved
-    return { label: 'Reviewed', type: 'review_done' };
+    return { label: 'REVIEWED', type: 'review_ready' };
+  }
+
+  getAIAction(row: any) {
+
+    if (row.approval_status)
+      return {
+        text: 'Approved',
+        icon: 'verified',
+        type: 'approved'
+      };
+
+    if (row.thread_total === 0)
+      return {
+        text: 'Review',
+        icon: 'smart_toy',
+        type: 'review'
+      };
+
+    if (row.thread_pending > 0)
+      return {
+        text: 'Fix',
+        icon: 'build',
+        type: 'fix'
+      };
+
+    return {
+      text: 'Reviewed',
+      icon: 'check_circle',
+      type: 'reviewed'
+    };
   }
 }

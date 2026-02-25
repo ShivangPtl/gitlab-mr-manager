@@ -18,3 +18,152 @@ table {
 .refresh-info {
   opacity: 0.7;
 }
+
+.ai-btn {
+
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+
+  padding: 2px 8px;
+  height: 26px;
+
+  border-radius: 6px;
+  border: 1px solid transparent;
+
+  font-size: 11px;
+  cursor: pointer;
+
+  background: transparent;
+
+  transition: 0.15s;
+
+}
+
+// /* RUN REVIEW */
+// .ai-btn.run {
+
+//   color: #d29922;
+//   border-color: rgba(210,153,34,0.4);
+//   background: rgba(210,153,34,0.08);
+
+// }
+
+// .ai-btn.run:hover {
+
+//   background: rgba(210,153,34,0.18);
+
+// }
+
+// /* FIX */
+// .ai-btn.fix {
+
+//   color: #f85149;
+//   border-color: rgba(248,81,73,0.4);
+//   background: rgba(248,81,73,0.08);
+
+// }
+
+// .ai-btn.fix:hover {
+
+//   background: rgba(248,81,73,0.18);
+
+// }
+
+// /* VIEW */
+// .ai-btn.done {
+
+//   color: #2da44e;
+//   border-color: rgba(46,160,67,0.4);
+//   background: rgba(46,160,67,0.08);
+
+// }
+
+// .ai-btn.done:hover {
+
+//   background: rgba(46,160,67,0.18);
+
+// }
+
+.ai-action {
+
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+
+  height: 26px;
+  padding: 0 10px;
+
+  font-size: 12px;
+  font-weight: 500;
+
+  border-radius: 6px;
+  border: 1px solid transparent;
+
+  cursor: pointer;
+  transition: 0.15s ease;
+
+  background: transparent;
+  color: #8b949e;
+}
+
+.ai-action.review,
+.ai-action.reviewed,
+.ai-action.fix,
+.ai-action.approved {
+
+  border-color: #30363d;
+  color: #8b949e;
+}
+
+.ai-action.review:hover,
+.ai-action.reviewed:hover,
+.ai-action.fix:hover,
+.ai-action.approved:hover {
+
+  border-color: #d29922;
+  color: #d29922;
+  background: rgba(210,153,34,0.08);
+}
+
+// .ai-action.fix {
+
+//   border-color: rgba(210,153,34,0.35);
+//   color: #d29922;
+//   background: rgba(210,153,34,0.05);
+// }
+
+// .ai-action.fix:hover {
+
+//   background: rgba(210,153,34,0.12);
+// }
+
+// .ai-action.reviewed {
+
+//   border-color: rgba(46,160,67,0.35);
+//   color: #2ea043;
+//   background: rgba(46,160,67,0.05);
+// }
+
+// .ai-action.reviewed:hover {
+
+//   background: rgba(46,160,67,0.12);
+// }
+
+// .ai-action.approved {
+
+//   border-color: rgba(31,111,235,0.35);
+//   color: #1f6feb;
+//   background: rgba(31,111,235,0.05);
+// }
+
+// .ai-action.approved:hover {
+
+//   background: rgba(31,111,235,0.12);
+// }
+
+.ai-icon {
+  font-size: 14px !important;
+  width: 14px !important;
+  height: 14px !important;
+}
