@@ -178,9 +178,9 @@
     <!-- Right: Buttons -->
     <div class="button-group">
       <button mat-raised-button class="themed-btn" (click)="loadProjectsWithCommitInfo()">🔄 Refresh</button>
-      <button mat-raised-button class="ai-review-btn" (click)="runAICodeReview()" [disabled]="!isAnySelected()">
+      <!-- <button mat-raised-button class="ai-review-btn" (click)="runAICodeReview()" [disabled]="!isAnySelected()">
         🧠 Run AI Review
-      </button>
+      </button> -->
       <button mat-raised-button class="themed-btn" (click)="createMergeRequests()"
         [disabled]="!isAnySelected() || !mrTitle || mrTitle.trim() === ''">🚀 Create MR</button>
     </div>

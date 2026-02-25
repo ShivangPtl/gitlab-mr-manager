@@ -1,0 +1,113 @@
+<!-- <h2 mat-dialog-title>
+  🧠 AI Code Review – {{data.project}}
+</h2>
+
+<mat-dialog-content class="review-container">
+
+  <div class="review-card" *ngFor="let f of data.findings" [class.selected]="f.selected"
+    (click)="f.selected = !f.selected">
+
+    <mat-checkbox [(ngModel)]="f.selected" (click)="$event.stopPropagation()">
+    </mat-checkbox>
+
+    <div class="review-content">
+
+      <div class="file">
+        📄 {{getFileName(f.file)}}
+      </div>
+
+      <pre class="code-line" [ngClass]="getDiffClass(f.line)" [innerText]="formatDiffLine(f.line)">
+      </pre>
+
+      <div class="comment" [ngClass]="f.risk">
+        ⚠ {{f.comment}}
+      </div>
+
+    </div>
+
+  </div>
+
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close>
+    Cancel
+  </button>
+
+  <button mat-raised-button color="primary" (click)="confirmSelection()">
+    Add To MR
+  </button>
+</mat-dialog-actions> -->
+
+
+<h2 mat-dialog-title>
+  🧠 AI Code Review – {{data.project}}
+</h2>
+
+<mat-dialog-content class="review-container">
+
+  <mat-accordion multi>
+
+    <mat-expansion-panel *ngFor="let g of groupedFindings; let i = index" [expanded]="i === 0">
+
+      <!-- FILE HEADER -->
+      <mat-expansion-panel-header class="file-header">
+
+        <div class="file-header-row">
+
+          <!-- LEFT -->
+          <div class="file-left">
+            📄 {{getFileName(g.file)}}
+          </div>
+
+          <!-- RIGHT -->
+          <div class="file-right">
+            {{g.findings.length}} issue(s)
+          </div>
+
+        </div>
+
+      </mat-expansion-panel-header>
+      <!-- FINDINGS CONTAINER -->
+      <div class="file-findings">
+        <!-- FINDINGS INSIDE FILE -->
+        <div *ngFor="let f of g.findings" class="review-card" [class.selected]="f.selected"
+          (click)="f.selected = !f.selected">
+
+          <mat-checkbox [(ngModel)]="f.selected" (click)="$event.stopPropagation()">
+          </mat-checkbox>
+
+          <div class="review-content">
+
+            <pre class="code-line" [ngClass]="getDiffClass(f.line)">
+{{formatDiffLine(f.line)}}
+          </pre>
+
+            <div class="comment" [ngClass]="f.risk">
+              ⚠ {{f.comment}}
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+
+    </mat-expansion-panel>
+
+  </mat-accordion>
+
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+
+  <button mat-button mat-dialog-close>
+    Cancel
+  </button>
+
+  <button mat-raised-button color="primary" (click)="confirmSelection()">
+
+    Add To MR
+
+  </button>
+
+</mat-dialog-actions>

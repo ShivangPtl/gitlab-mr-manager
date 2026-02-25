@@ -5,7 +5,7 @@ const ElectronStore = require('electron-store');
 const store = new ElectronStore.default();
 const { exec } = require('child_process');
 const log = require('electron-log');
-const { generateMultiMRDescription, generateMultiCodeReview } = require('./services/ai-mr.service');
+const { generateMultiMRDescription, generateMultiCodeReview, generateMRReview } = require('./services/ai-mr.service');
 
 const fetch = (...args) =>
   import('node-fetch').then(({ default: fetch }) => fetch(...args));
@@ -31,7 +31,7 @@ function createWindow() {
     store.set('gitlabAdmin', isAdmin);
     return true;
   });
-  
+
   ipcMain.handle('get-token', () => {
     return {
       token: store.get('gitlabToken'),
@@ -39,24 +39,24 @@ function createWindow() {
       isAdmin: store.get('gitlabAdmin'),
     };
   });
-  
+
   ipcMain.handle('clear-token', () => {
     store.delete('gitlabToken');
     store.delete('gitlabUser');
     store.delete('gitlabAdmin');
     store.delete('settings');
-  });  
+  });
 
 
   ipcMain.handle('open-folder-dialog', async () => {
     const result = await dialog.showOpenDialog({ properties: ['openDirectory'] });
     return result.canceled ? null : result.filePaths[0];
   });
-  
+
   ipcMain.handle('save-settings', async (event, settings) => {
     store.set('settings', settings);
   });
-  
+
   ipcMain.handle('get-settings', async () => {
     return store.get('settings') || {};
   });
@@ -71,31 +71,51 @@ function createWindow() {
   });
 
   ipcMain.handle('generate-multi-mr-description',
-    async (event,payload)=>{
-      try{
+    async (event, payload) => {
+      try {
         const result =
           await generateMultiMRDescription(payload);
-    
-        return { success:true, description:result };
+
+        return { success: true, description: result };
       }
-      catch(err){
-        log.error("AI ERROR",err);
-        return { success:false, error:err.message };
+      catch (err) {
+        log.error("AI ERROR", err);
+        return { success: false, error: err.message };
       }
     });
 
   ipcMain.handle('generate-multi-code-review',
-    async (event,payload)=>{
-      try{
+    async (event, payload) => {
+      try {
         const result =
           await generateMultiCodeReview(payload);
-    
-        return { success:true, review:result };
+
+        return { success: true, review: result };
       }
-      catch(err){
-        log.error("AI ERROR",err);
-        return { success:false, error:err.message };
+      catch (err) {
+        log.error("AI ERROR", err);
+        return { success: false, error: err.message };
       }
+    });
+
+  ipcMain.handle('generate-mr-review',
+    async (event, payload) => {
+      try {
+        const result = await generateMRReview(payload);
+
+        return {
+          success: true,
+          description: result
+        };
+      }
+      catch (err) {
+        log.error("AI REVIEW ERROR", err);
+        return {
+          success: false,
+          error: err.message
+        };
+      }
+
     });
 
   ipcMain.on('open-external', (event, url) => {
@@ -122,7 +142,7 @@ function createWindow() {
 
   ipcMain.on('show-notification', (event, data) => {
     showNotification(data.title, data.body);
-  });  
+  });
 
   const isDev = !app.isPackaged;
 
@@ -139,7 +159,7 @@ app.setAppUserModelId('GitLab MR Manager');
 
 app.whenReady().then(() => {
   var isAdmin = store.get('gitlabAdmin');
-  if(isAdmin) {
+  if (isAdmin) {
     startPipelineWatcher();   // 🔥 background watcher
   }
   createWindow();
@@ -281,7 +301,7 @@ function checkStateAndNotify(branch, project, newState, settings) {
   if (newState === 'running' && previousState !== 'running') {
     //log.info(`🔔 NOTIFY: ${project} on ${branch} → STARTED`);
     sendNotification(branch, project, 'STARTED', settings);
-  } 
+  }
   else if (newState === 'completed' && previousState === 'running') {
     //log.info(`🔔 NOTIFY: ${project} on ${branch} → COMPLETED`);
     sendNotification(branch, project, 'COMPLETED', settings);
@@ -305,7 +325,7 @@ function sendNotification(branch, project, status, settings) {
 
   let icon = '🔵';
   let action = 'Pipeline';
-  
+
   if (status === 'STARTED') {
     icon = '🟡';
     action = 'Pipeline Started';
@@ -320,12 +340,12 @@ function sendNotification(branch, project, status, settings) {
   const title = `${icon} ${branchType} - ${branch}`;
   const body = `${action}\n\n📦 Project: ${project}`;
 
-  const notification = new Notification({ 
-    title, 
+  const notification = new Notification({
+    title,
     body,
     timeoutType: 'default'
   });
-  
+
   notification.show();
 }
 
@@ -340,7 +360,7 @@ function getWatchedBranches(settings) {
     settings.releaseBranch,
     settings.liveBranch
   ].filter(b => !!b);
-  
+
   return [...new Set(branches)]; // Remove duplicates
 }
 

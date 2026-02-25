@@ -15,4 +15,10 @@ export class AiService {
       .generateMultiCodeReview(payload);
   }
 
+  async generateMRReview(payload: any) {
+    return await
+      window.electronAPI
+        .generateMRReview(payload);
+  }
+
 }

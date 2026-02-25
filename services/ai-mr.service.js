@@ -108,20 +108,116 @@ async function generateMultiCodeReview(data) {
   Projects:
   ${data.reviewInput}
   `;
-  
-    const response = await client.chat.completions.create({
+
+  const response = await client.chat.completions.create({
+    model: "llama-3.3-70b-versatile",
+    messages: [
+      { role: "system", content: "You are a strict enterprise code reviewer. Respond in valid JSON array only." },
+      { role: "user", content: prompt }
+    ],
+    temperature: 0.2,
+    max_tokens: 1000,
+    response_format: { type: "json_object" }
+  });
+
+  return response.choices[0].message.content;
+}
+
+
+async function generateMRReview(data) {
+
+  const prompt = `
+You are a Senior .NET and Angular Code Reviewer.
+
+You will receive git diff snippets grouped by:
+
+Project:<name>
+File:<file_path>
+Diff:
++ added line
+- removed line
+
+Analyze ONLY + or - lines.
+
+Detect:
+
+.NET:
+- SQL injection risk
+- Null reference risk
+- Improper async usage
+- Exception handling issues
+- Performance impacting query logic
+- Logging inside service layer
+
+Angular:
+- Direct DOM usage
+- Console logging
+- Subscription without unsubscribe
+- Environment misuse
+
+General:
+- Security risk
+- Performance risk
+- Maintainability issue
+
+DO NOT:
+- Suggest config values for appsettings.json
+- Suggest naming convention
+- Suggest formatting
+- Review comments
+
+Return MAX 3 findings per file.
+
+Each finding MUST contain:
+project → from Project:
+file → from File:
+line → exact + or - line
+comment → 1 line suggestion
+risk → Low | Medium | High
+
+Return ONLY valid JSON object using this EXACT schema:
+
+{
+ "findings":[
+   {
+    "project":"<Project from input>",
+    "file":"<File from input>",
+    "line":"<exact + or - line>",
+    "comment":"<short reviewer suggestion>",
+    "risk":"Low | Medium | High"
+   }
+ ]
+}
+
+Rules:
+- DO NOT change key names
+- DO NOT return array directly
+- DO NOT wrap inside any other key
+- DO NOT add explanation
+- DO NOT add markdown
+- If no issue found return:
+
+{
+ "findings":[]
+}
+
+Input:
+${data.reviewInput}
+`;
+
+  const response =
+    await client.chat.completions.create({
       model: "llama-3.3-70b-versatile",
       messages: [
-        { role: "system", content: "You are a strict enterprise code reviewer. Respond in valid JSON array only." },
+        { role: "system", content: "Strict enterprise code reviewer. Respond JSON only." },
         { role: "user", content: prompt }
       ],
       temperature: 0.2,
-      max_tokens: 1000,
+      max_tokens: 800,
       response_format: { type: "json_object" }
     });
-  
-    return response.choices[0].message.content;
-  }
 
+  return response.choices[0].message.content;
+}
 
-module.exports = { generateMultiMRDescription, generateMultiCodeReview };
+module.exports = { generateMultiMRDescription, generateMultiCodeReview, generateMRReview };

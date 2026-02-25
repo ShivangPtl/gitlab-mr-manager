@@ -1,0 +1,229 @@
+.review-container {
+  max-height: 65vh;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.review-card {
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 8px;
+  // margin-bottom: 10px;
+  cursor: pointer;
+  background: #1e1e1e;
+  border: 1px solid transparent;
+  transition: 0.15s;
+}
+
+.review-card:hover {
+  background: #232323;
+}
+
+.review-card.selected {
+  border: 1px solid #2ea043;
+  background: rgba(46,160,67,0.06);
+}
+
+.review-content {
+  width: 100%;
+}
+
+.file {
+  font-family: monospace;
+  font-size: 12px;
+  opacity: .7;
+  margin-bottom: 4px;
+}
+
+.code-line {
+  display: block;
+  width: 100%;
+
+  margin: 6px 0;
+  padding: 8px 12px;
+
+  font-family: Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.4;
+
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+
+  border-radius: 6px;
+  box-sizing: border-box;
+}
+
+/* DIFF COLORS */
+.diff-add {
+
+  background: linear-gradient(
+    90deg,
+    rgba(46,160,67,0.20),
+    rgba(46,160,67,0.05)
+  );
+
+  color: #7ee787;
+  border-left: 3px solid #2ea043;
+}
+
+.diff-remove {
+  background: rgba(248,81,73,0.25);
+  color: #f85149;
+}
+
+/* COMMENT BADGES */
+.comment {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+// .Low {
+//   background: #1b5e20;
+//   color: #a5d6a7;
+// }
+
+// .Medium {
+//   background: #e65100;
+//   color: #ffcc80;
+// }
+
+// .High {
+//   background: #b71c1c;
+//   color: #ffcdd2;
+// }
+
+.comment {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 400;
+  margin-top: 6px;
+  border-left: 3px solid;
+}
+
+/* SUBTLE CODE REVIEW COLORS */
+
+.Low {
+  background: rgba(46, 160, 67, 0.08);
+  color: #8fd19e;
+  border-color: #2ea043;
+}
+
+.Medium {
+  background: rgba(210, 153, 34, 0.08);
+  color: #f2cc60;
+  border-color: #d29922;
+}
+
+.High {
+  background: rgba(248, 81, 73, 0.08);
+  color: #ffa198;
+  border-color: #f85149;
+}
+
+
+// ::ng-deep .mat-expansion-panel {
+
+//   background: #1f1f1f;
+//   border: 1px solid #2c2c2c;
+//   margin-bottom: 8px;
+//   border-radius: 6px !important;
+// }
+
+::ng-deep .mat-expansion-panel-header {
+
+  height: 42px !important;
+
+  background: #1a1a1a;
+  border-bottom: 1px solid #2a2a2a;
+}
+
+::ng-deep .mat-expansion-panel-header-title {
+
+  font-family: monospace;
+  font-size: 13px;
+}
+
+::ng-deep .mat-expansion-panel-header-description {
+
+  font-size: 12px;
+  opacity: 0.6;
+}
+
+::ng-deep .mat-expansion-panel {
+
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+
+}
+
+.file-header {
+
+  background: #181818 !important;
+  border: 1px solid #2c2c2c !important;
+  border-radius: 6px !important;
+  padding: 0 12px !important;
+
+}
+
+.file-header-row {
+
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  font-family: Consolas, monospace;
+  font-size: 13px;
+
+}
+
+.file-left {
+
+  color: #c9d1d9;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+}
+
+.file-right {
+
+  font-size: 11px;
+  color: #8b949e;
+
+}
+
+::ng-deep .mat-expansion-panel-header:hover {
+
+  background: #202020 !important;
+
+}
+
+::ng-deep .mat-expansion-panel-body {
+
+  padding: 0 !important;
+
+}
+
+.file-findings {
+
+  // margin: 6px 10px 10px 10px;
+  padding: 10px;
+
+  background: #161616;
+
+  border-radius: 6px;
+  border: 1px solid #2a2a2a;
+
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}

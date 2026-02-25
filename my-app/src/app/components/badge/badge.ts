@@ -51,14 +51,14 @@ const COLOR_GROUPS: Record<string, {
     border: '#0891b2'
   }
 };
-  
+
 const STATUS_MAP: Record<string, {
   colorGroup: keyof typeof COLOR_GROUPS;
   icon?: string | null;
 }> = {
   ahead: { colorGroup: 'green', icon: 'arrow_upward' },
   behind: { colorGroup: 'amber', icon: 'arrow_downward' },
-  
+
   success: { colorGroup: 'green', icon: 'check_circle' },
   merged: { colorGroup: 'green', icon: 'check_circle' },
 
@@ -76,9 +76,9 @@ const STATUS_MAP: Record<string, {
   protected: { colorGroup: 'purple', icon: 'lock' },
   unprotected: { colorGroup: 'green', icon: 'lock_open' },
 
-  api: { colorGroup: 'cyan', icon: 'cloud'},
-  common: { colorGroup: 'purple', icon: 'layers'},
-  ui: { colorGroup: 'orange', icon: 'devices'},
+  api: { colorGroup: 'cyan', icon: 'cloud' },
+  common: { colorGroup: 'purple', icon: 'layers' },
+  ui: { colorGroup: 'orange', icon: 'devices' },
 
   support: { colorGroup: 'blue', icon: 'build' },
   release: { colorGroup: 'amber', icon: 'rocket_launch' },
@@ -86,6 +86,23 @@ const STATUS_MAP: Record<string, {
 
   pending_mr: { colorGroup: 'amber', icon: 'call_merge' },
   changes_after_deployment: { colorGroup: 'orange', icon: 'sync_problem' },
+
+  review_pending: { colorGroup: 'amber', icon: 'schedule' },
+
+  review_fix: {
+    colorGroup: 'red',
+    icon: 'error'
+  },
+
+  review_ready: {
+    colorGroup: 'green',
+    icon: 'check_circle'
+  },
+
+  review_approved: {
+    colorGroup: 'blue',
+    icon: 'verified'
+  },
 };
 
 @Component({

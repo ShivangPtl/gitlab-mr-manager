@@ -548,48 +548,48 @@ ${diff}
     textarea.style.height = textarea.scrollHeight + 'px';
   }
 
-  async runAICodeReview() {
+  // async runAICodeReview() {
 
-    const selected = this.dataSource.data.filter(p => p.is_selected);
+  //   const selected = this.dataSource.data.filter(p => p.is_selected);
 
-    let reviewInput = '';
+  //   let reviewInput = '';
 
-    for (const proj of selected) {
+  //   for (const proj of selected) {
 
-      const riskyDiff =
-        (proj.ai_diff ?? '')
-          .split('\n')
-          .filter(l =>
-            l.startsWith('+') ||
-            l.startsWith('-'))
-          .slice(0, 20)
-          .join('\n');
+  //     const riskyDiff =
+  //       (proj.ai_diff ?? '')
+  //         .split('\n')
+  //         .filter(l =>
+  //           l.startsWith('+') ||
+  //           l.startsWith('-'))
+  //         .slice(0, 20)
+  //         .join('\n');
 
-      reviewInput += `
-    Project:${proj.project_name}
-    Diff:
-    ${riskyDiff}
-    -----
-    `;
-    }
+  //     reviewInput += `
+  //   Project:${proj.project_name}
+  //   Diff:
+  //   ${riskyDiff}
+  //   -----
+  //   `;
+  //   }
 
-    const res = await this.aiService.generateMultiCodeReview({ reviewInput });
+  //   const res = await this.aiService.generateMultiCodeReview({ reviewInput });
 
-    if (res.success) {
-      const parsed = JSON.parse(res.review);
-      this.dataSource.data.forEach(p => {
-        p.aiReviewComments = parsed.filter((x: any) => x.project === p.project_name);
-      });
-    }
+  //   if (res.success) {
+  //     const parsed = JSON.parse(res.review);
+  //     this.dataSource.data.forEach(p => {
+  //       p.aiReviewComments = parsed.filter((x: any) => x.project === p.project_name);
+  //     });
+  //   }
 
 
-    this.dialog.open(MultiConfigDiffDialogComponent, {
-      width: '900px',
-      maxHeight: '85vh',
-      data: {
-        projects: selected,
-      }
-    });
-  }
+  //   this.dialog.open(MultiConfigDiffDialogComponent, {
+  //     width: '900px',
+  //     maxHeight: '85vh',
+  //     data: {
+  //       projects: selected,
+  //     }
+  //   });
+  // }
 }
 
