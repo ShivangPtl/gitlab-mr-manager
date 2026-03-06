@@ -376,7 +376,7 @@ export class Home implements OnInit {
 
       return `${alias}: project(fullPath: "pdp/${p.project_name}") {
                 repository {
-                  source: commit(ref: "${sourceBranch}") {
+                  source: commit(ref: "${p.current_branch}") {
                     sha
                   }
 

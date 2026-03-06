@@ -61,21 +61,21 @@ export class Settings implements OnInit {
 
   ngOnInit() {
     const defaultProjects : ProjectSettingModel[] = [
-      { project_id: 19, project_name: 'Config.Identity', local_repo_path: '', is_selected: false },
-      { project_id: 14, project_name: 'Config.Management', local_repo_path: '', is_selected: false },
-      { project_id: 880, project_name: 'ah.management', local_repo_path: '', is_selected: false },
-      { project_id: 24, project_name: 'Org.Management', local_repo_path: '', is_selected: false },
-      { project_id: 925, project_name: 'AmulOrgAPI', local_repo_path: '', is_selected: false },
-      { project_id: 897, project_name: 'Ah.Service', local_repo_path: '', is_selected: false },
-      { project_id: 28, project_name: 'Common', local_repo_path: '', is_selected: false },
-      { project_id: 31, project_name: 'Org.UI', local_repo_path: '', is_selected: false },
-      { project_id: 30, project_name: 'Config.UI', local_repo_path: '', is_selected: false },
+      { project_id: 19, project_name: 'Config.Identity', local_repo_path: '', is_selected: false, current_branch: '' },
+      { project_id: 14, project_name: 'Config.Management', local_repo_path: '', is_selected: false, current_branch: '' },
+      { project_id: 880, project_name: 'ah.management', local_repo_path: '', is_selected: false, current_branch: '' },
+      { project_id: 24, project_name: 'Org.Management', local_repo_path: '', is_selected: false, current_branch: '' },
+      { project_id: 925, project_name: 'AmulOrgAPI', local_repo_path: '', is_selected: false, current_branch: '' },
+      { project_id: 897, project_name: 'Ah.Service', local_repo_path: '', is_selected: false, current_branch: '' },
+      { project_id: 28, project_name: 'Common', local_repo_path: '', is_selected: false, current_branch: '' },
+      { project_id: 31, project_name: 'Org.UI', local_repo_path: '', is_selected: false, current_branch: '' },
+      { project_id: 30, project_name: 'Config.UI', local_repo_path: '', is_selected: false, current_branch: '' },
     
       // AdoptCattle
-      { project_id: 1076, project_name: 'AdoptCattle.Api', local_repo_path: '', is_selected: false },
-      { project_id: 1077, project_name: 'AdoptCattle.Ui', local_repo_path: '', is_selected: false },
-      { project_id: 1074, project_name: 'Common (AdoptCattle)', local_repo_path: '', is_selected: false },
-      { project_id: 1075, project_name: 'Identity (AdoptCattle)', local_repo_path: '', is_selected: false }
+      { project_id: 1076, project_name: 'AdoptCattle.Api', local_repo_path: '', is_selected: false, current_branch: '' },
+      { project_id: 1077, project_name: 'AdoptCattle.Ui', local_repo_path: '', is_selected: false, current_branch: '' },
+      { project_id: 1074, project_name: 'Common (AdoptCattle)', local_repo_path: '', is_selected: false, current_branch: '' },
+      { project_id: 1075, project_name: 'Identity (AdoptCattle)', local_repo_path: '', is_selected: false, current_branch: '' }
     ];
 
     this.projects = defaultProjects;

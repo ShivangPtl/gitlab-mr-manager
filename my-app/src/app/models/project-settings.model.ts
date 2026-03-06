@@ -3,4 +3,5 @@ export interface ProjectSettingModel {
   project_name: string;
   local_repo_path: string;
   is_selected: boolean;
+  current_branch: string;
 }

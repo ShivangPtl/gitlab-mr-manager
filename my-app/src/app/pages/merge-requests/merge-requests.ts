@@ -218,8 +218,7 @@ export class MergeRequests implements OnInit {
                   baseSha
                   headSha
                   startSha
-                }
-                approved        
+                }        
               }
             }
           }
