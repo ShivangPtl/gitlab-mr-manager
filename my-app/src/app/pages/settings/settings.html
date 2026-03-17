@@ -81,6 +81,18 @@
     </table>
   </section>
 
+  <div class="api-token-container">
+    <mat-form-field appearance="fill" class="branch-input">
+      <mat-label>Admin API Tokensasd</mat-label>
+      <input matInput [(ngModel)]="apiToken" [type]="hideToken ? 'password' : 'text'" />
+      <button mat-icon-button matSuffix (click)="hideToken = !hideToken">
+        <mat-icon>{{ hideToken ? 'visibility_off' : 'visibility' }}</mat-icon>
+      </button>
+    </mat-form-field>
+  </div>
+
+  
+
   <div class="actions">
     <button mat-raised-button color="primary" (click)="save()">Save Settings</button>
   </div>

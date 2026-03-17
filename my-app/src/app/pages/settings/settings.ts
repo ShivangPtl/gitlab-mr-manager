@@ -26,6 +26,7 @@ export interface CustomSettings {
   liveBranch: string;
   selectedAssigneeId: number;
   darkMode: boolean;
+  apiToken: string;
 }
 
 @Component({
@@ -58,6 +59,8 @@ export class Settings implements OnInit {
   useCustomBranch = true;
   selectedAssigneeId = 119;
   darkMode = true;
+  apiToken: string = '';
+  hideToken: boolean = true;
 
   ngOnInit() {
     const defaultProjects : ProjectSettingModel[] = [
@@ -70,19 +73,32 @@ export class Settings implements OnInit {
       { project_id: 28, project_name: 'Common', local_repo_path: '', is_selected: false, current_branch: '' },
       { project_id: 31, project_name: 'Org.UI', local_repo_path: '', is_selected: false, current_branch: '' },
       { project_id: 30, project_name: 'Config.UI', local_repo_path: '', is_selected: false, current_branch: '' },
-    
-      // AdoptCattle
-      { project_id: 1076, project_name: 'AdoptCattle.Api', local_repo_path: '', is_selected: false, current_branch: '' },
-      { project_id: 1077, project_name: 'AdoptCattle.Ui', local_repo_path: '', is_selected: false, current_branch: '' },
-      { project_id: 1074, project_name: 'Common (AdoptCattle)', local_repo_path: '', is_selected: false, current_branch: '' },
-      { project_id: 1075, project_name: 'Identity (AdoptCattle)', local_repo_path: '', is_selected: false, current_branch: '' }
     ];
 
     this.projects = defaultProjects;
     this.assignees = this.authService.userList;
 
     window.electronAPI.getSettings().then((data: any) => {
-      if (data.projects) this.projects = data.projects;
+      if (data.apiToken) this.apiToken = data.apiToken;
+      if (data.projects){
+        const projectMap = new Map<number, ProjectSettingModel>(
+          data.projects.map((p: ProjectSettingModel) => [p.project_id, p])
+        );
+
+        this.projects = this.projects.map(p => {
+          var saved = projectMap.get(p.project_id);
+
+          if (!saved) return p;
+
+          return {
+            ...p,
+            local_repo_path: saved.local_repo_path ?? p.local_repo_path,
+            is_selected: saved.is_selected ?? p.is_selected,
+            current_branch: saved.current_branch ?? p.current_branch
+          };
+        });
+      } 
+      //this.projects = data.projects;
       this.useCustomBranch = data.useCustomBranch;
       if (data.useCustomBranch) this.useCustomBranch = data.useCustomBranch;
       if (data.sourceBranch) this.sourceBranch = data.sourceBranch;
@@ -111,6 +127,7 @@ export class Settings implements OnInit {
       liveBranch: this.liveBranch,
       selectedAssigneeId: this.selectedAssigneeId,
       darkMode: this.darkMode,
+      apiToken: this.apiToken
     };
     await window.electronAPI.saveSettings(settings);
 
@@ -139,5 +156,10 @@ export class Settings implements OnInit {
     this.darkMode = event.checked;
     this.applyTheme(this.darkMode);
     this.save(false);
+  }
+
+  get maskedToken(): string {
+    if (!this.apiToken) return '';
+    return '****' + this.apiToken.slice(-4);
   }
 }

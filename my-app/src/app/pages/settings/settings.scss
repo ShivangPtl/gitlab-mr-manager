@@ -87,5 +87,60 @@
   .branch-input{
     width: 12%;
   }
+
+
+  .api-token-container {
+    margin-top: 20px;
+  
+    .mat-mdc-form-field {
+      width: 100%;
+    }
+  
+    ::ng-deep .mat-mdc-text-field-wrapper {
+      background: var(--bg-secondary) !important;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      transition: all 0.25s ease;
+    }
+  
+    // ::ng-deep .mat-mdc-form-field-flex {
+    //   align-items: center;
+    // }
+  
+    // ::ng-deep .mat-mdc-form-field-infix {
+    //   padding: 14px 12px !important;
+    // }
+  
+    ::ng-deep input.mat-mdc-input-element {
+      color: var(--text-primary);
+      font-size: 14px;
+    }
+  
+    // ::ng-deep .mat-mdc-form-field-label {
+    //   color: var(--text-secondary);
+    //   transform: translateY(-1.4em) scale(0.75) !important;
+    // }
+  
+    // ::ng-deep .mat-mdc-icon-button {
+    //   color: var(--text-secondary);
+    //   transition: color 0.2s ease;
+    // }
+  
+    // ::ng-deep .mat-mdc-icon-button:hover {
+    //   color: var(--accent-color);
+    // }
+  
+    // Hover effect (like your toggles)
+    // &:hover ::ng-deep .mat-mdc-text-field-wrapper {
+    //   background: var(--hover-bg) !important;
+    //   border-color: var(--accent-color);
+    // }
+  
+    // // Focus effect
+    // ::ng-deep .mat-mdc-text-field-wrapper.mdc-text-field--focused {
+    //   border-color: var(--accent-color) !important;
+    //   box-shadow: 0 0 0 1px var(--accent-color);
+    // }
+  }
 }
 

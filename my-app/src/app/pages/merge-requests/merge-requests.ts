@@ -324,7 +324,18 @@ ${riskyLines}
       reviewInput: reviewInput
     });
 
-    if (!res.success) return;
+    if (!res.success) {
+      this.loader.hide();
+      const errorMsg = this.parseError(res.error);
+      
+      this.snackBar.open(errorMsg, 'Close', {
+        duration: 3000,
+        horizontalPosition: 'center',
+        verticalPosition: 'bottom',
+        panelClass: ['error-snackbar']
+      });
+      return;
+    };
 
 
     const parsed = JSON.parse(res.description);
@@ -605,5 +616,22 @@ ${riskyLines}
       icon: 'check_circle',
       type: 'reviewed'
     };
+  }
+
+  parseError(error: any): string {
+    try {
+      if (typeof error === 'string') {
+        // remove "401 " prefix if exists
+        const jsonStart = error.indexOf('{');
+        if (jsonStart !== -1) {
+          const parsed = JSON.parse(error.substring(jsonStart));
+          return parsed?.error?.message || error;
+        }
+      }
+
+      return error?.message || error || 'Unknown error';
+    } catch {
+      return error;
+    }
   }
 }

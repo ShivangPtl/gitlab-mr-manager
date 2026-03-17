@@ -1,10 +1,20 @@
 const Groq = require("groq-sdk");
 
-const client = new Groq({
-  apiKey: process.env.GROQ_API_KEY  // or hardcode temporarily for testing
-});
+const Store = require('electron-store').default;
+const store = new Store();
+
+// const customSettings = store.get('settings');
+
+// const client = new Groq({
+//   apiKey: customSettings.apiToken
+// });
+
+// console.log("Settings:", customSettings);
+// console.log("API Key:", customSettings?.apiToken);
 
 async function generateMultiMRDescription(data) {
+
+  const client = getClient();
 
   const prompt = `
 Generate SHORT Merge Request Description for each project.
@@ -42,6 +52,8 @@ ${data.multiProjectInput}
 
 async function generateMultiCodeReview(data) {
 
+  const client = getClient();
+  
   const prompt = `
   You are a Senior .NET and Angular Code Reviewer.
   
@@ -126,6 +138,8 @@ async function generateMultiCodeReview(data) {
 
 async function generateMRReview(data) {
 
+  const client = getClient();
+
   const prompt = `
 You are a Senior .NET and Angular Code Reviewer.
 
@@ -158,7 +172,7 @@ Angular:
 General:
 - Security risk
 - Performance risk
-- Maintainability issue
+- Maintainability issue 
 
 DO NOT:
 - Suggest config values for appsettings.json
@@ -218,6 +232,18 @@ ${data.reviewInput}
     });
 
   return response.choices[0].message.content;
+}
+
+function getClient() {
+  const customSettings = store.get('settings');
+
+  if (!customSettings?.apiToken) {
+    throw new Error('API token not found in settings');
+  }
+
+  return new Groq({
+    apiKey: customSettings.apiToken
+  });
 }
 
 module.exports = { generateMultiMRDescription, generateMultiCodeReview, generateMRReview };
