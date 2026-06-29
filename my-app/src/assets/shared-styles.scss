@@ -1,13 +1,13 @@
 
-// Base container styling
-.page-container {
-  padding: 1.5rem;
-  background: var(--bg-primary);
-  color: var(--text-primary);
-  transition: background-color 0.3s ease, color 0.3s ease;
-}
+// // Base container styling
+// .page-container {
+//   padding: 1.5rem;
+//   background: var(--bg-primary);
+//   color: var(--text-primary);
+//   transition: background-color 0.3s ease, color 0.3s ease;
+// }
 
-// Controls section styling
+// // Controls section styling
 .controls {
   display: flex;
   flex-wrap: wrap;
@@ -162,57 +162,289 @@
   }
 }
 
-// Utility classes
-.full-width {
-  width: 100%;
+// // Utility classes
+// .full-width {
+//   width: 100%;
+// }
+
+// // Action buttons section
+// .actions {
+//   margin-top: 1.5rem;
+//   display: flex;
+//   justify-content: flex-end;
+
+//   .themed-btn {
+//     background-color: var(--theme-btn-bg);
+//     color: var(--theme-btn-text);
+//     padding: 0.6rem 1.2rem;
+//     font-size: 1rem;
+//     border-radius: 4px;
+//     transition: background-color 0.3s ease, color 0.3s ease;
+//     border: none;
+  
+//     &:hover {
+//       background-color: var(--theme-btn-hover);
+//     }
+//   }
+// }
+
+// // Theme toggle button styling
+// .theme-toggle {
+//   position: fixed;
+//   top: 1rem;
+//   right: 1rem;
+//   background: var(--accent-color);
+//   color: white;
+//   border: none;
+//   border-radius: 50%;
+//   width: 48px;
+//   height: 48px;
+//   cursor: pointer;
+//   display: flex;
+//   align-items: center;
+//   justify-content: center;
+//   font-size: 1.2rem;
+//   transition: background-color 0.3s ease;
+//   z-index: 1000;
+
+//   &:hover {
+//     background: var(--accent-color);
+//     opacity: 0.8;
+//   }
+// }
+
+// .pointer {
+//   cursor: pointer !important;
+// }
+
+// =============================================
+// SHARED STYLES — imported by all page components
+// =============================================
+
+.page-container {
+  padding: 1.25rem 1.5rem;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  height: calc(100vh - 52px);   // 52px = navbar height
+  overflow-y: auto;
+  box-sizing: border-box;
 }
 
-// Action buttons section
-.actions {
-  margin-top: 1.5rem;
+// ---- Controls row ----
+.controls {
   display: flex;
-  justify-content: flex-end;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
 
-  .themed-btn {
-    background-color: var(--theme-btn-bg);
-    color: var(--theme-btn-text);
-    padding: 0.6rem 1.2rem;
-    font-size: 1rem;
+  .labels {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+
+    .label-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+
+      ::ng-deep .mat-mdc-checkbox .mdc-label {
+        color: var(--text-primary) !important;
+      }
+
+      ::ng-deep .mat-mdc-checkbox:hover .mdc-label {
+        color: var(--accent-color) !important;
+      }
+    }
+  }
+
+  ::ng-deep .mat-mdc-form-field {
+    background-color: var(--bg-secondary);
     border-radius: 4px;
-    transition: background-color 0.3s ease, color 0.3s ease;
-    border: none;
-  
-    &:hover {
-      background-color: var(--theme-btn-hover);
+
+    .mat-mdc-select-value,
+    .mat-mdc-select-placeholder,
+    .mat-mdc-select-arrow,
+    .mdc-floating-label {
+      color: var(--text-secondary) !important;
+    }
+
+    .mat-mdc-input-element {
+      color: var(--text-primary);
     }
   }
 }
 
-// Theme toggle button styling
-.theme-toggle {
-  position: fixed;
-  top: 1rem;
-  right: 1rem;
-  background: var(--accent-color);
-  color: white;
-  border: none;
-  border-radius: 50%;
-  width: 48px;
-  height: 48px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.2rem;
-  transition: background-color 0.3s ease;
-  z-index: 1000;
+// ---- Select panel overlay ----
+::ng-deep .mat-mdc-select-panel {
+  background-color: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+}
+
+::ng-deep .mat-mdc-option {
+  color: var(--text-primary) !important;
 
   &:hover {
-    background: var(--accent-color);
-    opacity: 0.8;
+    background-color: var(--hover-bg) !important;
+  }
+
+  &.mat-mdc-option-active {
+    background-color: var(--active-bg) !important;
   }
 }
 
+// ---- Dialog ----
+::ng-deep .mat-mdc-dialog-surface {
+  background: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+}
+
+// ---- Table ----
+.full-width-table {
+  width: 100%;
+  margin-bottom: 1.5rem;
+
+  ::ng-deep .mat-mdc-header-cell,
+  ::ng-deep .mat-mdc-cell {
+    color: var(--text-primary);
+    border-bottom: 1px solid var(--border-color);
+    font-size: 0.85rem;
+  }
+
+  ::ng-deep .mat-mdc-header-row {
+    background: var(--bg-header);
+    height: 40px !important;
+  }
+
+  ::ng-deep .mat-mdc-row {
+    background: var(--bg-secondary);
+
+    &:hover {
+      background: var(--hover-bg) !important;
+    }
+  }
+}
+
+// ---- Section headers ----
+.section-header {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  margin: 0 0 0.75rem 0;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+// ---- Form sections ----
+.form-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+
+  ::ng-deep .mat-mdc-form-field {
+    background-color: var(--bg-secondary);
+    border-radius: 4px;
+
+    .mat-mdc-input-element {
+      color: var(--text-primary);
+    }
+
+    .mdc-floating-label {
+      color: var(--text-tertiary) !important;
+    }
+  }
+}
+
+.full-width {
+  width: 100%;
+}
+
+// ---- Actions bar ----
+.actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
+  margin-top: 0.5rem;
+
+  .refresh-info {
+    font-size: 0.78rem;
+    color: var(--text-tertiary);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .button-group {
+    display: flex;
+    gap: 0.5rem;
+  }
+}
+
+// ---- Buttons ----
+.themed-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem !important;
+  font-weight: 500 !important;
+  height: 36px;
+  padding: 0 14px !important;
+  border-radius: 6px !important;
+  background-color: var(--theme-btn-bg) !important;
+  color: var(--theme-btn-text) !important;
+  transition: opacity 0.15s ease, transform 0.1s ease !important;
+
+  mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+  }
+
+  &:hover:not(:disabled) {
+    opacity: 0.85;
+  }
+
+  &:active:not(:disabled) {
+    transform: scale(0.98);
+  }
+
+  &:disabled {
+    background-color: var(--theme-btn-disabled-bg) !important;
+    color: var(--theme-btn-disabled-text) !important;
+    cursor: not-allowed;
+  }
+
+  &.secondary {
+    background-color: transparent !important;
+    color: var(--text-secondary) !important;
+    border: 1px solid var(--border-color) !important;
+
+    &:hover:not(:disabled) {
+      background-color: var(--hover-bg) !important;
+      color: var(--text-primary) !important;
+    }
+  }
+}
+
+// ---- Link icon in tables ----
+.link-icon {
+  color: var(--accent-color) !important;
+  font-size: 18px !important;
+  width: 18px !important;
+  height: 18px !important;
+}
+
+// ---- Muted dash ----
+.muted {
+  color: var(--text-tertiary);
+  font-size: 1rem;
+}
+
+// ---- Pointer ----
 .pointer {
   cursor: pointer !important;
 }

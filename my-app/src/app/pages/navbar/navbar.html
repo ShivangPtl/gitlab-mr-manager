@@ -1,37 +1,30 @@
-<!-- <nav class="navbar">
-  <div class="left">
-    <button style="padding-left: 0;" (click)="goTo('/home')">🏠 Home</button>
-    <button (click)="goTo('/settings')">⚙️ Settings</button>
-  </div>
-  <div class="right">
-    <span class="user">👤 {{ userName }}</span>
-    <button class="logout" (click)="logout()">Logout</button>
-  </div>
-</nav> -->
-
-
-<!-- navbar.component.html -->
 <nav class="navbar">
   <div class="left">
-    <mat-tab-group [(selectedIndex)]="selectedTabIndex"
-               (selectedIndexChange)="onTabChange($event)"
-               class="navbar-tabs"
-               animationDuration="200ms">
+    <mat-tab-group
+      [(selectedIndex)]="selectedTabIndex"
+      (selectedIndexChange)="onTabChange($event)"
+      class="navbar-tabs"
+      animationDuration="150ms">
 
       <ng-container *ngFor="let t of tabsVisible">
         <mat-tab>
           <ng-template mat-tab-label>
-            <span class="tab-text">{{ t.icon }} {{ t.label }}</span> 
+            <mat-icon class="tab-icon">{{ t.matIcon }}</mat-icon>
+            <span class="tab-text">{{ t.label }}</span>
           </ng-template>
         </mat-tab>
       </ng-container>
-    
-    </mat-tab-group>
 
+    </mat-tab-group>
   </div>
-  
+
   <div class="right">
-    <span class="user">👤 {{ userName }}</span>
-    <button class="logout" (click)="logout()">Logout</button>
+    <div class="user-chip">
+      <mat-icon class="user-icon">account_circle</mat-icon>
+      <span class="user-name">{{ userName }}</span>
+    </div>
+    <button class="logout-btn" (click)="logout()" title="Sign out">
+      <mat-icon>logout</mat-icon>
+    </button>
   </div>
 </nav>

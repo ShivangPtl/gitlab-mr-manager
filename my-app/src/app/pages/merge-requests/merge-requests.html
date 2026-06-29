@@ -1,73 +1,63 @@
 <div class="mr-container">
 
-  <h2 style="margin-top:0;" *ngIf="hasSelectedProject && dataSource.data.length > 0">Pending Merge Requests</h2>
-
   <div *ngIf="hasSelectedProject && dataSource.data.length > 0; else noData">
     <table mat-table [dataSource]="dataSource" class="mat-elevation-z2 full-width-table">
 
-    <!-- Project -->
-    <ng-container matColumnDef="project">
-      <th mat-header-cell *matHeaderCellDef class="col-center"> Project </th>
-      <td mat-cell *matCellDef="let row" class="col-center">
-        <app-badge [type]="getProjectType(row.project_name)" [label]="row.project_name"></app-badge>
-      </td>
-    </ng-container>
+      <ng-container matColumnDef="project">
+        <th mat-header-cell *matHeaderCellDef class="col-center">Project</th>
+        <td mat-cell *matCellDef="let row" class="col-center">
+          <app-badge [type]="getProjectType(row.project_name)" [label]="row.project_name"></app-badge>
+        </td>
+      </ng-container>
 
-    <!-- Source -->
-    <ng-container matColumnDef="source">
-      <th mat-header-cell *matHeaderCellDef class="col-center"> Source </th>
-      <!-- <td mat-cell *matCellDef="let row">{{ row.source_branch }}</td> -->
-      <td mat-cell *matCellDef="let row" class="col-center">
-        <app-badge [type]="getBranchType(row.source_branch)" [label]="row.source_branch"></app-badge>
-      </td>
-    </ng-container>
+      <ng-container matColumnDef="source">
+        <th mat-header-cell *matHeaderCellDef class="col-center">Source</th>
+        <td mat-cell *matCellDef="let row" class="col-center">
+          <app-badge [type]="getBranchType(row.source_branch)" [label]="row.source_branch"></app-badge>
+        </td>
+      </ng-container>
 
-    <!-- Target -->
-    <ng-container matColumnDef="target">
-      <th mat-header-cell *matHeaderCellDef class="col-center"> Target </th>
-      <!-- <td mat-cell *matCellDef="let row">{{ row.target_branch }}</td> -->
-      <td mat-cell *matCellDef="let row" class="col-center">
-        <app-badge [type]="getBranchType(row.target_branch)" [label]="row.target_branch"></app-badge>
-      </td>
-    </ng-container>
+      <ng-container matColumnDef="target">
+        <th mat-header-cell *matHeaderCellDef class="col-center">Target</th>
+        <td mat-cell *matCellDef="let row" class="col-center">
+          <app-badge [type]="getBranchType(row.target_branch)" [label]="row.target_branch"></app-badge>
+        </td>
+      </ng-container>
 
-    <!-- Author -->
-    <ng-container matColumnDef="author">
-      <th mat-header-cell *matHeaderCellDef> Created By </th>
-      <td mat-cell *matCellDef="let row">{{ row.author }}</td>
-    </ng-container>
+      <ng-container matColumnDef="author">
+        <th mat-header-cell *matHeaderCellDef>Created By</th>
+        <td mat-cell *matCellDef="let row">{{ row.author }}</td>
+      </ng-container>
 
-    <!-- Created -->
-    <ng-container matColumnDef="created">
-      <th mat-header-cell *matHeaderCellDef> Created At </th>
-      <td mat-cell *matCellDef="let row">{{ row.created_at }}</td>
-    </ng-container>
+      <ng-container matColumnDef="created">
+        <th mat-header-cell *matHeaderCellDef>Created At</th>
+        <td mat-cell *matCellDef="let row">{{ row.created_at }}</td>
+      </ng-container>
 
-    <!-- Status -->
-    <ng-container matColumnDef="status">
-      <th mat-header-cell *matHeaderCellDef class="col-center"> Status </th>
-      <td mat-cell *matCellDef="let row" class="col-center">
-        <app-badge [type]="row.status" [label]="row.status"></app-badge>
-      </td>
-    </ng-container>
+      <ng-container matColumnDef="status">
+        <th mat-header-cell *matHeaderCellDef class="col-center">Status</th>
+        <td mat-cell *matCellDef="let row" class="col-center">
+          <app-badge [type]="row.status" [label]="row.status"></app-badge>
+        </td>
+      </ng-container>
 
-    <!-- URL -->
-    <ng-container matColumnDef="url">
-      <th mat-header-cell *matHeaderCellDef class="col-center"> Open </th>
-      <td mat-cell *matCellDef="let row" class="col-center">
-        <a (click)="openDefaultBrowser(row.url)" class="pointer">🔗</a>
-      </td>
-    </ng-container>
+      <ng-container matColumnDef="url">
+        <th mat-header-cell *matHeaderCellDef class="col-center">Open</th>
+        <td mat-cell *matCellDef="let row" class="col-center">
+          <button mat-icon-button (click)="openDefaultBrowser(row.url)" title="Open in GitLab">
+            <mat-icon class="link-icon">open_in_new</mat-icon>
+          </button>
+        </td>
+      </ng-container>
 
-    <tr mat-header-row *matHeaderRowDef="displayColumns"></tr>
-    <tr mat-row *matRowDef="let row; columns: displayColumns;"></tr>
-
+      <tr mat-header-row *matHeaderRowDef="displayColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayColumns;"></tr>
     </table>
   </div>
 
   <ng-template #noData>
-    <div class="empty-state" *ngIf="hasSelectedProject; else noProjects" >
-      <mat-icon>merge</mat-icon>
+    <div class="empty-state" *ngIf="hasSelectedProject; else noProjects">
+      <mat-icon>check_circle</mat-icon>
       <h3>No Pending Merge Requests</h3>
       <p>All merge requests are up to date.</p>
     </div>
@@ -77,19 +67,15 @@
     <div class="empty-state">
       <mat-icon>folder_off</mat-icon>
       <h3>No Project Selected</h3>
-      <p>
-        Please select a project in
-        <strong>Settings</strong>.
-      </p>
+      <p>Select a project in <strong>Settings</strong>.</p>
     </div>
-    </ng-template>
+  </ng-template>
 
   <div class="actions" *ngIf="hasSelectedProject">
-    <span class="refresh-info">
-      ⏱️ Last refreshed: {{ lastRefreshed | date: 'dd/MM/yyyy hh:mm a' }}
-    </span>
-
-    <button mat-raised-button class="themed-btn" (click)="refreshMRs()">🔄 Refresh</button>
+    <span class="refresh-info">Last refreshed: {{ lastRefreshed | date: 'dd/MM/yyyy hh:mm a' }}</span>
+    <button mat-stroked-button class="themed-btn secondary" (click)="refreshMRs()">
+      <mat-icon>refresh</mat-icon> Refresh
+    </button>
   </div>
 
 </div>

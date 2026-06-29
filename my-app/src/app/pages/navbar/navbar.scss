@@ -1,9 +1,8 @@
 @import '../../../assets/shared-styles.scss';
 
-// navbar.component.scss
 :host {
   display: block;
-  position: sticky; // Move sticky to host
+  position: sticky;
   top: 0;
   z-index: 1000;
 }
@@ -12,73 +11,46 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0rem 2rem;
+  padding: 0 1.5rem 0 0;
   background: var(--bg-secondary);
   border-bottom: 1px solid var(--border-color);
-  transition: background-color 0.3s ease;
-  backdrop-filter: blur(10px); // Optional: adds a nice blur effect
-  -webkit-backdrop-filter: blur(10px); // Safari support
+  height: 52px;
 
   .left {
     display: flex;
     align-items: center;
     flex: 1;
 
-    // Mat-tab styling for navbar
     ::ng-deep .navbar-tabs {
-      .mat-mdc-tab-group {
-        background: transparent;
-      }
-
-      // Remove default tab header background
       .mat-mdc-tab-header {
         background: transparent;
         border-bottom: none;
-        height: 48px;
       }
 
-      // Tab styling
       .mat-mdc-tab {
-        min-width: 120px;
-        padding: 0px 20px;
-        height: 48px;
+        min-width: 0;
+        padding: 0 16px;
+        height: 52px;
         color: var(--text-secondary);
-        transition: color 0.3s ease, background-color 0.3s ease;
-        border-radius: 4px;
-        margin-right: 0.5rem;
+        opacity: 1;
 
         &:hover:not(.mdc-tab--active) {
-          color: var(--text-primary);
           background: var(--hover-bg);
+          color: var(--text-primary);
         }
 
         &.mdc-tab--active {
           color: var(--accent-color);
-          background: var(--active-bg);
-          font-weight: 500;
-        }
-
-        .tab-icon {
-          margin-right: 0.5rem;
-          font-size: 1.1rem;
-        }
-
-        .tab-text {
-          color: var(--text-secondary);
-          font-size: 0.9rem;
         }
       }
 
-      // Active tab indicator
-      .mdc-tab-indicator__content--underline {
-        background-color: var(--accent-color);
-        height: 3px;
-        border-radius: 1px;
-      }
-
-      // Remove tab body since we're only using for navigation
       .mat-mdc-tab-body-wrapper {
         display: none;
+      }
+
+      .mdc-tab-indicator__content--underline {
+        background-color: var(--accent-color);
+        border-top-width: 2px;
       }
     }
   }
@@ -86,28 +58,75 @@
   .right {
     display: flex;
     align-items: center;
-    gap: 1.5rem;
+    gap: 0.75rem;
+    flex-shrink: 0;
+  }
+}
 
-    .user {
-      color: var(--text-secondary);
-      font-size: 0.9rem;
-      font-weight: 500;
-    }
+.tab-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  margin-right: 6px;
+  vertical-align: middle;
+  color: var(--text-secondary);
+}
 
-    .logout {
-      background: var(--button-bg);
-      color: white;
-      border: none;
-      padding: 0.5rem 1rem;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 0.9rem;
-      font-weight: 500;
-      transition: background-color 0.3s ease;
+.tab-text {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
 
-      &:hover {
-        background: var(--button-hover);
-      }
-    }
+.user-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.7rem;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+
+  .user-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    color: var(--text-tertiary);
+  }
+
+  .user-name {
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.logout-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+
+  &:hover {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.4);
+    color: #f87171;
   }
 }
