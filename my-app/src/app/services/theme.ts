@@ -1,37 +1,59 @@
 // theme.service.ts
-import { Injectable } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
+// import { Injectable } from '@angular/core';
+// import { BehaviorSubject } from 'rxjs';
 
-@Injectable({
-  providedIn: 'root'
-})
-export class Theme {
-  private isDarkTheme = new BehaviorSubject<boolean>(true); // Default to dark
+// @Injectable({
+//   providedIn: 'root'
+// })
+// export class Theme {
+//   private isDarkTheme = new BehaviorSubject<boolean>(true); // Default to dark
   
-  // Observable for components to subscribe to
-  isDarkTheme$ = this.isDarkTheme.asObservable();
+//   // Observable for components to subscribe to
+//   isDarkTheme$ = this.isDarkTheme.asObservable();
 
-  constructor() {
-    // Load saved theme preference from localStorage
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme) {
-      this.isDarkTheme.next(savedTheme === 'dark');
-    }
+//   constructor() {
+//     // Load saved theme preference from localStorage
+//     const savedTheme = localStorage.getItem('theme');
+//     if (savedTheme) {
+//       this.isDarkTheme.next(savedTheme === 'dark');
+//     }
     
-    // Apply initial theme
-    this.applyTheme(this.isDarkTheme.value);
-  }
+//     // Apply initial theme
+//     this.applyTheme(this.isDarkTheme.value);
+//   }
 
-  toggleTheme(): void {
-    const newTheme = !this.isDarkTheme.value;
-    this.isDarkTheme.next(newTheme);
-    this.applyTheme(newTheme);
+//   toggleTheme(): void {
+//     const newTheme = !this.isDarkTheme.value;
+//     this.isDarkTheme.next(newTheme);
+//     this.applyTheme(newTheme);
     
-    // Save preference to localStorage
-    localStorage.setItem('theme', newTheme ? 'dark' : 'light');
-  }
+//     // Save preference to localStorage
+//     localStorage.setItem('theme', newTheme ? 'dark' : 'light');
+//   }
 
-  private applyTheme(isDark: boolean): void {
+//   private applyTheme(isDark: boolean): void {
+//     if (isDark) {
+//       document.body.classList.add('dark-theme');
+//       document.body.classList.remove('light-theme');
+//     } else {
+//       document.body.classList.add('light-theme');
+//       document.body.classList.remove('dark-theme');
+//     }
+//   }
+
+//   getCurrentTheme(): boolean {
+//     return this.isDarkTheme.value;
+//   }
+// }
+
+
+import { Injectable } from '@angular/core';
+
+declare const window: any;
+
+@Injectable({ providedIn: 'root' })
+export class Theme {
+  apply(isDark: boolean): void {
     if (isDark) {
       document.body.classList.add('dark-theme');
       document.body.classList.remove('light-theme');
@@ -41,7 +63,8 @@ export class Theme {
     }
   }
 
-  getCurrentTheme(): boolean {
-    return this.isDarkTheme.value;
+  async applyFromSettings(): Promise<void> {
+    const data = await window.electronAPI.getSettings();
+    this.apply(data?.darkMode ?? true);
   }
 }

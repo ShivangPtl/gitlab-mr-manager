@@ -51,18 +51,6 @@ export class MergeRequests implements OnInit {
   dataSource = new MatTableDataSource<MRTableRow>();
   lastRefreshed: Date | null = null;
 
-  users = [
-    'Shivang Patel',
-    'Kiran Gami',
-    'Ekta Gupta',
-    'Aman Gupta',
-    'Dhriti Patel',
-    'Kulashree Patil',
-    'Jaimin Vasveliya',
-    'Divyesh Nankar',
-    'Ankita Hirani'
-  ];
-
   customSettings?: CustomSettings;
   getProjectType = getProjectType;
 
@@ -120,8 +108,6 @@ export class MergeRequests implements OnInit {
     try {
       this.loader.showLoading('Fetching merge requests…');
 
-      const selectedUsers = this.users;
-
       if (!this.customSettings?.projects?.length) {
         this.dataSource.data = [];
         this.lastRefreshed = new Date();
@@ -136,10 +122,6 @@ export class MergeRequests implements OnInit {
 
       // Filter by selected users
       const rows: MRTableRow[] = allMergeRequests
-        .filter(mr => {
-          const assignee = mr.assignees?.nodes?.map((x: any) => x.name).join(', ') ?? '-';
-          return selectedUsers.includes(mr.author?.name) || selectedUsers.includes(assignee);
-        })
         .map(mr => ({
           project_name: mr.projectName,
           source_branch: mr.sourceBranch,
@@ -147,7 +129,7 @@ export class MergeRequests implements OnInit {
           author: mr.author.name,
           assignee: mr.assignees?.nodes?.map((x: any) => x.name).join(', ') ?? '-',
           created_at: new Date(mr.createdAt).toLocaleString('en-GB'),
-          status: mr.state === 'opened' ? 'PENDING' : mr.state.toUpperCase(),
+          status: 'PENDING',
           url: mr.webUrl
         }));
 
@@ -268,7 +250,6 @@ export class MergeRequests implements OnInit {
                 webUrl
                 sourceBranch
                 targetBranch
-                state
                 author { name }
                 createdAt
               }

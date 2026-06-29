@@ -21,6 +21,7 @@ import { Badge } from "../../components/badge/badge";
 import { MatIcon } from '@angular/material/icon';
 import { CustomSettings } from '../settings/settings';
 import { getProjectType } from '../../../shared/base';
+import { BaseService } from '../../services/base-service';
 
 declare const window: any;
 @Component({
@@ -45,11 +46,12 @@ export class CreateBranch implements OnInit {
   isProtected = true;
 
   token = '';
-  displayedColumns = ['select', 'project', 'branch_status', 'protection_status'];
+// line: displayedColumns
+  displayedColumns = ['select', 'name', 'branch_status', 'protection_status', 'link'];
   dataSource = new MatTableDataSource<any>();
   baseUrl = 'https://git.promptdairytech.com/api/v4';
 
-  constructor(private loaderService: LoaderService, private snackBar: MatSnackBar) {}
+  constructor(private loaderService: LoaderService, private snackBar: MatSnackBar, private baseService: BaseService) {}
   lastRefreshed: Date | null = null;
   customSettings?: CustomSettings;
   getProjectType = getProjectType;
@@ -103,19 +105,10 @@ export class CreateBranch implements OnInit {
     const tasks = selected.map(async (proj) => {
       try {
         // 1️⃣ Create branch
-        const createResponse = await fetch(
-          `${this.baseUrl}/projects/${proj.project_id}/repository/branches`,
-          {
-            method: 'POST',
-            headers: {
-              'PRIVATE-TOKEN': this.token,
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              branch: this.newBranchName.trim(),
-              ref: this.baseBranch.trim()
-            })
-          }
+        // Replace raw fetch for create branch:
+        const createResponse = await this.baseService.restPost(
+          `/projects/${proj.project_id}/repository/branches`,
+          { branch: this.newBranchName.trim(), ref: this.baseBranch.trim() }
         );
 
         if (createResponse.ok) {
@@ -132,20 +125,25 @@ export class CreateBranch implements OnInit {
 
         // 3️⃣ Protect branch
         if (this.isProtected && proj.protection_status !== 'Protected') {
-          const protectResponse = await fetch(
-            `${this.baseUrl}/projects/${proj.project_id}/protected_branches`,
-            {
-              method: 'POST',
-              headers: {
-                'PRIVATE-TOKEN': this.token,
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify({
-                name: this.newBranchName.trim(),
-                push_access_level: 40,
-                merge_access_level: 40
-              })
-            }
+          // const protectResponse = await fetch(
+          //   `${this.baseUrl}/projects/${proj.project_id}/protected_branches`,
+          //   {
+          //     method: 'POST',
+          //     headers: {
+          //       'PRIVATE-TOKEN': this.token,
+          //       'Content-Type': 'application/json'
+          //     },
+          //     body: JSON.stringify({
+          //       name: this.newBranchName.trim(),
+          //       push_access_level: 40,
+          //       merge_access_level: 40
+          //     })
+          //   }
+          // );
+
+          const protectResponse = await this.baseService.restPost(
+            `/projects/${proj.project_id}/protected_branches`,
+            { name: this.newBranchName.trim(), push_access_level: 40, merge_access_level: 40 }
           );
 
           if (protectResponse.ok) {

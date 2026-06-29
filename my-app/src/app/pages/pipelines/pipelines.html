@@ -103,11 +103,11 @@
   <div class="actions">
     <span class="refresh-info">Last refreshed: {{ lastRefreshed | date: 'dd/MM/yyyy hh:mm a' }}</span>
     <div class="button-group">
-      <button mat-raised-button class="themed-btn" *ngIf="isAdmin" [disabled]="!hasSelectedRows" (click)="runSelected()">
-        <mat-icon>play_arrow</mat-icon> Run
-      </button>
       <button mat-stroked-button class="themed-btn secondary" (click)="refreshPipelines()">
         <mat-icon>refresh</mat-icon> Refresh
+      </button>
+      <button mat-raised-button class="themed-btn" *ngIf="isAdmin" [disabled]="!hasSelectedRows" (click)="runSelected()">
+        <mat-icon>play_arrow</mat-icon> Run
       </button>
     </div>
   </div>
