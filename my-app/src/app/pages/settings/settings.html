@@ -81,7 +81,14 @@
     </table>
   </section>
 
-  <div class="actions">
+  <!-- <div class="actions">
     <button mat-raised-button color="primary" (click)="save()">Save Settings</button>
+  </div> -->
+  <div class="actions">
+    <span class="refresh-info"></span>
+    <button mat-raised-button class="themed-btn" (click)="save()">
+      <mat-icon>settings</mat-icon> Save Settings
+    </button>
   </div>
 </div>
+

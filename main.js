@@ -4,6 +4,7 @@ const ElectronStore = require('electron-store');
 const store = new ElectronStore.default();
 const { exec } = require('child_process');
 const log = require('electron-log');
+const promoter = require('./promoter');
 
 const fetch = (...args) =>
   import('node-fetch').then(({ default: fetch }) => fetch(...args));
@@ -93,6 +94,59 @@ function createWindow() {
   ipcMain.on('show-notification', (event, data) => {
     showNotification(data.title, data.body);
   });  
+
+  ipcMain.handle('promoter-list-services', async (event, credentials) => {
+    const settings = store.get('settings') || {};
+    const cfg = promoter.mergeConfig(settings.promoterConfig);
+    try {
+      const services = await promoter.listApiServices(cfg, credentials);
+      return { success: true, services, uiFolders: cfg.uiFolders };
+    } catch (err) {
+      log.error('promoter-list-services failed', err.message);
+      return { success: false, message: err.message };
+    }
+  });
+
+  ipcMain.handle('promoter-backup', async (event, credentials, selectedItems) => {
+    const settings = store.get('settings') || {};
+    const cfg = promoter.mergeConfig(settings.promoterConfig);
+
+    try {
+      const result = await promoter.backupSelected(cfg, credentials, selectedItems, (progress) => {
+        event.sender.send('promoter-progress', progress);
+      });
+      return { success: true, ...result };
+    } catch (err) {
+      log.error('promoter-backup failed', err.message);
+      return { success: false, message: err.message };
+    }
+  });
+
+  ipcMain.handle('promoter-get-config', () => {
+    const settings = store.get('settings') || {};
+    return promoter.mergeConfig(settings.promoterConfig);
+  });
+
+  ipcMain.handle('promoter-save-config', async (event, promoterConfig) => {
+    const settings = store.get('settings') || {};
+    settings.promoterConfig = promoterConfig;
+    store.set('settings', settings);
+    return true;
+  });
+
+  ipcMain.handle('promoter-save-credentials', async (event, credentials) => {
+    store.set('promoterCredentials', credentials); // { username, password }
+    return true;
+  });
+
+  ipcMain.handle('promoter-get-credentials', () => {
+    return store.get('promoterCredentials') || null;
+  });
+
+  ipcMain.handle('promoter-clear-credentials', () => {
+    store.delete('promoterCredentials');
+    return true;
+  });
 
   const isDev = !app.isPackaged;
 
