@@ -1,17 +1,35 @@
 <div class="login-container">
-  <h2>GitLab Manager</h2> 
+  <div class="login-card">
+    <div class="login-brand">
+      <svg class="gl-logo" viewBox="0 0 25 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M24.507 9.5l-.034-.09L21.082.98a.749.749 0 00-.468-.453.75.75 0 00-.617.058l-3.36 2.051-3.196-2.041a.752.752 0 00-.852 0L9.393 2.635 6.034.584a.75.75 0 00-.617-.058.749.749 0 00-.468.453L.044 9.407l-.034.09A5.27 5.27 0 001.89 15.59l.009.007.024.017 4.434 3.323 2.196 1.662 1.337 1.01a.865.865 0 001.046 0l1.337-1.01 2.196-1.662 4.433-3.32.01-.008a5.27 5.27 0 001.845-6.09z" fill="#FC6D26"/>
+      </svg>
+      <span class="login-title">GitLab Manager</span>
+    </div>
 
-  <form (ngSubmit)="onSubmit()">
-    <label for="token">Personal Access Token</label>
-    <input
-      type="password"
-      id="token"
-      name="token"
-      [(ngModel)]="accessToken"
-      required
-    />
-    <button type="submit">Login</button>
-  </form>
+    <p class="login-subtitle">Enter your Personal Access Token to continue</p>
 
-  <div *ngIf="error" style="color: red; margin-top: 1rem;">{{ error }}</div>
+    <form (ngSubmit)="onSubmit()">
+      <div class="field-group">
+        <label for="token">Personal Access Token</label>
+        <input
+          type="password"
+          id="token"
+          name="token"
+          [(ngModel)]="accessToken"
+          placeholder="glpat-xxxxxxxxxxxxxxxxxxxx"
+          autocomplete="current-password"
+          required
+        />
+      </div>
+      <button type="submit" [disabled]="!accessToken">
+        <span>Sign In</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+          <path d="M5 12h14M12 5l7 7-7 7"/>
+        </svg>
+      </button>
+    </form>
+
+    <div class="login-error" *ngIf="error">{{ error }}</div>
+  </div>
 </div>

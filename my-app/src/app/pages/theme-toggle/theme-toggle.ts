@@ -17,11 +17,11 @@ export class ThemeToggle implements OnInit, OnDestroy {
   constructor(private themeService: Theme) {}
 
   ngOnInit(): void {
-    this.themeService.isDarkTheme$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(isDark => {
-        this.isDarkTheme = isDark;
-      });
+   // this.themeService.isDarkTheme$
+   //   .pipe(takeUntil(this.destroy$))
+   //   .subscribe(isDark => {
+   //     this.isDarkTheme = isDark;
+   //   });
   }
 
   ngOnDestroy(): void {
@@ -30,7 +30,7 @@ export class ThemeToggle implements OnInit, OnDestroy {
   }
 
   onThemeToggle(event: any): void {
-    this.themeService.toggleTheme();
+    //this.themeService.toggleTheme();
   }
 
 }

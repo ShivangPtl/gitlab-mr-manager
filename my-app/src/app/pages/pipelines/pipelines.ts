@@ -19,6 +19,7 @@ import { PipelineDetailsDialogComponent } from './pipeline-details-dialog/pipeli
 import { Badge } from '../../components/badge/badge';
 import { CustomSettings } from '../settings/settings';
 import { getProjectType } from '../../../shared/base';
+import { BaseService } from '../../services/base-service';
 
 declare const window: any;
 
@@ -51,7 +52,8 @@ export class Pipelines implements OnInit {
   constructor(
     private loader: LoaderService,
     private snackBar: MatSnackBar,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private baseService: BaseService
   ) {
     this.targetBranch = localStorage.getItem('selectedTargetBranch') || 'master_ah';
    }
@@ -532,13 +534,15 @@ export class Pipelines implements OnInit {
         { duration: 4000 }
       );
     } finally {
-      this.loader.hide();
+      // this.loader.hide();
+      this.loader.forceHide();
     }
   }
   
   
   private async playSchedule(scheduleId: string): Promise<void> {
-    const token = (await window.electronAPI.getToken()).token;
+    // const token = (await window.electronAPI.getToken()).token;
+    const token = await this.baseService.getToken();
 
     const mutation = `
       mutation {
@@ -658,87 +662,45 @@ export class Pipelines implements OnInit {
         lastUpdated: new Date()
       });
     }
-
-    console.log(this.activePipelines);
   }
 
 
   private async fetchAllProjectsPipelines(branch: string) {
-
-    const projects = this.customSettings?.projects
-      .filter((p: any) => p.is_selected && p.project_name.toLowerCase() !== 'common')
-      || [];
+    const projects = (this.customSettings?.projects ?? [])
+      .filter(p => p.is_selected && p.project_name.toLowerCase() !== 'common');
 
     const q = projects.map(p => `
-      ${p.project_name.replace(/[.-]/g, '_')}:
-      project(fullPath:"pdp/${p.project_name}") {
-        name
-        pipelines(first:5, ref:"${branch}") {
-          nodes {
-            id
-            status
-            ref
-            createdAt
-            startedAt
-            finishedAt
-            user { name }
-            source
-            sha
-          }
-        }
+    ${p.project_name.replace(/[.-]/g, '_')}:
+    project(fullPath:"pdp/${p.project_name}") {
+      name
+      pipelines(first:5, ref:"${branch}") {
+        nodes { id status ref createdAt startedAt finishedAt user { name } source sha }
       }
-    `).join('\n');
+    }
+  `).join('\n');
 
-    const query = `{ ${q} }`;
-
-    const res = await fetch('https://git.promptdairytech.com/api/graphql', {
-      method: 'POST',
-      headers: {
-        'PRIVATE-TOKEN': this.token,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ query })
-    });
-
-    return (await res.json())?.data || {};
+    return this.baseService.graphql(`{ ${q} }`);
   }
   
 
   private async fetchAllSchedules() {
-
-    const projects = this.customSettings?.projects
-      .filter((p: any) => p.is_selected && p.project_name.toLowerCase() !== 'common')
-      || [];
+    const projects = (this.customSettings?.projects ?? [])
+      .filter(p => p.is_selected && p.project_name.toLowerCase() !== 'common');
 
     const q = projects.map(p => `
-      ${p.project_name.replace(/[.-]/g, '_')}:
-      project(fullPath:"pdp/${p.project_name}") {
-        pipelineSchedules(first:20) {
-          nodes {
-            id
-            description
-            ref
-          }
-        }
+    ${p.project_name.replace(/[.-]/g, '_')}:
+    project(fullPath:"pdp/${p.project_name}") {
+      pipelineSchedules(first:20) {
+        nodes { id description ref }
       }
-    `).join('\n');
+    }
+  `).join('\n');
 
-    const query = `{ ${q} }`;
-
-    const res = await fetch('https://git.promptdairytech.com/api/graphql', {
-      method: 'POST',
-      headers: {
-        'PRIVATE-TOKEN': this.token,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ query })
-    });
-
-    return (await res.json())?.data || {};
+    return this.baseService.graphql(`{ ${q} }`);
   }
  
   async refreshPipelines(onlyActive: boolean = false) {
-
+    localStorage.setItem('selectedTargetBranch', this.targetBranch);
     try {
 
       this.loader.showLoading('Fetching pipelines…');
@@ -806,7 +768,8 @@ export class Pipelines implements OnInit {
     } catch (err) {
       this.showError(err);
     } finally {
-      this.loader.hide();
+      // this.loader.hide();
+      this.loader.forceHide();
     }
   }
    

@@ -167,11 +167,14 @@
     <div class="refresh-info">
       ⏱️ Last refreshed: {{ lastRefreshed | date: 'dd/MM/yyyy hh:mm a' }}
     </div>
-    <div class="button-group">
+    <!-- <div class="button-group">
       <button mat-raised-button class="themed-btn"
               (click)="compareBranches()">
         🔀 Compare
       </button>
-    </div>
+    </div> -->
+    <button mat-raised-button class="themed-btn secondary" (click)="compareBranches()">
+         <mat-icon>refresh</mat-icon> Refresh
+    </button>
   </div>
 </div>
