@@ -116,7 +116,7 @@ export class Home implements OnInit {
         }))
       );
 
-      const graphData = await this.fetchProjectsInfo(projectsWithBranch, sourceBranch, this.targetBranch);
+      const graphData = await this.fetchProjectsInfo(projectsWithBranch, this.targetBranch);
 
       const finalData = await Promise.all(
         projectsWithBranch.map(async p => {
@@ -207,15 +207,15 @@ export class Home implements OnInit {
     this.showMRResultsSummary(results);
   }
 
-  private async fetchProjectsInfo(projects: ProjectSettingModel[], sourceBranch: string, targetBranch: string) {
+  private async fetchProjectsInfo(projects: ProjectSettingModel[], targetBranch: string) {
     const q = projects.map(p => {
       const alias = p.project_name.replace(/[^a-zA-Z0-9_]/g, '_');
       return `${alias}: project(fullPath: "pdp/${p.project_name}") {
         repository {
-          source: commit(ref: "${sourceBranch}") { sha }
+          source: commit(ref: "${p.current_branch}") { sha }
           target: commit(ref: "${targetBranch}") { sha }
         }
-        mergeRequests(sourceBranches: ["${sourceBranch}"], targetBranches: ["${targetBranch}"]) {
+        mergeRequests(sourceBranches: ["${p.current_branch}"], targetBranches: ["${targetBranch}"]) {
           nodes { state }
         }
       }`;
