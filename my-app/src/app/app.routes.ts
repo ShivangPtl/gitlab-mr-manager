@@ -6,6 +6,7 @@ import { Pipelines } from './pages/pipelines/pipelines';
 import { MergeRequests } from './pages/merge-requests/merge-requests';
 import { CreateBranch } from './pages/create-branch/create-branch';
 import { CompareBranches } from './pages/compare-branches/compare-branches';
+import { Promoter } from './pages/promoter/promoter';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -16,5 +17,6 @@ export const routes: Routes = [
   { path: 'pipelines', component: Pipelines },
   { path: 'create-branch', component: CreateBranch },
   { path: 'settings', component: Settings },
+  { path: 'promoter', component: Promoter },
   { path: '**', redirectTo: 'login' }
 ];

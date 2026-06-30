@@ -1,0 +1,230 @@
+<div class="promoter-container">
+
+    <section class="connect-bar" *ngIf="!servicesLoaded">
+        <mat-form-field appearance="fill" class="control-item">
+            <mat-label>Username</mat-label>
+            <input matInput [(ngModel)]="username" autocomplete="username" />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill" class="control-item">
+            <mat-label>Password</mat-label>
+            <input matInput type="password" [(ngModel)]="password" autocomplete="current-password" />
+        </mat-form-field>
+
+        <button mat-raised-button class="themed-btn" [disabled]="isConnecting" (click)="loadServices()">
+            <mat-icon>{{ isConnecting ? 'hourglass_empty' : 'login' }}</mat-icon>
+            {{ isConnecting ? 'Connecting…' : 'Connect & Load Services' }}
+        </button>
+    </section>
+
+    <ng-template #rowProgress let-row>
+        <div class="progress-cell">
+            <div class="progress-bar-track">
+                <div class="progress-bar-fill" [class.indeterminate]="row.status === 'START'"
+                    [class.is-done]="row.status === 'DONE'" [class.is-failed]="row.status === 'FAILED'"
+                    [style.width.%]="row.status === 'START' ? 100 : getProgressPercent(row)">
+                </div>
+            </div>
+            <span class="progress-text" *ngIf="row.total > 0">{{ row.current }}/{{ row.total }}</span>
+        </div>
+    </ng-template>
+
+    <div *ngIf="servicesLoaded" class="tables-wrap">
+
+        <section class="summary-bar" *ngIf="hasRunStarted">
+            <div class="summary-stat">
+                <span class="summary-value">{{ doneCount }}/{{ selectedCount }}</span>
+                <span class="summary-label">Completed</span>
+            </div>
+            <div class="summary-stat" *ngIf="failedCount > 0">
+                <span class="summary-value failed">{{ failedCount }}</span>
+                <span class="summary-label">Failed</span>
+            </div>
+            <div class="summary-stat">
+                <span class="summary-value">{{ totalFilesCopied }}</span>
+                <span class="summary-label">Files Copied</span>
+            </div>
+            <div class="summary-stat" *ngIf="elapsedLabel">
+                <span class="summary-value">{{ elapsedLabel }}</span>
+                <span class="summary-label">Elapsed</span>
+            </div>
+
+            <button mat-stroked-button class="themed-btn secondary refresh-btn" [disabled]="isPromoting"
+                (click)="refresh()">
+                <mat-icon>refresh</mat-icon> Refresh
+            </button>
+        </section>
+
+        <div class="tables-grid">
+
+            <!-- ================= API ================= -->
+
+            <section class="table-card">
+
+                <h3 class="section-header">
+                    API Services
+                    <span class="section-count">{{ apiSelectedCount }} selected</span>
+                </h3>
+
+                <div class="table-scroll">
+
+                    <table mat-table [dataSource]="visibleApiRows" class="mat-elevation-z2 full-width-table">
+
+                        <ng-container matColumnDef="select">
+                            <th mat-header-cell *matHeaderCellDef>Select</th>
+                            <td mat-cell *matCellDef="let row">
+                                <mat-checkbox [(ngModel)]="row.is_selected" [disabled]="rowsLocked">
+                                </mat-checkbox>
+                            </td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="name">
+                            <th mat-header-cell *matHeaderCellDef>Service</th>
+                            <td mat-cell *matCellDef="let row">
+                                {{ row.displayName }}
+                            </td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="progress">
+                            <th mat-header-cell *matHeaderCellDef>Progress</th>
+                            <td mat-cell *matCellDef="let row">
+                                <ng-container *ngTemplateOutlet="rowProgress; context: { $implicit: row }">
+                                </ng-container>
+                            </td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="status">
+                            <th mat-header-cell *matHeaderCellDef class="col-center">
+                                Status
+                            </th>
+
+                            <td mat-cell *matCellDef="let row" class="col-center">
+
+                                <div class="status-cell">
+                                    <app-badge [label]="row.status" variant="pill" [type]="getStatusType(row.status)">
+                                    </app-badge>
+
+                                    <button mat-icon-button class="error-toggle" *ngIf="row.status === 'FAILED'"
+                                        (click)="row.showError=!row.showError">
+
+                                        <mat-icon>info_outline</mat-icon>
+
+                                    </button>
+                                </div>
+
+                                <div class="error-detail" *ngIf="row.status==='FAILED' && row.showError">
+
+                                    {{ row.errorMessage || 'Unknown error' }}
+
+                                </div>
+
+                            </td>
+
+                        </ng-container>
+
+                        <tr mat-header-row *matHeaderRowDef="columns"></tr>
+                        <tr mat-row *matRowDef="let row; columns: columns" [class.row-done]="row.status==='DONE'">
+                        </tr>
+
+                    </table>
+
+                </div>
+
+            </section>
+
+            <!-- ================= UI ================= -->
+
+            <section class="table-card">
+
+                <h3 class="section-header">
+                    UI Folders
+                    <span class="section-count">{{ uiSelectedCount }} selected</span>
+                </h3>
+
+                <div class="table-scroll">
+
+                    <table mat-table [dataSource]="visibleUiRows" class="mat-elevation-z2 full-width-table">
+
+                        <ng-container matColumnDef="select">
+                            <th mat-header-cell *matHeaderCellDef>Select</th>
+                            <td mat-cell *matCellDef="let row">
+                                <mat-checkbox [(ngModel)]="row.is_selected" [disabled]="rowsLocked">
+                                </mat-checkbox>
+                            </td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="name">
+                            <th mat-header-cell *matHeaderCellDef>Folder</th>
+                            <td mat-cell *matCellDef="let row">
+                                {{ row.displayName }}
+                            </td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="progress">
+                            <th mat-header-cell *matHeaderCellDef>Progress</th>
+                            <td mat-cell *matCellDef="let row">
+                                <ng-container *ngTemplateOutlet="rowProgress; context: { $implicit: row }">
+                                </ng-container>
+                            </td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="status">
+                            <th mat-header-cell *matHeaderCellDef class="col-center">
+                                Status
+                            </th>
+
+                            <td mat-cell *matCellDef="let row" class="col-center">
+
+                                <div class="status-cell">
+                                    <app-badge [label]="row.status" variant="pill" [type]="getStatusType(row.status)">
+                                    </app-badge>
+
+                                    <button mat-icon-button class="error-toggle" *ngIf="row.status === 'FAILED'"
+                                        (click)="row.showError=!row.showError">
+
+                                        <mat-icon>info_outline</mat-icon>
+
+                                    </button>
+                                </div>
+
+                                <div class="error-detail" *ngIf="row.status==='FAILED' && row.showError">
+
+                                    {{ row.errorMessage || 'Unknown error' }}
+
+                                </div>
+
+                            </td>
+
+                        </ng-container>
+
+                        <tr mat-header-row *matHeaderRowDef="columns"></tr>
+                        <tr mat-row *matRowDef="let row; columns: columns" [class.row-done]="row.status==='DONE'">
+                        </tr>
+
+                    </table>
+
+                </div>
+
+            </section>
+
+        </div>
+
+        <div class="backup-info" *ngIf="backupDir">
+            <mat-icon>folder_open</mat-icon>
+            <span>Saved to: {{ backupDir }}</span>
+            <button mat-button class="open-folder-btn" (click)="openBackupFolder()">Open folder</button>
+        </div>
+
+        <div class="actions" *ngIf="!hasRunStarted">
+            <span class="refresh-info"></span>
+            <div class="button-group">
+                <button mat-raised-button class="themed-btn" [disabled]="!isAnySelected() || isPromoting"
+                    (click)="runBackup()">
+                    <mat-icon>{{ isPromoting ? 'hourglass_empty' : 'download' }}</mat-icon>
+                    {{ isPromoting ? 'Backing up…' : 'Backup Selected DLLs' }}
+                </button>
+            </div>
+        </div>
+    </div>
+
+</div>

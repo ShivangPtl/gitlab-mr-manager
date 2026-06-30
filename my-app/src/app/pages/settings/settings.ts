@@ -66,6 +66,15 @@ export class Settings implements OnInit {
   selectedAssigneeId = 119;
   darkMode = true;
 
+  promoterConfig = {
+    qaApiPath: '/opt/hosting_ah_support',
+    //liveApiPath: '/opt/hosting_ah_live',
+    qaUiPath: '/data/hosting_ah_support',
+    //liveUiPath: '/data/hosting_ah_live',
+    networkBackupPath: '\\\\LT147\\OShared',
+    fallbackToDesktop: true
+  };
+
   constructor(
     private snackBar: MatSnackBar,
     private authService: GitlabAuth,
@@ -76,7 +85,7 @@ export class Settings implements OnInit {
     this.assignees = this.authService.userList;
 
     const data: Partial<CustomSettings> = await window.electronAPI.getSettings() ?? {};
-
+    this.promoterConfig = await window.electronAPI.promoterGetConfig();
     // Merge saved projects onto the default list so new projects appear automatically
     // but saved selections / paths are preserved.
     const savedMap = new Map((data.projects ?? []).map(p => [p.project_id, p]));
@@ -137,5 +146,10 @@ export class Settings implements OnInit {
   onThemeToggle(event: any): void {
     this.darkMode = event.checked;
     this.save(false);
+  }
+
+  async savePromoterConfig() {
+    await window.electronAPI.promoterSaveConfig(this.promoterConfig);
+    this.snackBar.open('Promoter config saved', 'Close', { duration: 2000, panelClass: ['success-snackbar'] });
   }
 }

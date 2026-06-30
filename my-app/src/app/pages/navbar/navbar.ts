@@ -27,6 +27,7 @@ export class Navbar {
     { label: 'Pipelines',      route: '/pipelines',        matIcon: 'rocket_launch' },
     { label: 'Create Branch',  route: '/create-branch',    matIcon: 'account_tree', adminOnly: true },
     { label: 'Compare',        route: '/compare-branches', matIcon: 'compare_arrows', adminOnly: true },
+    { label: 'Backup',        route: '/promoter',         matIcon: 'download', adminOnly: true },  // NEW
     { label: 'Settings',       route: '/settings',         matIcon: 'settings' },
   ];
 
