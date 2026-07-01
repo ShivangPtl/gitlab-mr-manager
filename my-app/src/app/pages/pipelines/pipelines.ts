@@ -20,6 +20,9 @@ import { Badge } from '../../components/badge/badge';
 import { CustomSettings } from '../settings/settings';
 import { getProjectType } from '../../../shared/base';
 import { BaseService } from '../../services/base-service';
+import { UpdateScheduleConfirmDialogComponent } from './update-schedule-confirm-dialog/update-schedule-confirm-dialog';
+import { UpdateScheduleResultDialogComponent } from './update-schedule-result-dialog/update-schedule-result-dialog';
+import { UpdateScheduleDialogComponent } from './update-schedule-dialog/update-schedule-dialog';
 
 declare const window: any;
 
@@ -43,7 +46,10 @@ declare const window: any;
     MatTooltipModule,
     MatDialogModule,
     MatIconModule,
-    Badge
+    Badge,
+    UpdateScheduleDialogComponent,
+    UpdateScheduleConfirmDialogComponent,
+    UpdateScheduleResultDialogComponent,
   ],
 })
 export class Pipelines implements OnInit {
@@ -845,5 +851,184 @@ export class Pipelines implements OnInit {
     return result;
   }
   
+
+
+
+
+
+
+
+
+
+
+
+
+  // Add field:
+  isUpdatingSchedules = false;
+
+  async updateScheduleBranch() {
+    const dialogRef = this.dialog.open(UpdateScheduleDialogComponent, {
+      width: '440px',
+      data: { defaultNewBranch: this.targetBranch }
+    });
+
+    const result = await dialogRef.afterClosed().toPromise();
+    if (!result) return; // cancelled
+
+    const { oldBranch, newBranch } = result;
+
+    // ---- Validation ----
+    if (oldBranch.trim() === newBranch.trim()) {
+      this.snackBar.open('Old and new branch are the same — nothing to update.', 'Close', {
+        duration: 4000, panelClass: ['error-snackbar']
+      });
+      return;
+    }
+
+    this.loader.showLoading('Fetching schedules…');
+    this.isUpdatingSchedules = true;
+
+    try {
+      // 1. Fetch all schedules for all selected projects
+      const scheduleData = await this.fetchAllSchedulesFull();
+
+      // 2. Find schedules whose ref EXACTLY matches oldBranch
+      const toUpdate: { projectKey: string; projectName: string; scheduleId: string }[] = [];
+
+      for (const key of Object.keys(scheduleData)) {
+        const schedules: any[] = scheduleData[key]?.pipelineSchedules?.nodes || [];
+        for (const s of schedules) {
+          if (s.ref === oldBranch.trim()) {
+            const projectName = key.replace(/_/g, '.');
+            toUpdate.push({ projectKey: key, projectName, scheduleId: s.id });
+          }
+        }
+      }
+
+      if (!toUpdate.length) {
+        this.snackBar.open(
+          `No schedules found with branch "${oldBranch}" — nothing updated.`,
+          'Close', { duration: 4000 }
+        );
+        return;
+      }
+
+      // 3. Verify new branch exists for each project in parallel
+      this.loader.showLoading(`Verifying "${newBranch}" exists in ${toUpdate.length} project(s)…`);
+
+      const branchChecks = await Promise.all(
+        toUpdate.map(async item => {
+          const encodedPath = encodeURIComponent(`pdp/${item.projectName}`);
+          const encodedBranch = encodeURIComponent(newBranch.trim());
+          try {
+            const res = await fetch(
+              `https://git.promptdairytech.com/api/v4/projects/${encodedPath}/repository/branches/${encodedBranch}`,
+              { headers: { 'PRIVATE-TOKEN': this.token } }
+            );
+            return { ...item, branchExists: res.ok };
+          } catch {
+            return { ...item, branchExists: false };
+          }
+        })
+      );
+      this.loader.forceHide();
+      const canUpdate = branchChecks.filter(x => x.branchExists);
+      const branchMissing = branchChecks.filter(x => !x.branchExists);
+
+      if (!canUpdate.length) {
+        this.snackBar.open(
+          `Branch "${newBranch}" does not exist in any of the matched projects.`,
+          'Close', { duration: 5000, panelClass: ['error-snackbar'] }
+        );
+        return;
+      }
+
+      // 4. Show results dialog — what will be updated, what will be skipped
+      const confirmRef = this.dialog.open(UpdateScheduleConfirmDialogComponent, {
+        width: '560px',
+        data: { oldBranch, newBranch, canUpdate, branchMissing }
+      });
+
+      const confirmed = await confirmRef.afterClosed().toPromise();
+      if (!confirmed) return;
+
+      // 5. Run updates in parallel
+      this.loader.showLoading(`Updating ${canUpdate.length} schedule(s)…`);
+
+      const updateResults = await Promise.allSettled(
+        canUpdate.map(item => this.updateScheduleRef(item.scheduleId, newBranch.trim(), item.projectName))
+      );
+
+      // 6. Build result summary
+      const succeeded: string[] = [];
+      const failed: { project: string; reason: string }[] = [];
+
+      updateResults.forEach((res, i) => {
+        if (res.status === 'fulfilled') {
+          succeeded.push(canUpdate[i].projectName);
+        } else {
+          failed.push({
+            project: canUpdate[i].projectName,
+            reason: (res.reason as Error)?.message || 'Unknown error'
+          });
+        }
+      });
+
+      // 7. Show final results dialog
+      this.dialog.open(UpdateScheduleResultDialogComponent, {
+        width: '560px',
+        data: { oldBranch, newBranch, succeeded, failed, skipped: branchMissing.map(x => x.projectName) }
+      });
+
+      await this.refreshPipelines();
+
+    } catch (err) {
+      this.showError(err);
+    } finally {
+      this.loader.hide();
+      this.isUpdatingSchedules = false;
+    }
+  }
+
+  private async fetchAllSchedulesFull() {
+    const projects = this.customSettings?.projects
+      .filter((p: any) => p.is_selected && p.project_name.toLowerCase() !== 'common') || [];
+
+    const q = projects.map(p => `
+    ${p.project_name.replace(/[.-]/g, '_')}:
+    project(fullPath:"pdp/${p.project_name}") {
+      pipelineSchedules(first: 20) {
+        nodes { id description ref }
+      }
+    }
+  `).join('\n');
+
+    const res = await fetch('https://git.promptdairytech.com/api/graphql', {
+      method: 'POST',
+      headers: { 'PRIVATE-TOKEN': this.token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query: `{ ${q} }` })
+    });
+
+    return (await res.json())?.data || {};
+  }
+
+  private async updateScheduleRef(scheduleId: string, newRef: string, projectName: string): Promise<void> {
+    const numericId = scheduleId.split('/').pop();
+    const encodedPath = encodeURIComponent(`pdp/${projectName}`);
+
+    const res = await fetch(
+      `https://git.promptdairytech.com/api/v4/projects/${encodedPath}/pipeline_schedules/${numericId}`,
+      {
+        method: 'PUT',
+        headers: { 'PRIVATE-TOKEN': this.token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ref: newRef })
+      }
+    );
+
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`${res.status}: ${text}`);
+    }
+  }
 }
 
