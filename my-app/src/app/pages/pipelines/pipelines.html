@@ -103,6 +103,10 @@
   <div class="actions">
     <span class="refresh-info">Last refreshed: {{ lastRefreshed | date: 'dd/MM/yyyy hh:mm a' }}</span>
     <div class="button-group">
+      <button mat-stroked-button class="themed-btn secondary" *ngIf="isAdmin" [disabled]="isUpdatingSchedules"
+        (click)="updateScheduleBranch()" matTooltip="Bulk-update pipeline schedule branches across all selected projects">
+        <mat-icon>update</mat-icon> Update Schedules
+      </button>
       <button mat-stroked-button class="themed-btn secondary" (click)="refreshPipelines()">
         <mat-icon>refresh</mat-icon> Refresh
       </button>
