@@ -1,9 +1,13 @@
 <div class="app-container">
   <app-navbar *ngIf="showNavbar"></app-navbar>
-  <router-outlet></router-outlet>
-  <app-loader 
+
+  <main class="app-content">
+    <router-outlet></router-outlet>
+  </main>
+
+  <app-loader
       [show]="isLoading$ | async"
       [message]="loaderMessage$ | async"
       [loaderType]="loaderType$ | async">
-    </app-loader>
+  </app-loader>
 </div>

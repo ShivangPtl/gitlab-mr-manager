@@ -55,6 +55,42 @@ export class BaseService {
     return (json.data ?? {}) as T;
   }
 
+
+  async restGet(path: string): Promise<Response> {
+    return fetch(`${this.baseUrl}${path}`, {
+      method: 'GET',
+      headers: await this.headers()
+    });
+  }
+
+  async restDelete(path: string): Promise<Response> {
+    return fetch(`${this.baseUrl}${path}`, {
+      method: 'DELETE',
+      headers: await this.headers()
+    });
+  }
+
+  async getCompare(projectId: number, from: string, to: string): Promise<Response> {
+    return fetch(
+      `${this.baseUrl}/projects/${projectId}/repository/compare` +
+      `?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`,
+      { headers: await this.headers() }
+    );
+  }
+
+  async responseError(response: Response, fallback: string): Promise<string> {
+    try {
+      const text = await response.text();
+      if (!text) return fallback;
+      const json = JSON.parse(text);
+      if (typeof json.message === 'string') return json.message;
+      if (json.message && typeof json.message === 'object') return Object.values(json.message).flat().join(', ');
+      return text;
+    } catch {
+      return fallback;
+    }
+  }
+
   async restPost(path: string, body: object): Promise<Response> {
     return fetch(`${this.baseUrl}${path}`, {
       method: 'POST',

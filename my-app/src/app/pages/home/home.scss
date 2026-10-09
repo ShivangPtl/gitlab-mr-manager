@@ -26,3 +26,83 @@
     .mat-mdc-snack-bar-action { color: white !important; }
   }
 }
+
+.labels-select {
+  min-width: 220px;
+  flex: 1 1 260px;
+  max-width: 520px;
+}
+
+.labels-select ::ng-deep .mat-mdc-select-trigger {
+  min-width: 0;
+}
+
+@media (max-width: 900px) {
+  .labels-select {
+    flex-basis: 100%;
+    max-width: none;
+  }
+}
+
+
+// Merge request table polish. Status meaning is preserved by the shared badge component.
+.full-width-table {
+   border: 1px solid color-mix(
+    in srgb,
+    var(--table-border, var(--border-color)) 35%,
+    transparent
+  );
+  border-radius: var(--app-radius-md);
+  overflow: hidden;
+  box-shadow: var(--app-shadow-sm);
+
+  .mat-mdc-header-row {
+    height: 38px !important;
+  }
+
+  .mat-mdc-row {
+    height: 42px;
+    transition: background-color var(--motion-fast), box-shadow var(--motion-fast);
+
+    &.row-selected {
+      background: var(--table-selected-bg) !important;
+      box-shadow: inset 2px 0 0 var(--accent-color);
+    }
+
+    &:hover {
+      background: var(--table-row-hover) !important;
+    }
+  }
+
+  .mat-mdc-header-cell {
+    padding: 0 14px;
+    color: var(--table-header-text);
+  }
+
+  .mat-mdc-cell {
+    padding: 0 14px;
+    border-bottom-color: var(--table-border);
+  }
+
+  .mat-column-select {
+    width: 54px;
+    min-width: 54px;
+  }
+
+  .mat-column-project {
+    min-width: 220px;
+  }
+
+  .mat-column-branch,
+  .mat-column-target {
+    min-width: 190px;
+  }
+
+  .mat-column-ahead {
+    min-width: 150px;
+  }
+
+  .mat-column-mr_status {
+    min-width: 130px;
+  }
+}

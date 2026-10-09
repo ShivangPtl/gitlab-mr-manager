@@ -40,6 +40,7 @@ export class Home implements OnInit {
   targetBranch = '';
   assignees: UserItem[] = [];
   labels: LabelItem[] = [];
+  selectedLabelNames: string[] = [];
   selectedAssigneeId = 119;
   mrTitle = '';
   mrDescription = '';
@@ -165,7 +166,7 @@ export class Home implements OnInit {
     const selected = this.dataSource.data.filter(p => p.is_selected);
     if (!selected.length) return;
 
-    const selectedLabels = this.labels.filter(l => l.is_selected).map(l => l.name).join(',');
+    const selectedLabels = this.selectedLabelNames.join(',');
     const results: { project: string; status: 'success' | 'failed'; message: string }[] = [];
 
     for (const proj of selected) {

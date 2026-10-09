@@ -20,14 +20,21 @@
       </mat-select>
     </mat-form-field>
 
-    <div class="labels control-item">
+    <mat-form-field appearance="fill" class="control-item labels-select">
       <mat-label>Labels</mat-label>
-      <div class="label-list">
-        <mat-checkbox *ngFor="let label of labels" [(ngModel)]="label.is_selected">
+      <mat-select [(ngModel)]="selectedLabelNames" multiple>
+        <mat-select-trigger>
+          <span *ngIf="selectedLabelNames.length === 0">Select labels</span>
+          <span *ngIf="selectedLabelNames.length === 1">{{ selectedLabelNames[0] }}</span>
+          <span *ngIf="selectedLabelNames.length > 1">
+            {{ selectedLabelNames[0] }} +{{ selectedLabelNames.length - 1 }}
+          </span>
+        </mat-select-trigger>
+        <mat-option *ngFor="let label of labels" [value]="label.name">
           {{ label.name }}
-        </mat-checkbox>
-      </div>
-    </div>
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
   </div>
 
   <div *ngIf="dataSource.data.length > 0; else noData">
@@ -51,7 +58,7 @@
       </ng-container>
 
       <ng-container matColumnDef="branch">
-        <th mat-header-cell *matHeaderCellDef class="col-center">Branch</th>
+        <th mat-header-cell *matHeaderCellDef class="col-center">Source Branch</th>
         <td mat-cell *matCellDef="let project" class="col-center">
           <app-badge [label]="project.current_branch" variant="pill"
             [type]="getBranchChipType(project.sourceBranchExists)">
@@ -87,7 +94,7 @@
       </ng-container>
 
       <tr mat-header-row *matHeaderRowDef="['select','project','branch','target','ahead','mr_status']"></tr>
-      <tr mat-row *matRowDef="let row; columns: ['select','project','branch','target','ahead','mr_status'];"></tr>
+      <tr mat-row *matRowDef="let row; columns: ['select','project','branch','target','ahead','mr_status'];" [class.row-selected]="row.is_selected"></tr>
     </table>
   </div>
 

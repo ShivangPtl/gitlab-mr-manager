@@ -98,6 +98,7 @@ export class Badge implements OnChanges {
   @Input() label: string | number = '';
   @Input() type: any = 'neutral';
   resolvedType: string = 'neutral';
+  resolvedColorGroup: keyof typeof COLOR_GROUPS = 'neutral';
   // styling
 
   // behavior
@@ -114,6 +115,7 @@ export class Badge implements OnChanges {
     const statusCfg = STATUS_MAP[key] ?? { colorGroup: 'neutral' };
     const colorCfg = COLOR_GROUPS[statusCfg.colorGroup];
 
+    this.resolvedColorGroup = statusCfg.colorGroup;
     this.color = colorCfg.color;
     this.background = colorCfg.bg;
     this.borderColor = colorCfg.border;

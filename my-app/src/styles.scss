@@ -56,6 +56,44 @@ html {
 
   --bg-success-150: rgba(46, 160, 67, 0.15);
   --clr-success: #2da44e;
+
+  // Global layout / motion tokens
+  --app-page-padding-x: clamp(1rem, 1.8vw, 1.75rem);
+  --app-page-padding-y: clamp(0.85rem, 1.4vw, 1.25rem);
+  --app-control-height: 40px;
+  --app-radius-sm: 6px;
+  --app-radius-md: 10px;
+  --app-radius-lg: 12px;
+  --app-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.12);
+  --app-shadow-md: 0 8px 24px rgba(0, 0, 0, 0.14);
+  --surface-page: #1a1a1a;
+  --surface-card: #222222;
+  --surface-elevated: #292929;
+  --surface-hover: #303030;
+  --border-subtle: rgba(255, 255, 255, 0.07);
+  --focus-ring: rgba(79, 131, 204, 0.24);
+
+  // Shared status colors
+  --status-success: #2da44e;
+  --status-warning: #d29922;
+  --status-info: #1f6feb;
+  --status-danger: #f85149;
+  --status-purple: #8250df;
+  --status-orange: #d97706;
+  --status-cyan: #0891b2;
+  --status-neutral: #8b949e;
+
+  // Shared table surfaces
+  --table-surface: #222222;
+  --table-header-bg: #1f1f1f;
+  --table-header-text: #a9a9a9;
+  --table-border: rgba(255, 255, 255, 0.07);
+  --table-row-hover: #292929;
+  --table-selected-bg: rgba(79, 131, 204, 0.08);
+  --motion-fast: 120ms cubic-bezier(0.22, 1, 0.36, 1);
+  --motion-base: 180ms cubic-bezier(0.22, 1, 0.36, 1);
+  --motion-slow: 260ms cubic-bezier(0.22, 1, 0.36, 1);
+  --motion-theme: 220ms ease;
 }
 
 .light-theme {
@@ -88,10 +126,29 @@ html {
   --dialog-text: #1a1a1a;
   --dialog-header-bg: #f5f5f5;
   --dialog-border: #e0e0e0;
+
+  --app-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.06);
+  --app-shadow-md: 0 8px 24px rgba(0, 0, 0, 0.10);
+  --surface-page: #f8f8f8;
+  --surface-card: #ffffff;
+  --surface-elevated: #ffffff;
+  --surface-hover: #f4f4f4;
+  --border-subtle: rgba(0, 0, 0, 0.07);
+  --focus-ring: rgba(21, 101, 192, 0.16);
+
+  --table-surface: #ffffff;
+  --table-header-bg: #f4f5f7;
+  --table-header-text: #626b78;
+  --table-border: rgba(0, 0, 0, 0.08);
+  --table-row-hover: #f7f8fa;
+  --table-selected-bg: rgba(21, 101, 192, 0.07);
 }
 
 html, body {
+  width: 100%;
   height: 100%;
+  min-width: 0;
+  min-height: 0;
   margin: 0;
   overflow: hidden;
 }
@@ -104,36 +161,205 @@ body {
   cursor: default;
 }
 
+// Global page sizing. The Electron app shell owns scrolling; individual
+// pages should fill the available content area without imposing a fixed width.
+.page-container {
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+  min-height: 100%;
+  box-sizing: border-box;
+  padding: var(--app-page-padding-y) var(--app-page-padding-x);
+  background: var(--surface-page);
+  color: var(--text-primary);
+}
+
+.page-container > * {
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+  margin-inline: 0;
+}
+
+// Shared surface motion. This keeps the desktop utility feeling responsive
+// without adding page-specific animation code.
+.page-container > section,
+.page-container > header,
+.page-container > .section-header,
+.page-container > .full-width-table,
+.page-container > .mat-mdc-table,
+.page-container > .empty-state {
+  animation: app-surface-enter 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes app-surface-enter {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 // Theme transitions — only color/border, not layout props
 *,
 *::before,
 *::after {
-  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
   box-sizing: border-box;
+}
+
+html,
+body,
+button,
+input,
+textarea,
+select,
+.mat-mdc-form-field,
+.mat-mdc-card,
+.mat-mdc-button,
+.mat-mdc-stroked-button,
+.mat-mdc-raised-button {
+  transition:
+    background-color var(--motion-theme),
+    color var(--motion-theme),
+    border-color var(--motion-theme),
+    box-shadow var(--motion-base),
+    opacity var(--motion-fast),
+    transform var(--motion-fast);
+}
+
+button,
+a,
+[role='button'],
+.mat-mdc-button,
+.mat-mdc-icon-button,
+.mat-mdc-stroked-button,
+.mat-mdc-raised-button,
+.mat-mdc-checkbox {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:not(:disabled),
+a,
+[role='button'],
+.mat-mdc-button:not(:disabled),
+.mat-mdc-icon-button:not(:disabled),
+.mat-mdc-stroked-button:not(:disabled),
+.mat-mdc-raised-button:not(:disabled) {
+  transition: transform var(--motion-fast), background-color var(--motion-fast), color var(--motion-fast), border-color var(--motion-fast), box-shadow var(--motion-fast), opacity var(--motion-fast);
+}
+
+button:not(:disabled):active,
+[role='button']:active,
+.mat-mdc-button:not(:disabled):active,
+.mat-mdc-icon-button:not(:disabled):active,
+.mat-mdc-stroked-button:not(:disabled):active,
+.mat-mdc-raised-button:not(:disabled):active {
+  transform: translateY(1px);
+}
+
+// ---- Global responsive rules ----
+.mat-mdc-form-field {
+  min-width: 0;
+}
+
+.mat-mdc-table {
+  min-width: 680px;
+}
+
+.full-width-table {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.mat-mdc-cell,
+.mat-mdc-header-cell {
+  min-width: 0;
+}
+
+@media (max-width: 1200px) {
+  :root {
+    --app-page-padding-x: 1.15rem;
+    --app-page-padding-y: 1rem;
+  }
+}
+
+@media (max-width: 900px) {
+  :root {
+    --app-page-padding-x: 0.9rem;
+    --app-page-padding-y: 0.85rem;
+  }
+
+  .page-container {
+    min-width: 0;
+  }
+}
+
+@media (max-width: 640px) {
+  :root {
+    --app-page-padding-x: 0.7rem;
+    --app-page-padding-y: 0.7rem;
+  }
+
+  .page-container {
+    font-size: 13px;
+  }
+
+  .actions,
+  .controls {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 // ---- Material Table globals ----
 .mat-mdc-table {
-  background-color: transparent;
+  min-width: 680px;
+  background: var(--table-surface);
+  color: var(--text-primary);
   font-family: 'Inter', system-ui, sans-serif;
 }
 
 .mat-mdc-header-row {
-  background-color: var(--bg-header);
+  background: var(--table-header-bg);
 }
 
 .mat-mdc-header-cell {
-  font-size: 0.72rem;
+  height: 38px;
+  padding: 0 14px;
+  font-size: 0.7rem;
   font-weight: 600;
   letter-spacing: 0.07em;
   text-transform: uppercase;
-  color: var(--text-tertiary);
-  border-bottom: 1px solid var(--border-color);
+  color: var(--table-header-text);
+  border-bottom: 1px solid var(--table-border);
 }
 
 .mat-mdc-cell {
-  font-size: 0.85rem;
+  padding: 0 14px;
+  font-size: 0.82rem;
   color: var(--text-primary);
+  border-bottom: 1px solid var(--table-border);
+}
+
+.mat-mdc-row {
+  transition: background-color var(--motion-fast), box-shadow var(--motion-fast);
+}
+
+.mat-mdc-row:hover {
+  background: var(--table-row-hover) !important;
 }
 
 .col-center {
@@ -221,4 +447,77 @@ a {
   color: var(--accent-color);
   text-decoration: none;
   &:hover { opacity: 0.7; }
+}
+// ---- Theme-aware Angular Material form controls ----
+.mat-mdc-form-field {
+  --mdc-filled-text-field-container-color: var(--bg-secondary);
+  --mdc-filled-text-field-input-text-color: var(--text-primary);
+  --mdc-filled-text-field-label-text-color: var(--text-tertiary);
+  --mdc-filled-text-field-focus-label-text-color: var(--accent-color);
+  --mdc-filled-text-field-hover-label-text-color: var(--text-secondary);
+  --mdc-filled-text-field-active-indicator-color: var(--border-color);
+  --mdc-filled-text-field-hover-active-indicator-color: var(--border-color);
+  --mdc-filled-text-field-focus-active-indicator-color: var(--accent-color);
+  --mat-form-field-container-text-color: var(--text-primary);
+  --mat-form-field-subscript-text-color: var(--text-tertiary);
+  color: var(--text-primary);
+}
+
+.mat-mdc-form-field .mdc-text-field--filled {
+  background-color: var(--bg-secondary) !important;
+}
+
+.mat-mdc-form-field .mdc-text-field--filled::before,
+.mat-mdc-form-field .mdc-text-field--filled::after {
+  background-color: transparent;
+}
+
+.mat-mdc-form-field .mat-mdc-select-value,
+.mat-mdc-form-field .mat-mdc-select-placeholder,
+.mat-mdc-form-field .mat-mdc-select-arrow,
+.mat-mdc-form-field .mdc-floating-label,
+.mat-mdc-form-field .mdc-text-field__input {
+  color: var(--text-primary) !important;
+}
+
+.mat-mdc-form-field .mdc-floating-label {
+  color: var(--text-tertiary) !important;
+}
+
+.mat-mdc-form-field.mat-focused .mdc-floating-label,
+.mat-mdc-form-field.mat-focused .mat-mdc-select-arrow {
+  color: var(--accent-color) !important;
+}
+
+.cdk-overlay-pane .mat-mdc-select-panel {
+  background: var(--bg-secondary) !important;
+  border: 1px solid var(--border-color);
+  border-radius: var(--app-radius-sm, 6px) !important;
+  box-shadow: var(--app-shadow-md, 0 8px 24px rgba(0,0,0,.2)) !important;
+}
+
+.cdk-overlay-pane .mat-mdc-option {
+  color: var(--text-primary) !important;
+  background: var(--bg-secondary) !important;
+}
+
+.cdk-overlay-pane .mat-mdc-option:hover:not(.mdc-list-item--disabled),
+.cdk-overlay-pane .mat-mdc-option.mat-mdc-option-active {
+  background: var(--hover-bg) !important;
+}
+
+.cdk-overlay-pane .mat-mdc-option.mdc-list-item--selected,
+.cdk-overlay-pane .mat-mdc-option.mdc-list-item--selected:hover {
+  background: var(--active-bg) !important;
+}
+
+.cdk-overlay-pane .mat-mdc-option .mdc-list-item__primary-text {
+  color: var(--text-primary) !important;
+}
+
+.cdk-overlay-pane .mat-pseudo-checkbox {
+  --mat-pseudo-checkbox-full-selected-icon-color: var(--accent-color);
+  --mat-pseudo-checkbox-full-selected-checkmark-color: #fff;
+  --mat-pseudo-checkbox-minimal-selected-checkmark-color: var(--accent-color);
+  border-color: var(--text-tertiary) !important;
 }

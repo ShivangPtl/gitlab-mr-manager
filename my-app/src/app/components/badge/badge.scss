@@ -1,36 +1,50 @@
+// Shared status component. Colors are defined globally in styles.scss so every
+// page follows the active application theme consistently.
 .status-chip {
+  --badge-color: var(--status-neutral);
+  --badge-bg: color-mix(in srgb, var(--badge-color) 10%, transparent);
+  --badge-border: color-mix(in srgb, var(--badge-color) 70%, transparent);
+
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  border: 1px solid;
+  justify-content: center;
+  gap: 5px;
+  border: 1px solid var(--badge-border);
+  color: var(--badge-color);
+  background: var(--badge-bg);
   font-weight: 600;
   white-space: nowrap;
+  line-height: 1;
+  transition: background-color var(--motion-fast), border-color var(--motion-fast), color var(--motion-fast), transform var(--motion-fast);
 
   mat-icon {
-    font-size: 16px;
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
   }
 
   &.badge {
-    border-radius: 12px;
-    padding: 2px 8px;
+    border-radius: 10px;
+    padding: 4px 8px;
   }
 
   &.pill {
     border-radius: 6px;
-    padding: 2px 10px;
-    font-family: monospace;
-  }
-
-  &.sm {
+    padding: 4px 9px;
+    font-family: 'Roboto Mono', monospace;
     font-size: 12px;
+    letter-spacing: -0.01em;
   }
 
-  &.md {
-    font-size: 13px;
-  }
+  &.sm { font-size: 11px; }
+  &.md { font-size: 12px; }
 
-  .close {
-    font-size: 12px;
-    line-height: 12px;
-  }
+  &.status-green { --badge-color: var(--status-success); }
+  &.status-amber { --badge-color: var(--status-warning); }
+  &.status-blue { --badge-color: var(--status-info); }
+  &.status-red { --badge-color: var(--status-danger); }
+  &.status-purple { --badge-color: var(--status-purple); }
+  &.status-orange { --badge-color: var(--status-orange); }
+  &.status-cyan { --badge-color: var(--status-cyan); }
+  &.status-neutral { --badge-color: var(--status-neutral); }
 }

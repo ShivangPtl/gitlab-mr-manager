@@ -16,6 +16,15 @@ declare const window: any;
   imports: [MatTabGroup, MatTabLabel, MatButtonModule, MatTabsModule, MatIconModule, CommonModule]
 })
 export class Navbar {
+  collapsed = false;
+
+  toggleSidebar(): void {
+    this.collapsed = !this.collapsed;
+  }
+
+  isActive(route: string): boolean {
+    return this.router.url === route || this.router.url.startsWith(`${route}/`);
+  }
   selectedTabIndex = 0;
   userName = '';
   token: string = '';
@@ -26,6 +35,7 @@ export class Navbar {
     { label: 'Merge Requests', route: '/merge-requests',   matIcon: 'merge' },
     { label: 'Pipelines',      route: '/pipelines',        matIcon: 'rocket_launch' },
     { label: 'Create Branch',  route: '/create-branch',    matIcon: 'account_tree', adminOnly: true },
+    { label: 'Branch Cleanup', route: '/branch-cleanup',   matIcon: 'cleaning_services', adminOnly: true },
     { label: 'Compare',        route: '/compare-branches', matIcon: 'compare_arrows', adminOnly: true },
     { label: 'Backup',        route: '/promoter',         matIcon: 'download', adminOnly: true },  // NEW
     { label: 'Settings',       route: '/settings',         matIcon: 'settings' },

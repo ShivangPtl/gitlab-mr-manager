@@ -304,23 +304,27 @@
   width: 100%;
   margin-bottom: 1.5rem;
 
+  ::ng-deep .mat-mdc-table {
+    background: var(--table-surface, var(--bg-secondary));
+  }
+
   ::ng-deep .mat-mdc-header-cell,
   ::ng-deep .mat-mdc-cell {
     color: var(--text-primary);
-    border-bottom: 1px solid var(--border-color);
-    font-size: 0.85rem;
+    border-bottom: 1px solid var(--table-border, var(--border-color));
+    font-size: 0.82rem;
   }
 
   ::ng-deep .mat-mdc-header-row {
-    background: var(--bg-header);
-    height: 40px !important;
+    background: var(--table-header-bg, var(--bg-header));
+    height: 38px !important;
   }
 
   ::ng-deep .mat-mdc-row {
-    background: var(--bg-secondary);
+    background: var(--table-surface, var(--bg-secondary));
 
     &:hover {
-      background: var(--hover-bg) !important;
+      background: var(--table-row-hover, var(--hover-bg)) !important;
     }
   }
 }
